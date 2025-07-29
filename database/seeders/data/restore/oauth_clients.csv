@@ -1,0 +1,7 @@
+"id","user_id","name","secret","redirect","personal_access_client","password_client","revoked","created_at","updated_at"
+"1","","National Orthopaedic and Traumatology Board Examination Personal Access Client","rULju2emQVm2ZMOSPUFFmrPE5TuWdiR5DLT4W56C","http://localhost","1","0","0","2017-07-09 23:14:40","2017-07-09 23:14:40"
+"2","","National Orthopaedic and Traumatology Board Examination Password Grant Client","rkxwntKNzxeP2ls0KtBWdJCya8Ho75L0tjtwTyW3","http://localhost","0","1","0","2017-07-09 23:14:40","2017-07-09 23:14:40"
+"3","","National Orthopaedic and Traumatology Board Examination Personal Access Client","qmF7TwNWzSnTZfjjAt0Vfkl3vd4WvADekLMNlQGM","http://localhost","1","0","0","2017-07-10 05:24:10","2017-07-10 05:24:10"
+"4","","National Orthopaedic and Traumatology Board Examination Password Grant Client","zsbTWO7jRQL8Hrk3Ahy73axrv71VbtauSleLWM3w","http://localhost","0","1","0","2017-07-10 05:24:10","2017-07-10 05:24:10"
+"5","","National Orthopaedic and Traumatology Board Examination Personal Access Client","oKr2GZ4pbqZfjkuSJMhfM2TICk7ezZGp1AFINrZI","http://localhost","1","0","0","2017-07-19 13:44:19","2017-07-19 13:44:19"
+"6","","National Orthopaedic and Traumatology Board Examination Password Grant Client","Vop3zf4DowgyeG1zs1SNXMoTKHGnpqcuW4YtaMOi","http://localhost","0","1","0","2017-07-19 13:44:19","2017-07-19 13:44:19"

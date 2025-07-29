@@ -1,0 +1,3 @@
+[submodule "database/seeders/data/restore-attachment"]
+	path = database/seeders/data/restore-attachment
+	url = git@github.com:digital-entropy/ionbec.storage.git

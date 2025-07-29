@@ -1,0 +1,42 @@
+id,type,code,parent,name,description,created_at,updated_at
+1,disease-group,,0,Unspecified,,2017-07-09 21:14:39,2017-07-09 21:14:39
+2,disease-group,,0,Congenital,,2017-07-09 21:14:39,2017-07-09 21:14:39
+3,disease-group,,0,Infection,,2017-07-09 21:14:39,2017-07-09 21:14:39
+4,disease-group,,0,Tumor,,2017-07-09 21:14:39,2017-07-09 21:14:39
+5,disease-group,,0,Injury/Trauma,,2017-07-09 21:14:39,2017-07-09 21:14:39
+6,disease-group,,0,Metabolic,,2017-07-09 21:14:39,2017-07-09 21:14:39
+7,disease-group,,0,Inflammatory,,2017-07-09 21:14:39,2017-07-09 21:14:39
+8,disease-group,,0,Degenerative,,2017-07-09 21:14:39,2017-07-09 21:14:39
+9,disease-group,,0,Neuromuscular,,2017-07-09 21:14:39,2017-07-09 21:14:39
+10,disease-group,,0,Basic Science,,2017-07-09 21:14:39,2017-07-09 21:14:39
+11,region-group,,0,Unspecified,,2017-07-09 21:14:39,2017-07-09 21:14:39
+12,region-group,,0,Cervical,,2017-07-09 21:14:39,2017-07-09 21:14:39
+13,region-group,,0,Thoracal,,2017-07-09 21:14:39,2017-07-09 21:14:39
+14,region-group,,0,Lumbar,,2017-07-09 21:14:39,2017-07-09 21:14:39
+15,region-group,,0,Sacrococcygeal,,2017-07-09 21:14:39,2017-07-09 21:14:39
+16,region-group,,0,Shoulder Joint,,2017-07-09 21:14:39,2017-07-09 21:14:39
+17,region-group,,0,Arm,,2017-07-09 21:14:39,2017-07-09 21:14:39
+18,region-group,,0,Elbow Joint,,2017-07-09 21:14:39,2017-07-09 21:14:39
+19,region-group,,0,Forearm,,2017-07-09 21:14:39,2017-07-09 21:14:39
+20,region-group,,0,Wrist Joint,,2017-07-09 21:14:39,2017-07-09 21:14:39
+21,region-group,,0,Hand,,2017-07-09 21:14:39,2017-07-09 21:14:39
+22,region-group,,0,Pelvic,,2017-07-09 21:14:39,2017-07-09 21:14:39
+23,region-group,,0,Hip Joint,,2017-07-09 21:14:39,2017-07-09 21:14:39
+24,region-group,,0,Thigh,,2017-07-09 21:14:39,2017-07-09 21:14:39
+25,region-group,,0,Knee Joint,,2017-07-09 21:14:39,2017-07-09 21:14:39
+26,region-group,,0,Lower Leg,,2017-07-09 21:14:39,2017-07-09 21:14:39
+27,region-group,,0,Ankle Joint,,2017-07-09 21:14:39,2017-07-09 21:14:39
+28,region-group,,0,Foot,,2017-07-09 21:14:39,2017-07-09 21:14:39
+29,region-group,,0,No Region,,2017-07-09 21:14:39,2017-07-09 21:14:39
+30,region-group,,0,Multiple Region,,2017-07-09 21:14:39,2017-07-09 21:14:39
+31,specific-part,,0,Unspecified,,2017-07-09 21:14:39,2017-07-09 21:14:39
+32,specific-part,,0,Pathogenesis,,2017-07-09 21:14:39,2017-07-09 21:14:39
+33,specific-part,,0,Diagnosis/Investigation,,2017-07-09 21:14:39,2017-07-09 21:14:39
+34,specific-part,,0,Treatment/Management,,2017-07-09 21:14:39,2017-07-09 21:14:39
+35,specific-part,,0,Prognosis and Complication,,2017-07-09 21:14:39,2017-07-09 21:14:39
+36,typical-group,,0,Unspecified,,2017-07-09 21:14:39,2017-07-09 21:14:39
+37,typical-group,,0,Analysis,,2017-07-09 21:14:39,2017-07-09 21:14:39
+38,typical-group,,0,Recall Type,,2017-07-09 21:14:39,2017-07-09 21:14:39
+39,disease-group,,0,abc,,2017-12-06 20:32:38,2017-12-06 20:32:38
+40,region-group,,0,Thoracolumbal,,2020-11-15 20:06:40,2020-11-15 20:07:03
+41,disease-group,,0,Ethic,,2020-11-16 21:12:41,2020-11-16 21:12:42

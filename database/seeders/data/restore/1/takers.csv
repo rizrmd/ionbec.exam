@@ -1,0 +1,602 @@
+id,name,reg,email,created_at,updated_at
+174,Pramono ari wibowo,1,dr.pramono@gmail.com,2017-07-31 07:41:32,2017-07-31 07:41:32
+181,bee,1,basukimh@gmail.com,2017-12-10 12:50:22,2017-12-10 12:50:22
+193,dr. Muhammad Anggawiyatna,31,wiyatna@gmail.com,2017-12-24 22:56:48,2018-07-12 09:38:41
+194,dr. Agus Waryudi,33,waryudiagus79@gmail.com,2017-12-24 22:57:31,2018-07-12 09:41:08
+195,dr. Damiarta Simorangkir,32,damiartas@gmail.com,2017-12-24 22:58:13,2018-07-12 09:41:22
+196,dr. Doli Mauliate Sitompul,34,mauliate84@gmail.com,2017-12-24 22:59:08,2018-07-12 09:41:37
+197,dr. Dyah Purnaning,35,dyah.purnaning@gmail.com,2017-12-24 22:59:50,2018-07-12 09:41:53
+198,dr. Muhammad Triadi Wijaya,36,m.triadi@gmail.com,2017-12-24 23:00:28,2018-07-12 09:42:22
+199,dr. Muh. Trinugroho Fahrudhin,37,fahrudhin1986@gmail.com,2017-12-24 23:01:11,2018-07-12 09:44:43
+210,dr. Hantonius,38,dedogtor@gmail.com,2017-12-24 23:09:57,2018-07-12 09:45:25
+227,dr. Muhammad Bayuaji Meiarso,15,dr.bayuaji@gmail.com,2017-12-24 23:25:26,2018-07-12 09:51:42
+228,dr. Dhina Hafiz Sa'ban,16,dhinahafizsaban54@gmail.com,2017-12-24 23:26:04,2018-07-12 09:51:59
+229,dr. Bagus Nur Graha Wahyu Aji,17,dr.bnwahyuaji@gmail.com,2017-12-24 23:26:42,2018-07-12 09:52:21
+231,dr. Zen Firhan,14,zenfirhanshahab@gmail.com,2017-12-24 23:27:55,2018-07-12 09:54:25
+232,dr. Alifia Rifki Rimanda,18,alifia.rifki@gmail.com,2017-12-24 23:28:29,2018-07-12 09:54:41
+235,dr. Dimas Triaryo,41,dr.dimastriaryo@gmail.com,2017-12-24 23:30:45,2018-07-12 09:55:44
+242,dr. Zainarda,24,fzee80@gmail.com,2017-12-24 23:35:13,2018-07-12 09:58:08
+243,dr. I Gusti Ngurah Yudhi Setiawan,21,charm.youd@gmail.com,2017-12-24 23:35:49,2018-07-12 09:56:43
+244,dr. Kadek Yuris Wira Artha,22,yurisartha@gmail.com,2017-12-24 23:36:27,2018-07-12 09:57:19
+245,dr. I Gusti Kadek Satrio Adiwardhana,20,ryo.wardhana7@gmail.com,2017-12-24 23:37:00,2018-07-12 09:57:35
+246,dr. Putu Suehandika Caksana,23,tuandi182@gmail.com,2017-12-24 23:37:37,2018-07-12 09:57:50
+247,dr. Fredy Arianto,19,fredya96@gmail.com,2017-12-24 23:38:09,2018-07-12 09:58:25
+253,dr. Kukuh Dwiputra Hemugrahanto,8,kukuhdh@gmail.com,2017-12-27 13:08:28,2018-07-12 09:59:23
+255,Ika Benny Kartikasari,4,dr.ikafk04@gmail.com,2017-12-27 13:10:32,2018-07-12 09:59:46
+256,dr. OK Ilham A. Irsyam,6,ok.ilham@gmail.com,2017-12-27 13:11:12,2018-07-12 10:01:07
+257,dr. Yesa A. Suwandani,7,suwandani2@gmail.com,2017-12-27 13:11:58,2018-07-12 10:01:28
+258,dr. Jifaldiafrian Maharajadinda Sedar,5,jiforthobaya@gmail.com,2017-12-27 13:12:30,2018-07-12 10:01:45
+259,dr. Gladys Adipranoto,21519-UB-1,g.adipranoto@gmail.com,2017-12-28 00:11:24,2019-05-21 05:27:49
+260,dr. Alwi Rachman,UB-6,awimuhdhar@gmail.com,2017-12-28 00:12:14,2017-12-28 00:12:14
+261,dr. Andika Dwiputra Djaja,BE191218-23,andika_dwiputra@rocketmail.com,2018-07-05 12:56:38,2018-12-17 03:32:14
+262,dr. Herjuno Ardhi,BE191218-25,herjuno.ardhi@gmail.com,2018-07-05 12:57:10,2018-12-17 03:32:43
+263,dr. M. Faj'rin Armin F,BE191218-26,fajrin_armin@yahoo.com,2018-07-06 00:29:28,2018-12-17 03:32:59
+264,dr. Putri Amalia Isdianto,BE191218-28,putri.isdianto@gmail.com,2018-07-06 00:29:56,2018-12-17 03:34:00
+265,dr. Helmi Ismunandar,39,dr.helmiismunandar@gmail.com,2018-07-06 00:32:49,2018-07-12 10:03:53
+266,dr. Tody Pinandita,40,tody_pinandita@yahoo.com,2018-07-06 00:33:26,2018-07-12 10:04:19
+267,dr. David Simorangkir,BE191218-41,daviid.sim@gmail.com,2018-07-06 00:34:30,2018-12-17 03:37:58
+268,dr. Gregorius Batara Putra Setia Sutradi,kandidat UNPAD 1,sutardigreg@gmail.com,2018-07-06 00:34:57,2019-11-05 05:49:31
+269,dr. Fajar Yulianto Karna Rajasa,BE191218-43,ianfajar8@gmail.com,2018-07-06 00:35:21,2018-12-17 03:38:30
+270,dr. Iwan Hipsa Achmad,BE191218-27,onehipsa@yahoo.com,2018-07-06 00:35:56,2018-12-17 03:33:18
+271,dr. Anita Kurniawati,BE191218-29,kurniawatianita85@gmail.com,2018-07-06 00:36:22,2018-12-17 03:34:11
+272,dr. Adam Fajar,BE191218-31,adam_fajar@yahoo.com.sg,2018-07-06 00:42:14,2018-12-17 03:34:47
+273,dr. Asep Sulaeman,BE191218-33,asepsulaeman12@gmail.com,2018-07-06 00:42:38,2018-12-17 03:35:13
+274,dr. Fadlyansyah Farid,BE191218-35,silongfarid@gmail.com,2018-07-06 00:43:18,2018-12-17 03:35:47
+275,dr. Boby Harul Priono,BE191218-37,bobyharulpriono@gmail.com,2018-07-06 00:43:41,2018-12-17 03:36:30
+276,dr. Agung Malinda,21519-UNAIR-1,A@SDADA.COM,2018-07-06 00:47:33,2019-05-21 04:47:30
+277,dr. Citra Ahdi Prasetya,BE191218-4,CACA@GMA.COM,2018-07-06 00:47:57,2018-12-17 03:24:57
+278,dr. Angga Fiandana,BE191218-13,ADAS@ASA.COM,2018-07-06 00:48:17,2018-12-17 03:28:42
+279,dr. Hudaya Nikmatullah,BE191218-16,AMSDN@FJAAD.COM,2018-07-06 00:48:35,2018-12-17 03:29:37
+280,dr. Nia Irayati,9,niairayati@gmail.com,2018-07-06 00:53:11,2018-07-12 10:04:52
+281,dr. Aries Freddy Hutabarat,10,arieshutabarat@gmail.com,2018-07-06 00:53:30,2018-07-12 10:05:17
+282,dr. Michael Horeb,11,michael.horeb@gmail.com,2018-07-06 00:53:47,2018-07-12 10:05:35
+283,dr. Herbert Yurianto,12,hyurianto@yahoo.com,2018-07-06 00:54:04,2018-07-12 10:05:51
+284,dr. Zuwanda Then,13,amink_zwd@hotmail.com,2018-07-06 00:54:22,2018-07-12 10:06:08
+285,dr. M. Fadli,BE191218-3,fadlyspot@gmail.com,2018-07-06 00:57:17,2018-12-17 03:24:10
+286,dr. Khrisnanto Nugroho,BE191218-12,khrisnanto.nugroho@gmail.com,2018-07-06 00:57:39,2018-12-17 03:28:22
+287,dr. Bagus Jati Nugroho,BE191218-9,bagusjt@gmail.com,2018-07-06 00:57:57,2018-12-17 03:27:22
+288,dr. Aris Kurniawan,21519-UNS-1,aris.orthopedi@gmail.com,2018-07-06 00:58:14,2019-05-21 05:11:42
+289,dr. Ronald Iskandar,BE191218-42,dr.ronald.iskandar@gmail.com,2018-07-06 00:59:19,2018-12-17 03:38:13
+290,dr. St. Hengkie Marseno,BE191218-30,virus_dlx@yahoo.com,2018-07-06 00:59:37,2018-12-17 03:34:32
+291,dr. Andika Dwi Cahyo,BE191218-40,andika.dwicahyo@gmail.com,2018-07-06 00:59:55,2018-12-17 03:37:46
+292,dr. Asa Ibrahim Zainal,BE191218-38,asaibrahimza@gmail.com,2018-07-06 01:00:20,2018-12-17 03:36:55
+293,dr. Arie Nugroho,21519-UGM-6,arienugroho171086@gmail.com,2018-07-06 01:00:36,2019-05-21 05:18:03
+294,dr. Marda Ade,BE191218-36,marhoochi@gmail.com,2018-07-06 01:00:54,2018-12-17 03:36:04
+295,dr. Hendi Dwi Bharata,BE191218-32,hd_bharata@yahoo.co.id,2018-07-06 01:01:11,2018-12-17 03:35:02
+296,dr. Sudaryanto,BE191218-34,sudaryantoku06@gmail.com,2018-07-06 01:01:28,2018-12-17 03:35:32
+297,dr. Trimanto Wibowo,BE191218-5,trimartowibowo@gmail.com,2018-07-06 01:06:29,2018-12-17 03:25:22
+298,dr. I Komang Mahendra Laksana M,BE191218-15,mahendralaksana@ymail.com,2018-07-06 01:06:45,2018-12-17 03:29:17
+299,dr. I Made Tusan S.,BE191218-17,toozanck@gmail.com,2018-07-06 01:07:07,2018-12-17 03:29:59
+300,dr. I.B. Gede Arimbawa,BE191218-20,ibg.arimbawa@gmail.com,2018-07-06 01:07:30,2018-12-17 03:31:10
+301,dr. Rakhmad Aditya Hernawan,1,aditlea@gmail.com,2018-07-06 01:08:34,2018-07-12 10:07:03
+302,dr. Warih Anggoro Mustaqim,2,mustaqim.ot@gmail.com,2018-07-06 01:08:55,2018-07-12 10:07:23
+303,dr. Alwi Rachman,3,awimuhdhar@gmail.com,2018-07-06 01:09:13,2018-07-12 10:07:38
+304,dr. Hidayat,BE191218-6,hidayatrizal85@gmail.com,2018-07-06 01:58:45,2018-12-17 03:25:46
+305,dr. Rusendi Hidayat,BE191218-18,drrusendi@gmail.com,2018-07-06 01:59:18,2018-12-17 03:30:39
+306,dr. Brian Dhananjaya,BE191218-22,briandhananjaya@gmail.com,2018-07-06 01:59:41,2018-12-17 03:31:42
+307,Reza Mahruzza Putra,25,mahruzza13@gmail.com,2018-07-06 02:00:17,2018-07-12 10:08:03
+308,M.Rangga Akbari Siregar,26,r9rangga@yahoo.com,2018-07-06 02:00:39,2018-07-12 10:08:27
+309,M Hidayat Siregar,27,siregardayat@yahoo.co.id,2018-07-06 02:00:56,2018-07-12 10:08:43
+310,dr. Ira Juliet Anestessia,BE191218-39,irajuliet.dr@gmail.com,2018-07-06 02:01:14,2018-12-17 03:37:27
+311,Rudi Hadinata,29,hadinata_rudi@yahoo.com,2018-07-06 02:01:34,2018-07-12 10:09:30
+312,dr. Melitta setyarani(salah nama),UI-1,setyarani@gmail.com,2018-07-12 01:24:05,2018-07-12 01:24:05
+313,dr. Aiflia Rifki Rimanda,18,adasda@yahoo.com,2018-07-12 10:15:27,2018-07-12 10:15:27
+314,usertest001,1001,usertest001@test.com,2018-07-14 10:18:16,2018-07-14 10:18:16
+315,usertest002,1002,usertest002@test.com,2018-07-14 10:18:41,2018-07-14 10:18:51
+316,usertest003,1003,usertest003@test.com,2018-07-14 10:19:14,2018-07-14 10:19:14
+317,usertest004,1004,usertest004@test.com,2018-07-14 10:19:35,2018-07-14 10:19:35
+318,usertest005,1005,usertest005@test.com,2018-07-14 10:20:08,2018-07-14 10:20:08
+319,usertest006,1006,usertest006@test.com,2018-07-14 10:20:32,2018-07-14 10:20:32
+320,usertest007,1007,usertest007@test.com,2018-07-14 10:20:51,2018-07-14 10:20:51
+321,usertest008,1008,usertest008@gmail.com,2018-07-14 10:21:16,2018-07-14 10:21:16
+322,usertest009,1009,usertest009@test.com,2018-07-14 10:21:38,2018-07-14 10:21:38
+323,usertest010,1010,usertest010@test.com,2018-07-14 10:21:56,2018-07-14 10:21:56
+324,usertest011,1011,usertest011@test.com,2018-07-14 10:22:18,2018-07-14 10:22:18
+325,usertest012,1012,usertest012@test.com,2018-07-14 10:22:37,2018-07-14 10:22:37
+326,usertest013,1013,usertest013@test.com,2018-07-14 10:23:21,2018-07-14 10:23:21
+327,usertest014,1014,usertest014@test.com,2018-07-14 10:23:45,2018-07-14 10:23:45
+328,usertest015,1015,usertest015@test.com,2018-07-14 10:24:09,2018-07-14 10:24:09
+329,usertest016,1016,usertest016@test.com,2018-07-14 10:24:34,2018-07-14 10:24:34
+330,usertest017,1017,usertest017@test.com,2018-07-14 10:25:01,2018-07-14 10:25:01
+331,usertest018,1018,usertest018@test.com,2018-07-14 10:25:21,2018-07-14 10:25:21
+332,usertest019,1019,usertest019@test.com,2018-07-14 10:25:38,2018-07-14 10:25:38
+333,usertest020,1020,usertest020@test.com,2018-07-14 10:26:44,2018-07-14 10:26:44
+334,usertest021,1021,usertest021@test.com,2018-07-14 10:27:03,2018-07-14 10:27:03
+335,usertest022,1022,usertest022@test.com,2018-07-14 10:27:21,2018-07-14 10:27:21
+336,usertest023,1023,usertest023@test.com,2018-07-14 10:27:40,2018-07-14 10:27:40
+337,usertest024,1024,usertest024@test.com,2018-07-14 10:27:58,2018-07-14 10:27:58
+338,usertest025,1025,usertest025@test.com,2018-07-14 10:28:22,2018-07-14 10:28:22
+339,usertest026,1026,usertest026@test.com,2018-07-14 10:28:42,2018-07-14 10:28:42
+340,usertest027,1027,usertest027@test.com,2018-07-14 10:28:59,2018-07-14 10:28:59
+341,usertest028,1028,usertest028@test.com,2018-07-14 10:29:24,2018-07-14 10:29:24
+342,usertest029,1029,usertest029@test.com,2018-07-14 10:29:47,2018-07-14 10:29:47
+343,usertest030,1030,usertest030@test.com,2018-07-14 10:30:08,2018-07-14 10:30:08
+344,usertest031,1031,usertest031@test.com,2018-07-14 10:30:24,2018-07-14 10:30:24
+345,usertest032,1032,usertest032@test.com,2018-07-14 10:30:40,2018-07-14 10:30:40
+346,usertest033,1033,usertest033@test.com,2018-07-14 10:31:00,2018-07-14 10:31:00
+347,usertest034,1034,usertest034@test.com,2018-07-14 10:31:24,2018-07-14 10:31:24
+348,usertest036,1036,usertest036@test.com,2018-07-14 10:32:04,2018-07-14 10:32:04
+349,usertest037,1037,usertest037@test.com,2018-07-14 10:42:49,2018-07-14 10:42:49
+350,usertest038,1038,usertest038@test.com,2018-07-14 10:43:08,2018-07-14 10:43:08
+351,usertest039,1039,usertest039@test.com,2018-07-14 10:43:24,2018-07-14 10:43:24
+352,usertest040,1040,usertest040@test.com,2018-07-14 10:43:40,2018-07-14 10:43:40
+353,usertest041,1041,usertest041@test.com,2018-07-14 10:43:58,2018-07-14 10:43:58
+354,usertest042,1042,usertest042@test.com,2018-07-14 10:44:24,2018-07-14 10:44:24
+355,usertest043,1043,usertest043@test.com,2018-07-14 10:44:41,2018-07-14 10:44:41
+356,usertest044,1044,usertest044@test.com,2018-07-14 10:44:58,2018-07-14 10:44:58
+357,usertest045,1045,usertest045@test.com,2018-07-14 10:45:19,2018-07-14 10:45:19
+358,usertest046,1046,usertest046@test.com,2018-07-14 10:45:37,2018-07-14 10:45:37
+359,usertest047,1047,usertest047@test.com,2018-07-14 10:45:55,2018-07-14 10:45:55
+360,usertest048,1048,usertest048@test.com,2018-07-14 10:46:12,2018-07-14 10:46:12
+361,usertest049,1049,usertest049@test.com,2018-07-14 10:46:31,2018-07-14 10:46:31
+362,usertest050,1050,usertest050@test.com,2018-07-14 10:46:48,2018-07-14 10:46:48
+363,usertest051,1051,usertest051@test.com,2018-07-14 10:47:05,2018-07-14 10:47:05
+364,usertest052,1052,usertest052@test.com,2018-07-14 10:48:46,2018-07-14 10:48:46
+365,usertest053,1053,usertest053@test.com,2018-07-14 10:49:04,2018-07-14 10:49:04
+366,usertest054,1054,usertest054@test.com,2018-07-14 10:49:24,2018-07-14 10:49:24
+367,usertest055,1055,usertest055@test.com,2018-07-14 10:50:48,2018-07-14 10:50:48
+368,usertest056,1056,usertest056@test.com,2018-07-14 10:52:00,2018-07-14 10:52:00
+369,usertest057,1057,usertest057@test.com,2018-07-14 10:52:16,2018-07-14 10:52:16
+370,usertest058,1058,usertest058@test.com,2018-07-14 10:52:32,2018-07-14 10:52:32
+371,usertest059,1059,usertest059@test.com,2018-07-14 10:52:49,2018-07-14 10:52:49
+372,usertest060,1060,usertest060@test.com,2018-07-14 10:53:06,2018-07-14 10:53:06
+373,usertest061,1061,usertest061@test.com,2018-07-14 10:53:24,2018-07-14 10:53:24
+374,usertest062,1062,usertest062@test.com,2018-07-14 10:53:44,2018-07-14 10:53:44
+375,usertest063,1063,usertest063@test.com,2018-07-14 10:54:03,2018-07-14 10:54:03
+376,usertest064,1064,usertest064@test.com,2018-07-14 10:54:20,2018-07-14 10:54:20
+377,usertest065,1065,usertest065@test.com,2018-07-14 10:54:38,2018-07-14 10:54:38
+378,usertest066,1066,usertest066@test.com,2018-07-14 10:54:56,2018-07-14 10:54:56
+379,usertest067,1067,usertest067@test.com,2018-07-14 10:55:15,2018-07-14 10:55:15
+380,usertest068,1068,usertest068@test.com,2018-07-14 10:55:44,2018-07-14 10:55:44
+381,usertest069,1069,usertest069@test.com,2018-07-14 10:56:01,2018-07-14 10:56:01
+382,usertest070,1070,usertest070@test.com,2018-07-14 10:56:16,2018-07-14 10:56:16
+383,usertest071,1071,usertest071@test.com,2018-07-14 10:56:33,2018-07-14 10:56:33
+384,usertest072,1072,usertest072@test.com,2018-07-14 10:56:49,2018-07-14 10:56:49
+385,usertest073,1073,usertest073@test.com,2018-07-14 10:57:10,2018-07-14 10:57:10
+386,usertest074,1074,usertest074@test.com,2018-07-14 10:57:31,2018-07-14 10:57:31
+387,usertest075,1075,usertest075@test.com,2018-07-14 10:57:49,2018-07-14 10:57:49
+388,usertest076,1076,usertest076@test.com,2018-07-14 10:58:05,2018-07-14 10:58:05
+389,usertest077,1077,usertest077@test.com,2018-07-14 10:58:33,2018-07-14 10:58:33
+390,usertest078,1078,usertest078@test.com,2018-07-14 10:58:49,2018-07-14 10:58:49
+391,usertest079,1079,usertest079@test.com,2018-07-14 10:59:07,2018-07-14 10:59:07
+392,usertest080,1080,usertest080@test.com,2018-07-14 10:59:23,2018-07-14 10:59:23
+393,usertest081,1081,usertest081@test.com,2018-07-14 10:59:40,2018-07-14 10:59:40
+394,usertest082,1082,usertest082@test.com,2018-07-14 10:59:56,2018-07-14 10:59:56
+395,usertest083,1083,usertest083@test.com,2018-07-14 11:00:11,2018-07-14 11:00:11
+396,usertest084,1084,usertest084@test.com,2018-07-14 11:00:27,2018-07-14 11:00:27
+397,usertest085,1085,usertest085@test.com,2018-07-14 11:00:58,2018-07-14 11:00:58
+398,usertest086,1086,usertest086@test.com,2018-07-14 11:01:45,2018-07-14 11:01:45
+399,usertest087,1087,usertest087@test.com,2018-07-14 11:02:03,2018-07-14 11:02:03
+400,usertest088,1088,usertest088@test.com,2018-07-14 11:02:21,2018-07-14 11:02:21
+401,usertest089,1089,usertest089@test.com,2018-07-14 11:02:39,2018-07-14 11:02:39
+402,usertest090,1090,usertest090@test.com,2018-07-14 11:02:58,2018-07-14 11:02:58
+403,usertest091,1091,usertest091@test.com,2018-07-14 11:03:19,2018-07-14 11:03:19
+404,usertest092,1092,usertest092@test.com,2018-07-14 11:03:36,2018-07-14 11:03:36
+405,usertest093,1093,usertest093@test.com,2018-07-14 11:03:53,2018-07-14 11:03:53
+406,usertest094,1094,usertest094@test.com,2018-07-14 11:04:14,2018-07-14 11:04:14
+407,usertest095,1095,usertest095@test.com,2018-07-14 11:04:33,2018-07-14 11:04:33
+408,usertest096,1096,usertest096@test.com,2018-07-14 11:04:57,2018-07-14 11:04:57
+409,usertest097,1097,usertest097@test.com,2018-07-14 11:05:17,2018-07-14 11:05:17
+410,usertest098,1098,usertest098@test.com,2018-07-14 11:06:11,2018-07-14 11:06:11
+411,usertest099,1099,usertest099@test.com,2018-07-14 11:06:32,2018-07-14 11:06:32
+412,usertest100,1100,usertest100@test.com,2018-07-14 11:06:50,2018-07-14 11:06:50
+413,Ahmad Hannan Amrullah,BE191218-1,hannanortho@gmail.com,2018-11-20 06:24:49,2018-12-17 03:22:56
+414,Kadek Seta Prawira,21519-UNAIR-3,seta.prawira@gmail.com,2018-11-20 06:25:33,2019-05-21 04:48:22
+415,Farindra Ridhalhi,BE191218-7,farindra3@gmail.com,2018-11-20 06:26:22,2018-12-17 03:26:15
+416,Donny Permana,21519-UNAIR-2,dr.donnypermana@gmail.com,2018-11-20 06:27:03,2019-05-21 04:48:02
+417,Rizky Agung Satria,BE191218-10,rizkysatria.kik@gmail.com,2018-11-20 06:27:45,2018-12-17 03:27:44
+418,Erfan Nasrullah,BE191218-19,rfun_n@yahoo.com,2018-11-20 06:28:18,2018-12-17 03:30:55
+419,Febrian  Brahmana,BE191218-21,febrian_brahmana@yahoo.com,2018-11-20 06:31:12,2018-12-17 03:31:25
+420,Teddy HW,0,teddyhw@gmail.com,2018-11-20 07:05:04,2018-11-20 07:05:04
+421,dr. Andika Dwiputra Djaja,UI-1,andika_dwiputra@rocketmail.com,2018-12-10 21:52:25,2018-12-10 21:52:25
+422,dr. Aria Adhitya Suyatno,21519-UI-1,ariaadhitya14@gmail.com,2018-12-10 22:09:53,2019-05-21 00:02:39
+423,dr. Jephtah Furano Lumban Tobing,21519-UI-2,jephurano@yahoo.com,2018-12-10 22:10:56,2019-05-21 00:03:05
+424,dr. Ade Martinus,21519-UI-3,ade.martinus88@gmail.com,2018-12-10 22:11:41,2019-05-21 00:03:28
+425,dr. Ajiantoro,21519-UI-4,ajiantoro99@gmail.com,2018-12-10 22:12:10,2019-05-21 00:04:01
+426,dr. Akbar Rizki Beni Asdi,21519-UI-5,akbarrba@gmail.com,2018-12-10 22:13:01,2019-05-21 00:04:37
+427,dr. Adisa Yusuf Reksoprodjo,21519-UI-6,adisayr@gmail.com,2018-12-10 22:13:46,2019-05-21 00:04:59
+428,dr. Aldo Fransiskus Marsetio,21519-UI-7,aldofransiskus@yahoo.com,2018-12-10 22:14:26,2019-05-21 00:05:26
+429,dr. Auliya Akbar,21519-UI-8,abay.jabz@gmail.com,2018-12-10 22:15:06,2019-05-21 00:05:55
+430,dr. Jessica Fiolin,21519-UI-9,jessica_fiolin@yahoo.co.uk,2018-12-10 22:15:52,2019-05-21 00:06:22
+431,dr. M. Deryl Ivansyah,21519-UI-10,deryl2006@yahoo.com,2018-12-10 22:16:33,2019-05-21 00:06:49
+432,dr. M. Rizki Adhi Primaputra,21519-UI-11,riaqi.adhi@yahoo.com,2018-12-10 22:17:20,2019-05-21 00:07:13
+433,dr. Rizki Hidayat,21519-UI-12,rizkihidayat1987@gmail.com,2018-12-10 22:18:06,2019-05-21 00:07:52
+434,dr. Rizky Priambodo Wisnubaroto,21519-UI-13,rizky.wisnubarotio@gmail.com,2018-12-10 22:18:50,2019-05-21 00:08:31
+435,dr. Zecky Eko Triwahyudi,21519-UI-14,zecky_oke@yahoo.com,2018-12-10 22:19:23,2019-05-21 00:09:34
+436,dr. Deny Mory Aryawan,21519-UNAIR-4,orioctapaedi@gmail.com,2018-12-10 22:21:11,2019-05-21 04:48:41
+437,dr. Hizbillah Yazid,21519-UNAIR-5,hizbillahyazid@gmail.com,2018-12-10 22:22:10,2019-05-21 05:52:53
+438,dr. Januar Ari Subiantoro,16 - 12520,jans_dr@ymail.com,2018-12-10 22:23:40,2020-05-07 07:26:22
+439,dr. I Gusti Ngurah Dodo Muliawan Ranuh,21519-UNAIR-8,dodo.ranuh@gmail.com,2018-12-10 22:24:30,2019-05-21 04:51:36
+440,dr. Maruli Oloan Tua,21519-UNPAD-2,marulioloantua@gmail.com,2018-12-10 22:26:18,2019-05-21 04:54:40
+441,dr. Gamal Ramdiputra,21519-UNPAD-3,gamalramadi@gmail.com,2018-12-10 22:26:53,2019-05-21 04:54:56
+442,dr. Ahmad Rizan Hendrawan,BE191218-2,rizan.hendra@yahoo.com,2018-12-10 22:27:45,2018-12-17 03:23:21
+443,dr. Angga Anggriawan,BE191218-8,a_angga_ang@yahoo.co.id,2018-12-10 22:28:27,2018-12-17 03:26:57
+444,dr. Alfa Januar Krista,BE191218-11,alfajanuardr@ymail.com,2018-12-10 22:29:01,2018-12-17 03:28:01
+445,dr. Glen Purnomo,BE191218-14,glen.purnomo@yahoo.com,2018-12-10 22:29:25,2018-12-17 03:28:59
+446,dr. Agung,UNHAS-NC1,agungm2014@gmail.com,2018-12-10 22:29:48,2018-12-10 22:29:48
+447,dr. Fajar Baskoro Gardjito,21519-UNS-2,baskoro_laziale@yahoo.com,2018-12-10 22:30:32,2019-05-21 05:12:00
+448,dr. Arief Indra Perdana P.,04-181120,absolutelydarkknight@gmail.com,2018-12-10 22:31:14,2020-11-18 01:25:49
+449,dr. Adi Surya Dharma,UNS-NC4,dr_adisurya_dharma@yahoo.co.id,2018-12-10 22:31:55,2018-12-10 22:31:55
+450,dr. Aditya Fuad Robby,21519-UGM-1,dr.robby_triangga@yahoo.com,2018-12-10 22:32:41,2019-05-21 05:16:16
+451,dr. Doni Agustian,21519-UGM-2,doni.ortho@gmail.com,2018-12-10 22:33:07,2019-05-21 05:16:35
+452,dr. Widyo Wahyu Pratomo,UGM-NC4,kaisaramadhan@gmail.com,2018-12-10 22:33:44,2018-12-10 22:33:44
+453,dr. Paramitha Dyah Lesmana,21519-UGM-3,meetha_dyah@yahoo.com,2018-12-10 22:34:27,2019-05-21 05:17:26
+454,dr. Ary Putra Noor,21519-UGM-4,aryputranoor@gmail.com,2018-12-10 22:35:00,2019-05-21 05:17:04
+455,dr. Aditya Warman,21519-UGM-5,adit3mil@gmail.com,2018-12-10 22:35:39,2019-05-21 05:17:47
+456,dr. Made Wirabhawa,21519-UNUD-1,madewirabhawa@hotmail.com,2018-12-10 22:36:14,2019-05-21 05:24:11
+457,dr. Komang Septian Sandiwidayat,21519-UNUD-2,tian_encephalon@yahoo.com,2018-12-10 22:36:48,2019-05-21 05:24:33
+458,dr. Aakash,21519-UNUD-3,aakashchatani@gmail.com,2018-12-10 22:37:19,2019-05-21 05:24:47
+459,dr. Ery Satriawan,21519-UB-2,ery_triple8@yahoo.co.id,2018-12-10 22:39:02,2019-05-21 05:28:07
+460,dr. Inggra Vivayuna,UB-NC3,inggra1st@yahoo.com,2018-12-10 22:39:31,2018-12-10 22:39:31
+461,dr. Fiki Nurandani,UB-NC4,fhuangkey@yahoo.com,2018-12-10 22:40:00,2018-12-10 22:40:00
+462,Henry dominica,21519-UNAIR-7,adasda@gmail.com,2018-12-11 08:48:58,2019-05-21 04:49:54
+464,dr. Andra Hendriarto,kandidat UI 1,andre.hendriarto@yahoo.com,2019-05-21 00:11:01,2019-11-05 05:45:08
+465,dr. Suyenci limbong,21519-UNAIR--6,suyenci@gmail.com,2019-05-21 04:51:14,2019-05-21 04:53:35
+466,dr. Musa Arafah,kandidat UNAIR 4,musa@gmail.com,2019-05-21 04:52:37,2019-11-05 06:34:38
+467,dr. Bayu Antara hadi,kandidat UNAIR 1,bar@gmail.com,2019-05-21 04:53:22,2019-11-05 06:31:00
+468,dr. Liliek Yudhantoro,21519-UNPAD-4,l.yudhantoro@yahoo.com,2019-05-21 04:55:43,2019-05-21 04:55:43
+469,dr. Preodita Agradi,21519-UNPAD-5,preodita@GMAIL.COM,2019-05-21 04:56:29,2019-05-21 04:56:29
+470,dr. Diki Julkarnain,kandidat UNPAD 2,dikijulkarnain@gmail.com,2019-05-21 04:57:21,2019-11-05 05:53:46
+471,dr.  Taufan Herwindo Dewangga,kandidat UNPAD 3,taufanhdewangga@gmail.com,2019-05-21 04:58:18,2019-11-05 05:54:46
+472,dr. Rendy Cahya Soetanto,kandiadt UNPAD 4,rendy.cahya@yahoo.com,2019-05-21 04:59:07,2019-11-05 05:55:15
+473,dr. Ricky Wibowo,kandidat UNPAD 5,rickywibowo@yahoo.com,2019-05-21 05:01:02,2019-11-05 05:55:49
+474,dr. Venansius Henry Perdana Suryanta,kandidat UNPAD 6,venansiusherry@yahoo.com,2019-05-21 05:02:01,2019-11-05 05:56:20
+475,dr. Yoan Putrasos Arif,kandidat UNPAD 7,putrasosarif@gmail.com,2019-05-21 05:02:44,2019-11-05 05:56:45
+476,dr. Bangkit Primayudha,kandidat UNPAD 8,tts.bangkit@gmail.com,2019-05-21 05:03:49,2019-11-05 05:57:21
+477,dr. Abdurrahman,kandidat UNPAD 9,indobrotherland@yahoo.com,2019-05-21 05:04:37,2019-11-05 05:57:52
+478,dr. Farry,kandidat UNPAD 10,farry_doank@yahoo.com,2019-05-21 05:05:25,2019-11-05 05:58:15
+479,dr. Anak Agung Gede Putra Prameswara,21519-UNHAS-1,d_dive_right_in@yahoo.com,2019-05-21 05:06:47,2019-05-21 05:06:47
+480,dr. Edwin William Thioritz,21519-UNHAS-2,willam_906@yahoo.com,2019-05-21 05:07:45,2019-05-21 05:07:45
+481,dr. Ery Wildan,21519-UNHAS-3,erywildan@gmail.com,2019-05-21 05:08:17,2019-05-21 05:08:17
+482,dr. Handoko,21519-UNHAS-4,handoko.lau@gmail.com,2019-05-21 05:08:59,2019-05-21 05:08:59
+483,dr. Jansen,21519-UNHAS-5,lee.jansen.88@yahoo.com,2019-05-21 05:09:38,2019-05-21 05:09:38
+484,dr. Yohannes Toban Layuk Allo,21519-UNHAS-6,yohannestoban@gmail.com,2019-05-21 05:10:21,2019-05-21 05:10:21
+485,dr. Anggita Tri Yurisworo,kandidat UNS 1,anggiortho@gmail.com,2019-05-21 05:12:46,2019-11-05 06:10:03
+486,dr. R. Bagas Widhiarso,kandidat UNS,bagas.works@gmail.com,2019-05-21 05:13:20,2019-11-05 06:11:30
+487,dr. M. Riyadli,21519-UNS-5,adiriyadi27@gmail.com,2019-05-21 05:14:00,2019-05-21 05:14:00
+488,dr. Abdaud Rasyid Y,kandidat UNS 3,abdaudry@gmail.com,2019-05-21 05:14:39,2019-11-05 06:11:06
+489,dr. Adi Surya Dharma,kandidat UNS 2,dr_adisurya_dharma@yahoo.co.id,2019-05-21 05:15:16,2019-11-05 06:10:39
+490,dr. Muhammad Bayu W,kandidat UGM 1,bayu.ortho@gmail.com,2019-05-21 05:19:21,2019-11-05 06:19:42
+491,dr. Dananjaya Putramega,kandidat UGM 2,putramega.dananjaya@gmail.com,2019-05-21 05:19:57,2019-11-05 06:27:02
+492,dr. Irsan Kesuma,kandidat UGM 3,irsanahong98@gmail.com,2019-05-21 05:20:43,2019-11-05 06:25:41
+493,dr. Irissandya D A,kandidat UGM 4,dr.iris@yahoo.com,2019-05-21 05:21:19,2019-11-05 06:24:57
+494,dr. Aditya Akbar W,kandidat UGM 5,adityaakbarwicaksosno@gmail.com,2019-05-21 05:21:59,2019-11-05 06:23:24
+495,dr. David Yosua P H,kandidat UGM 6,david_yosua@yahoo.com,2019-05-21 05:22:32,2019-11-05 06:23:48
+496,dr. Widyo Wahyu P,21519-UGM-13,kaisaramadhan@gmail.com,2019-05-21 05:23:18,2019-05-21 05:23:18
+497,dr. Komang Arie Trysna Andika,38 - 12520,arieandika888@gmail.com,2019-05-21 05:25:44,2020-05-07 07:35:34
+498,dr. I Gusti Bagus Indra Angganugraha Putra Juniantara,35 - 12520,anggadoc06@yahoo.com,2019-05-21 05:26:36,2020-05-07 07:34:33
+499,dr. Ida Bagus Aditya Wirakarna,21519-UNUD-6,wirakarna@gmail.com,2019-05-21 05:27:14,2019-05-21 05:27:14
+500,dr. Inggra Vivayuna,21519-UB-3,ery_triple8@yahoo.co.id,2019-05-21 05:28:57,2019-05-21 05:28:57
+501,dr. Fikri Nurandani,21519-UB-4,fhuangkey@yahoo.com,2019-05-21 05:29:26,2019-05-21 05:29:26
+502,dr. Elfiah,kandidat UB 1,elfiahmarekar@yahoo.com,2019-05-21 05:30:12,2019-11-05 06:54:04
+503,dr. I Gede Made Oka Rahaditya,kandidat UB 2,oka.rahaditya@gmail.com,2019-05-21 05:31:22,2019-11-05 06:54:30
+504,dr. Hanindya Prasojo,kandidat UB 3,hanindyaprasojo@gmail.com,2019-05-21 05:31:57,2019-11-05 06:54:57
+505,dr. Arimurti Pratianto,kandidat UB 4,arimurti03@gmail.com,2019-05-21 05:32:27,2019-11-05 06:55:18
+506,dr. Jeff Loren,21519-USU-1,dr.jeffloren@gmail.com,2019-05-21 05:33:27,2019-05-21 05:33:27
+507,dr. Randy Susanto,kandidat USU 1,f32ixalexander@gmail.com,2019-05-21 05:34:10,2019-11-05 06:57:26
+508,dr. Elvan Trianda,kandidat USU 2,elvantirandasato@gmail.com,2019-05-21 05:34:47,2019-11-05 06:57:47
+509,dr. Alamsyah Faritz Siregar,21519-USU-4,alamsyahfs@gmail.com,2019-05-21 05:35:16,2019-05-21 05:35:16
+510,dr. Irsan Abubakar,21519-UI-16,dr.irsan_abubakar@yahoo.com,2019-05-21 05:51:37,2019-05-21 05:51:37
+511,Eko Setiawan,kandidat UI 2,echo_stwan@yahoo.com,2019-11-05 05:42:39,2019-11-05 05:42:39
+512,dr. Irsan Abubakar,kandidat UI 3,dr.irsan_abubajar@yahoo.com,2019-11-05 05:44:42,2019-11-05 05:44:42
+513,dr. Muhammad Alvin Shiddieqie pohan,kandidat UI 4,alvinshid.pohan@gmail.com,2019-11-05 05:46:04,2019-11-05 05:46:04
+514,dr. Toto Surya Efar,kandidat UI 5,totosuryoefar@gmail.com,2019-11-05 05:46:48,2019-11-05 05:46:48
+515,dr. Faisal Rahman,next kandidat UI 1,me.faisalrahman@gmail.com,2019-11-05 05:47:39,2019-11-05 05:47:39
+516,dr. Muhammad Reza Saputra,19 - 12520,rezasaputra_mhd@yahoo.co.id,2019-11-05 05:48:27,2020-05-07 07:27:34
+517,dr. Anggi Fauzan,kandidat UNPAD 11,giefauzan@hotmail.com,2019-11-05 05:59:08,2019-11-05 05:59:08
+518,dr. Juliando,kandidat UNPAD 12,dokter_juliando@yahoo.com,2019-11-05 06:00:01,2019-11-05 06:00:01
+519,dr. Muhammad Fatikh Nanda Perdana,kandidat UNPAD 13,nandaperdana@ymail.com,2019-11-05 06:00:45,2019-11-05 06:00:45
+520,dr. Gustman Lumanda Sitanggang,kandidat UNPAD 14,gusman200887@gmail.com,2019-11-05 06:01:45,2019-11-05 06:01:45
+521,dr. R. Moechammad Satrio Nugroho Magetsari,20 - 12520,magesari@gmail.com,2019-11-05 06:02:57,2020-05-07 07:28:02
+522,dr. Padlan Pasallo,kandidat UNHAS 1,padlanpasallo@ymail.com,2019-11-05 06:04:41,2019-11-05 06:04:41
+523,dr. Nur Rahmansyah,kandidat UNHAS 2,nurrahmansyah27@gmail.com,2019-11-05 06:05:39,2019-11-05 06:05:39
+524,dr. Andika Adiputra Thehumury,kandidat UNHAS 3,andikathehumury@gmail.com,2019-11-05 06:06:32,2019-11-05 06:06:32
+525,dr. Zulfan Zulkarnain,kandidat UNHAS 5,zulpanzulkarnain123@yahoo.com,2019-11-05 06:07:30,2019-11-05 06:07:30
+526,dr. Thomson,next kandidat UNHAS 1,manurungthomson@gmail.com,2019-11-05 06:08:15,2019-11-05 06:08:15
+527,dr. Michael Benjamin,39 - 12520,vicorgozaly84@gmail.com,2019-11-05 06:09:20,2020-05-07 07:35:49
+528,dr. Muhammad Riadli,kandidat UNS 5,adiriyadli27@gmail.com,2019-11-05 06:12:33,2019-11-05 06:12:33
+529,dr. Adhitya Indra Pradana,02 - 12520,adhityaindrapradhana@gmail.com,2019-11-05 06:13:45,2020-05-07 07:15:56
+530,dr. Dita Anggara Kusuma,12 - 12520,dokterdita8811@gmail.com,2019-11-05 06:14:25,2020-05-07 07:21:10
+531,dr. Misbahuddin,18 - 12520,dadakan16@gmail.com,2019-11-05 06:15:04,2020-05-07 07:26:58
+532,dr. Umar Kharisma Islami,28 - 12520,dr.aris_37@yahoo.com,2019-11-05 06:18:36,2020-05-07 07:30:40
+536,dr. Irene Araneta,14 - 12520,aranetairene@gmail.com,2019-11-05 06:27:57,2020-05-07 07:25:35
+537,dr. Rizky Admagusta,23 - 12520,rizkyadmagusta@yahoo.com,2019-11-05 06:28:41,2020-05-07 07:29:09
+538,dr. Andreas wahyu,05 - 12520,dr.andre07@gmail.com,2019-11-05 06:29:24,2020-05-07 07:17:39
+539,dr. Brilliant Citra Wirashada,kandidat UNAIR 2,brilwirashada@gmail.com,2019-11-05 06:32:22,2019-11-05 06:32:22
+540,dr. Dionysius Brampta Putra Manyakori,kandidat UNAIR 3,bramptapm@gmail.com,2019-11-05 06:33:53,2019-11-05 06:33:53
+541,dr. Andrianto P Perbowo,next kandidat UNAIR 2,ianperbowo@me.com,2019-11-05 06:36:40,2019-11-05 06:36:40
+542,dr. Stessy Benedicta,next kandidat UNAIR 3,stacy.benedicta@gmail.com,2019-11-05 06:37:26,2019-11-05 06:37:26
+543,dr. Goklas Ridwan R Gultom,next kandidat UNAIR 4,goklasgultom@gmail.com,2019-11-05 06:38:09,2019-11-05 06:38:09
+544,dr. Ronna Nuqtho H,next kandidat UNAIR 5,ronhidayatullah@gmail.com,2019-11-05 06:38:59,2019-11-05 06:38:59
+545,dr. Reyner Valiant Tumbelaka,22 - 12520,dr.reyner@gmail.com,2019-11-05 06:40:31,2020-05-07 07:28:50
+546,dr. Ansari Rahman,08 - 12520,ansarirahman86@gmail.com,2019-11-05 06:41:10,2020-05-07 07:19:44
+547,dr. hafidz Addatuang Ambong,next kandidat UNUD 3,hafidzambong82@gmail.com,2019-11-05 06:44:06,2019-11-05 06:44:06
+548,dr. Ni Made Puspa Dewi Astawa,40 - 12520,puspadewiastawa@gmail.com,2019-11-05 06:45:42,2020-05-07 07:36:07
+549,dr. Herryanto Agustriadi Simanjuntak,33 - 12520,herry_sjuntak@yahoo.com,2019-11-05 06:46:31,2020-05-07 07:33:39
+550,dr. Gusti Ngurah Putra Stanu,31 - 12520,putra.stanu@gmail.com,2019-11-05 06:47:31,2020-05-07 07:32:54
+551,dr. Stedy Adnyana Christian,next kandidat UNUD 7,saylovehoen@gmail.com,2019-11-05 06:48:27,2019-11-05 06:48:27
+552,dr. I G N Paramartha Wijaya P,next kandidat UNUD 8,paramarthawijaya123@gmail.com,2019-11-05 06:49:12,2019-11-05 06:49:12
+553,dr. Komang Indra Teguh Wisesa,26-270521,indrateguhwisessa@gmail.com,2019-11-05 06:49:46,2021-05-27 07:23:50
+554,dr. Ivander Purvance,37 - 12520,ivander_purvance@hotmail.com,2019-11-05 06:51:17,2020-05-07 07:35:16
+555,dr. I B Aditya Wirakrana,next kandidat UNUD 10,wirakrana@gmail.com,2019-11-05 06:51:58,2019-11-05 06:51:58
+556,dr. Soehartono Hadi Pranata,41 - 12520,Soe_hp@yahoo.com,2019-11-05 06:52:44,2020-05-07 07:36:24
+557,dr. Yudi Purbiantoro,30 - 12520,ud_fkub@yahoo.co.id,2019-11-05 06:56:03,2020-05-07 07:31:17
+558,dr. Fiski Purantoro,13 - 12520,fiski_p@yahoo.com,2019-11-05 06:56:52,2020-05-07 07:21:37
+559,dr. Alamansyah Faritz Siregar,kandidat USu 3,alamansyahfs@gmail.com,2019-11-05 06:58:38,2019-11-05 06:58:38
+560,dr. Widyo Wahyu P,kandidat UGM 7,kaisaramadhan@gmail.com,2019-11-05 07:00:52,2019-11-05 07:00:52
+561,dr. Viktor Gozaly,next kandidat UNHAS 2,victorgozaly84@gmail.com,2019-11-05 07:02:28,2019-11-05 07:02:28
+562,dr. Abdul Aziz,01 - 12520,aziz_orthomlg@gmail.com,2019-11-05 08:01:34,2020-05-07 07:15:03
+563,dr. Abdul Aziz,Kandidat UB susulan,aziz_orthomlg@gmail.com,2019-11-05 08:02:40,2019-11-05 08:02:40
+564,"Ginanjar B. Prathama, dr., SpOT",1,ginanjarbudhip@gmail.com,2020-04-02 22:04:18,2020-04-02 22:04:18
+565,"Hendrian Chaniago, dr., SpOT",2,hendrianchaniago@gmail.com,2020-04-02 22:05:04,2020-04-02 22:05:04
+566,"Henry Tanzil, dr., SpOT",3,henrytanzil@ymail.com,2020-04-02 22:05:46,2020-04-02 22:05:46
+567,"James Meinheart Pelealu, dr., SpOT",4,jpelealu25@gmail.com,2020-04-02 22:06:25,2020-04-02 22:06:25
+568,"Roy Lisang, dr., SpOT",5,rlisang@yahoo.com,2020-04-02 22:07:01,2020-04-02 22:07:01
+569,"Leonardus Hartoko, dr., SpOT",6,leonardush@yahoo.com,2020-04-02 22:07:40,2020-04-02 22:07:40
+570,"Romy Darmawansa, dr., SpOT",7,romydarmawansa@yahoo.co.id,2020-04-02 22:08:16,2020-04-02 22:08:16
+571,"Didyn Nuzul Ariefin, dr., SpOT",8,indrapura@gmail.com,2020-04-02 22:08:53,2020-04-02 22:08:53
+572,"Setyagung Budi Santosa, dr., Sp.OT,CCD",9,setyagungbs@yahoo.com,2020-04-02 22:09:26,2020-04-02 22:09:26
+573,dr. Sammy Saleh Alhuraiby,25 - 12520,sammay.elharby@gmail.com,2020-05-04 22:28:53,2020-05-07 07:29:52
+574,dr. Ali Abdullah,03 - 12520,ali.abdullah@sungkar.net,2020-05-04 22:29:50,2020-05-07 07:16:22
+575,dr. Andi Praja Wira Yudha Luthfi,04 - 12520,wirapraja.med@gmail.com,2020-05-04 22:30:29,2020-05-07 07:17:13
+576,dr. Dina Aprilya,11 - 12520,dina.cia.aprilya@gmail.com,2020-05-04 22:31:11,2020-05-07 07:20:52
+577,dr. Ivan Mucharry Dalitan,15 - 12520,ivandalitan@gmail.com,2020-05-04 22:31:45,2020-05-07 07:25:59
+578,dr. Latsarizul Alfariq Senja Belantara,17 - 12520,latsarizulalfariq@gmail.com,2020-05-04 22:32:25,2020-05-07 07:26:42
+579,dr. Muhammad Reza Saputra,13520-UI7,rezasaputra_mhd@yahoo.co.id,2020-05-04 22:32:54,2020-05-04 22:32:54
+580,dr. Samuel Mauranaya,26 - 12520,samuelmauranaya@gmail.com,2020-05-04 22:33:28,2020-05-07 07:30:06
+581,dr. Faisal Rahman,09-181120,me.faisalrahman@gmail.com,2020-05-04 22:34:27,2020-11-18 01:27:45
+582,dr. Ismail Salim,13-181120,ismailsalim1982@gmail.com,2020-05-04 22:35:04,2020-11-18 01:29:22
+583,dr. Felais Hediyanto Pradana,10-181120,deazfelais@gmail.com,2020-05-04 22:35:42,2020-11-18 01:28:09
+584,dr. Muhammad Ade Junaidi,15-181120,ade.junaidi@gmail.com,2020-05-04 22:36:13,2020-11-18 01:30:03
+585,dr. Prima Enky Merthana,16-181120,prima.enky@gmail.com,2020-05-04 22:36:54,2020-11-18 01:30:28
+586,dr. Yogi Ismail Gani,23-181120,yogiismailgani@yahoo.com,2020-05-04 22:37:25,2020-11-18 01:32:46
+587,dr. Andrianto Prasetyo Perbowo,07 - 12520,ianperbowo@me.com,2020-05-04 22:38:37,2020-05-07 07:19:04
+588,dr. Ansari Rahman,13520-UNAIR2,ansarirahman86@gmail.com,2020-05-04 22:39:08,2020-05-04 22:39:08
+589,dr. Arifin,09 - 12520,arifin85dr@gmail.com,2020-05-04 22:39:41,2020-05-07 07:20:12
+590,dr. Arifin,13520-UNAIR3,arifin85dr@gmail.com,2020-05-04 22:39:42,2020-05-04 22:39:42
+591,dr. Asyumeredha,10 - 12520,maredha.asriel@gmail.com,2020-05-04 22:40:33,2020-05-07 07:20:33
+592,dr. Ramadhan Anandita Putra,21 - 12520,ramadhan.putra88@yahoo.co.id,2020-05-04 22:42:04,2020-05-07 07:28:26
+593,dr. Reyner Valiant Tumbelaka,13520-UNAIR7,dr.reyner@gmail.com,2020-05-04 22:42:37,2020-05-04 22:42:37
+594,dr. Ronaa Nuqtho Hidayatullah,24 - 12520,ronhidayatullah@gmail.com,2020-05-04 22:43:08,2020-05-07 07:29:32
+595,dr. Steesy Benedicta,27 - 12520,stacy_benedicta@gmail.com,2020-05-04 22:43:36,2020-05-07 07:30:25
+596,dr. Goklas Ridwan R. Gultom,12-181120,goklasgultom@gmail.com,2020-05-04 22:44:23,2020-11-18 01:28:55
+597,dr. Raymond Parung,01-270521,raymond220983@gmail.com,2020-05-04 22:44:59,2021-05-27 07:16:57
+598,dr. R. Taufan Mulyo Wibisono,18-181120,rtmortho@gmail.com,2020-05-04 22:45:27,2020-11-18 01:31:09
+599,dr. Gana Adyaksa,11-181120,ganaadyaksa@gmail.com,2020-05-04 22:45:57,2020-11-18 01:28:34
+600,dr. Trixie Brevi Putri,21-181120,triziebreviputri@gmail.com,2020-05-04 22:46:28,2020-11-18 01:31:59
+601,dr. Adhinanda Gema Wahyudiputra,01-181120,nanorthobaya@gmail.com,2020-05-04 22:46:58,2020-11-18 01:24:48
+602,dr. R. Moechammad Satrio Nugroho Magetsari,13520-UNPAD1,satrio.magetsari@gmail.com,2020-05-04 22:47:40,2020-05-04 22:47:40
+603,dr. Aditya Priherdadi,06-270521,priherdadi@gmail.com,2020-05-04 22:48:19,2021-05-27 07:18:20
+604,dr. Priscilla,17-181120,reginapriscilla@ymail.com,2020-05-04 22:48:48,2020-11-18 01:30:49
+605,dr. Arnold David Pardamean,05-181120,arnold17845@gmail.com,2020-05-04 22:49:18,2020-11-18 01:26:16
+606,dr. Kemas Abdul Mutholib Luthfi,14-181120,luhtfinet@gmail.com,2020-05-04 22:49:50,2020-11-18 01:29:42
+607,dr. Cakra Andhika,07-270521,cakra1143@yahoo.com,2020-05-04 22:50:21,2021-05-27 07:18:34
+608,dr. Thomson,36-181120,manurungthomson@gmail.com,2020-05-04 22:52:04,2020-11-18 01:37:03
+609,dr. Viktor Gozaly,37-181120,victorgozaly84@gmail.com,2020-05-04 22:52:37,2020-11-18 01:37:22
+610,dr. Qariah Maulidiah,31-181120,maulidiahqariah@gmail.com,2020-05-04 22:53:06,2020-11-18 01:35:05
+611,dr. William Limoa,38-181120,william.limoa@gmail.com,2020-05-04 22:53:34,2020-11-18 01:37:54
+612,dr. William Limoa,5520-UNHAS4,william.limoa@gmail.com,2020-05-04 22:53:34,2020-05-04 22:53:34
+613,dr. Ricky Marasi Tambunan,33-181120,tambs_rq@yahoo.com,2020-05-04 22:54:01,2020-11-18 01:35:44
+614,dr. Pierre Alexander,29-181120,pierre.alexander.ortho@gmail.com,2020-05-04 22:54:37,2020-11-18 01:34:36
+615,dr. Stefan A.G.P. Kambey,35-181120,sciwora@yahoo.com,2020-05-04 22:55:14,2020-11-18 01:36:32
+616,dr. Randy Presly Octavianu,32--181120,randy.orthopediuh@gmail.com,2020-05-04 22:55:50,2020-11-18 01:35:23
+617,dr. Loli Anton,27-181120,lolianton87@gmail.com,2020-05-04 22:56:27,2020-11-18 01:34:00
+618,dr. Adhitya Indra Pradana,13520-UNS2,adhityaindrapradhana@gmail.com,2020-05-04 22:57:48,2020-05-04 22:57:48
+620,dr. Hafiz Addatuang Ambong,32 - 12520,hafidzambong82@gmail.com,2020-05-04 23:07:39,2020-05-07 07:33:18
+621,dr. I Gusti Ngurah Paramartha Wijaya Putra,36 - 12520,paramarthawijaya123@gmail.com,2020-05-04 23:09:06,2020-05-07 07:35:00
+622,dr. IB Aditya Wirakarma,34 - 12520,wirakarna@gmail.com,2020-05-04 23:10:33,2020-05-07 07:34:01
+623,dr. Stedy Adnyana Christian,34-181120,saylovehoen@gmail.com,2020-05-04 23:11:43,2020-11-18 01:36:10
+624,dr. Komang Indra Teguh Wisesa,UNUD 01,indrateguhwisesa@gmail.com,2020-05-04 23:12:17,2021-05-05 05:02:11
+625,dr. Putu Kermawan,30-181120,putukermawan@gmail.com,2020-05-04 23:12:45,2020-11-18 01:34:50
+626,dr. Dwiwahyonokusuma,25-181120,nonotjandra@gmail.com,2020-05-04 23:13:39,2020-11-18 01:33:28
+627,dr. Mario Daniel Simatupang,28-181120,mario_luztig@yahoo.com,2020-05-04 23:14:09,2020-11-18 01:34:19
+628,dr. Gede Agung Krisna Yudha,26-181120,krisnaagung112@gmail.com,2020-05-04 23:14:55,2020-11-18 01:33:45
+629,dr. Abdul Azis,13520-UB2,aziz.orthomlg@gmail.com,2020-05-04 23:17:36,2020-05-04 23:17:36
+630,dr. Fajar Sholehudin Salim,24-270521,fajar.salim89@gmail.com,2020-05-04 23:18:07,2021-05-27 07:23:13
+631,dr. Rizky Julana,20-181120,joereezky@gmail.com,2020-05-04 23:18:32,2020-11-18 01:31:42
+632,dr. Wongso Kusuma,22-181120,acheinsver86@gmail.com,2020-05-04 23:19:02,2020-11-18 01:32:22
+633,dr. Yohanes Augustinus,29 - 12520,grovio_26@yahoo.com,2020-05-04 23:19:37,2020-05-07 07:31:00
+634,dr. Andri Yandra Hidayat,06 - 12520,dr_adriyandra@yahoo.com,2020-05-04 23:20:12,2020-05-07 07:18:04
+635,dr. Agus Salim Lubis,02-181120,sugamilaslubis@gmail.com,2020-05-04 23:20:43,2020-11-18 01:25:10
+636,dr. Charles Apulta Meliala,08-181120,altameliala@gmail.com,2020-05-04 23:21:19,2020-11-18 01:27:15
+637,dr. Gean Juniwan Syahputra B,17-270521,ge_medico@yahoo.com,2020-05-04 23:48:36,2021-05-27 07:21:34
+638,dr. Yossie Atyanadhari,24-181120,yossie_blue@yahoo.com,2020-05-04 23:49:27,2020-11-18 01:32:59
+639,dr. Muhammad Afrizal Farkhan,19-270521,afrizalfarkhan@gmail.com,2020-05-04 23:50:05,2021-05-27 07:22:03
+640,dr. Reza Muttaqen,19-181120,orthoreza@gmail.com,2020-05-04 23:50:38,2020-11-18 01:31:28
+641,dr. Arya Maulana Nasution,06-181120,nasutionariya@gmail.com,2020-05-05 00:09:12,2020-11-18 01:26:35
+642,dr. Agus Wahyudi,03-181120,a_yoedi@yahoo.co.id,2020-05-05 00:09:44,2020-11-18 01:25:28
+643,dr. Bayu Sakti Jiwandono,07-181120,bayujiwandono@yahoo.co.id,2020-05-05 00:10:16,2020-11-18 01:26:57
+644,"dr. Wijaya Johanes Chendra, Sp.OT",IHKS no.1,wijaya_j6@yahoo.com,2020-10-15 10:01:59,2020-10-15 10:01:59
+645,"dr. Nico Raga, Sp.OT",IHKS no.2,nicoraga@gmail.com,2020-10-15 10:02:47,2020-10-15 10:02:47
+646,"dr. Bunarwan Prihargono, SpOT",IHKS no.3,bunichiroo@gmail.com,2020-10-15 10:03:31,2020-10-15 10:03:31
+647,"dr. Bunarwan Prihargono, SpOT",IHKS no.3,bunichiroo@gmail.com,2020-10-15 10:03:36,2020-10-15 10:03:36
+648,"dr. Kukuh Dwiputra Hernugrahanto, Sp.OT",IHKS no.4,kukuhdh@gmail.com,2020-10-15 10:04:18,2020-10-15 10:04:18
+649,"dr. Jifaldi Afrian M. D. S., Sp.OT",IHKS no.5,jiforthobaya@gmail.com,2020-10-15 10:04:57,2020-10-15 10:04:57
+650,"dr. Brian Vicky Faridyan, Sp.OT",IHKS no.6,brianfaridyan@gmail.com,2020-10-15 10:05:33,2020-10-15 10:05:33
+651,"dr. Eka Mulyana, SpOT., FICS., M.Kes., SH., MHKes",IHKS no.7,ekamdspot@yahoo.com,2020-10-15 10:06:09,2020-10-15 10:06:09
+652,Yoppi ARI,IHKS TEST,yoppi.ari@gmail.com,2020-10-16 13:32:46,2020-10-16 13:32:46
+653,dr. Muhammad Ade Refdian Menkher,NC UI 01,adre.refdian@gmail.com,2020-11-09 13:19:48,2020-11-09 13:19:48
+654,dr. Fahmi Anshori,UI - 1,fhmanshori@yahoo.com,2020-11-09 13:20:31,2022-05-17 14:37:28
+655,dr. Elfikri Asril,NC UI 02,elfikri.asril@gmail.com,2020-11-09 13:21:15,2021-05-05 04:16:21
+656,dr. Naufal Ranadi Firas,02-270521,nau.orthobaya@gmail.com,2020-11-09 13:27:53,2021-05-27 07:17:18
+657,dr. Yuga Rahmadana,04-270521,yugarahmadana@gmail.com,2020-11-09 13:38:52,2021-05-27 07:17:41
+658,dr. Muhammad Pandu Nugrahadi,NC UNAIR 01,pandunugrahadi@gmail.com,2020-11-09 13:39:41,2021-05-05 04:36:46
+659,dr. Haris Dwi Khoirur Rofiq,03-270521,dr.harisdwi@gmail.com,2020-11-09 13:40:25,2021-05-27 07:17:30
+660,dr. I Putu Gede Pradnyadewa P,05-270521,iputugedepp@gmail.com,2020-11-09 13:41:56,2021-05-27 07:18:05
+661,dr. Denny Maulana,08-270521,dr.dennysiahaan@gmail.com,2020-11-09 13:54:21,2021-05-27 07:18:51
+662,dr. Hendy Rachmat Primana,11-270521,rphendy@gmail.com,2020-11-10 05:04:01,2021-05-27 07:19:48
+663,dr. Fary Tri Sabdillah,10-270521,ompalun@gmail.com,2020-11-10 05:05:43,2021-05-27 07:19:30
+664,dr. Doddy Putra Pratama Sudjana,09-270521,dr_doddyputra@yahoo.com,2020-11-10 05:06:42,2021-05-27 07:19:13
+665,dr. Firdaus Ramli,NC UNPAD 01,firdausramli0485@yahoo.com,2020-11-10 05:07:29,2021-05-05 04:43:13
+666,dr. Ramco Abtiza,12-270521,ramcoabtiza@yahoo.com,2020-11-10 05:08:04,2021-05-27 07:20:03
+667,dr. M. Eka Putra,NC UNPAD 02,m.eka1807@gmail.com,2020-11-10 05:08:53,2021-05-05 04:43:33
+668,dr. Naufal Chairulfatah,NC UNPAD 03,naufalism@gmail.com,2020-11-10 05:09:35,2021-05-05 04:43:50
+669,dr. Roichan Mochammad Firdaus,33-270521,firdaus.idoz232@gmail.com,2020-11-10 05:14:08,2021-05-27 07:25:35
+670,dr. Moh. Asri Abidin,35-270521,moh.asriabidin@gmail.com,2020-11-10 05:14:42,2021-05-27 07:26:11
+671,dr. Krishna Yudha,34-270521,nrp087@gmail.com,2020-11-10 05:15:15,2021-05-27 07:25:56
+672,dr. Marcell Wijaya,32-270521,marcell.wijaya.1986.2@gmail.com,2020-11-10 05:15:56,2021-05-27 07:25:14
+673,dr. Fajar Ivan Effendi,14-270521,fajareffendiortho@yahoo.com,2020-11-10 05:18:14,2021-05-27 07:20:41
+674,dr. Savero Iman Hari Suko,16-270521,saveroimanharisuko@gmsil.com,2020-11-10 05:18:52,2021-05-27 07:21:11
+675,dr. Hanif Andhika Wardhana,13-270521,hanifwardhana@gmail.com,2020-11-10 05:19:36,2021-05-27 07:20:21
+676,dr. Rosihan Effendi,15-270521,dreffe19@gmail.com,2020-11-10 05:20:16,2021-05-27 07:20:58
+677,dr. Okkie Mharga Sentana,NC UNS 02,okkie.ms90@gmail.com,2020-11-10 05:20:52,2021-05-05 04:53:18
+678,dr. Adhi Tanjung Laksono,NC UNS 01,tanjungortho@gmail.com,2020-11-10 05:21:26,2021-05-05 04:53:03
+679,dr. Rezky Winda Saraswaty,18-270521,saraswaty710@gmail.com,2020-11-10 05:22:50,2021-05-27 07:21:45
+680,dr. Muhammad Afrizal Farkhan,UGM 02,afrizalfarkhan@gmail.com,2020-11-10 05:23:26,2021-05-05 04:58:52
+681,dr. Gean Juniwan Syahputra Batong,UGM 01,ge_medico@yahoo.com,2020-11-10 05:24:05,2021-05-05 04:58:39
+682,dr. Dwijo Purboyo,27-270521,dwijo.purboyo@gmail.com,2020-11-10 05:26:50,2021-05-27 07:24:02
+683,dr. Gede Ketut Alit Satria Nugraha,28-270521,drgedekasn@gmail.com,2020-11-10 05:27:34,2021-05-27 07:24:14
+684,dr. Made Wahyu Dharmapradita,30-270521,g2a003111@gmail.com,2020-11-10 05:28:24,2021-05-27 07:24:43
+685,dr. Gde Dedy Andika,29-270521,dedyandika06@gmail.com,2020-11-10 05:28:57,2021-05-27 07:24:30
+686,dr. I Made Sumaria,31-270521,madesumaria86@gmail.com,2020-11-10 05:29:30,2021-05-27 07:25:02
+687,dr. Domy Pradana Putra,23-270521,domy_pradana_putra@yahoo.com,2020-11-10 05:31:26,2021-05-27 07:22:59
+688,dr. Tofan Margaret Dwi Saputra,25-270521,tofanmds29@gmail.com,2020-11-10 05:32:04,2021-05-27 07:23:25
+689,dr. Agustinus Budhi Prasetio,22-270521,sunitsugabudhi@gmail.com,2020-11-10 05:32:46,2021-05-27 07:22:48
+690,dr. Irfan Ritonga,21-270521,irfan_uhuy@yahoo.co.id,2020-11-10 05:34:08,2021-05-27 07:22:34
+691,dr. Fadli Yoga Arif,20-270521,fadli.arif@gmail.com,2020-11-10 05:34:42,2021-05-27 07:22:15
+692,dr. Muhammad Zulhandani,NC UI 03,dani.multafia@gmail.com,2021-05-05 04:14:14,2021-05-05 04:16:57
+693,dr. Richa Resmiati Musa,Adaptasi 02 - 2022,richamusa@yahoo.com,2021-05-05 04:15:02,2022-04-04 12:37:21
+694,dr. Uno Surgery Erwin,NC UI 05,unosurgery@yahoo.com,2021-05-05 04:18:16,2021-05-05 04:18:16
+695,dr. Taufik Akbar,NC UI 06,taufik.nazir.akbar@gmail.com,2021-05-05 04:18:56,2021-05-05 04:18:56
+696,dr. Ahmad Nugroho,NC UI 07,ahmad.nugroho18@gmail.com,2021-05-05 04:19:42,2021-05-05 04:19:42
+697,dr. Dody Kurniawan,NC UI 08,dodydocz@gmail.com,2021-05-05 04:24:23,2021-05-05 04:24:23
+698,dr. Dody Kurniawan,NC UI 08,dodydocz@gmail.com,2021-05-05 04:25:20,2021-05-05 04:25:20
+699,dr. Husnul Verdian,NC UI 09,husnul.verdian@gmail.com,2021-05-05 04:29:46,2021-05-05 04:29:46
+700,dr. ido Prabowo,NC UI 10,idoprobowow@gmail.com,2021-05-05 04:33:01,2021-05-05 04:33:01
+701,dr. Windi Martika,UI NC 11,windi.martika@gmail.com,2021-05-05 04:33:33,2021-05-05 04:33:33
+702,dr. Fahmi Anshori,NC UI 12,fhmanshori@gmail.com,2021-05-05 04:34:08,2021-05-05 04:34:08
+703,dr. Arius Suwondo,NC UNAIR 02,arius.suwondo@gmail.com,2021-05-05 04:37:41,2021-05-05 04:37:41
+704,dr. Ferdiansyah Danang,NC UNAIR 03,ferdiansyahref@gmail.com,2021-05-05 04:38:32,2021-05-05 04:38:32
+705,dr. Cery Tarise Hajali,NC UNAIR 04,ceryhazali@gmail.com,2021-05-05 04:39:05,2021-05-05 04:39:05
+706,dr. Azmi Farhadi,NC UNAIR 05,azmifarhadidr@gmail.com,2021-05-05 04:39:36,2021-05-05 04:39:36
+707,dr. Muh. Abdurrahman Al Haraani,NC UNAIR 06,dokterarmand89@gmail.com,2021-05-05 04:40:21,2021-05-05 04:40:21
+708,dr. Mahyudin,NC UNPAD 04,mahyudin307@gmail.com,2021-05-05 04:44:36,2021-05-05 04:44:36
+709,dr. Novra Yuditya Santoso,NC UNHAS 01,yudit.santosa84@gmail.com,2021-05-05 04:47:03,2021-05-05 04:47:03
+710,dr. Sufandi Fahmi,NC UNHAS 02,sufandi_fahmi08@yahoo.com,2021-05-05 04:47:44,2021-05-05 04:47:44
+711,dr. Reza Romadhona Fahlevi,NC UNHAS 03,reza_r_fahlevi@yahoo.com,2021-05-05 04:48:48,2021-05-05 04:48:48
+712,dr. Vicky William Saranga Paundanan,NC UNHAS 04,williamvicky174@gmail.com,2021-05-05 04:49:32,2021-05-05 04:49:32
+713,dr. Iswahyudi,NC UNHAS 05,is_elfath@yahoo.co.id,2021-05-05 04:50:03,2021-05-05 04:50:03
+714,dr. Kerwin Halim,NC UNHAS 06,kerwin.halim@ymail.com,2021-05-05 04:50:38,2021-05-05 04:50:38
+715,dr. Yoshua Adi Nugroho,NC UNHAS 07,yan.wiryosuparto@gmail.com,2021-05-05 04:51:22,2021-05-05 04:51:22
+716,dr. Rahmad Rian,NC UNS 03,Rahmad.rian@gmail.com,2021-05-05 04:54:23,2021-05-05 04:54:23
+717,dr. Johan Dwi Murtanto,NC UNS 04,johanmurtanto@gmail.com,2021-05-05 04:54:59,2021-05-05 04:54:59
+718,dr. Bagus Iman Brilianto,NC UNS 05,bib.ortho@gmail.com,2021-05-05 04:55:36,2021-05-05 04:55:36
+719,dr. Denny Ardiansyah,NC UNS 06,adriansyahdenny@gmail.com,2021-05-05 04:56:25,2021-05-05 04:56:25
+720,dr. Fanny Indra Warman,NC UNS 07,fanny.warman@gmail.com,2021-05-05 04:56:57,2021-05-05 04:56:57
+721,dr. Zikrina Abyanti Lanodiyu,NC UGM 01,zikrina.lonudiyu158@gmail.com,2021-05-05 04:59:55,2021-05-05 04:59:55
+722,dr. Rosyad Nur Khadafi,NC UGM 02,khadafirosyadnur@gmail.com,2021-05-05 05:00:35,2021-05-05 05:00:35
+723,dr. Ahmad Ramdhoni Chusnanto,NC UGM 03,ramdhoni_ahmad@yahoo.com,2021-05-05 05:01:09,2021-05-05 05:01:09
+724,dr. Dea Prista Agatha,NC UGM 04,dea.prista@gmail.com,2021-05-05 05:01:39,2021-05-05 05:01:39
+725,dr. Indra Rukmana Tri Partistha,NC UNUD 01,dr_indra_pratisrtha@yahoo.com,2021-05-05 05:05:20,2021-05-05 05:05:20
+726,dr. Nico Lie,NC UNUD 02,nico.lie1611@gmail.com,2021-05-05 05:06:00,2021-05-05 05:06:00
+727,dr. Nyoman Gede BImantara,NC UNUD 03,oobbiimm@yahoo.com,2021-05-05 05:06:35,2021-05-05 05:06:35
+728,dr. Priza Razunif,NC UNUD 04,prizazunip.md@gmail.com,2021-05-05 05:07:15,2021-05-05 05:07:15
+729,dr. Dedde Aditya Rachman,NC UB 01,deddeaditya@gmail.com,2021-05-05 05:09:40,2021-05-05 05:09:40
+730,dr. Satria Wira Sakti,NC UB 0,satriawirasakti@yahoo.com,2021-05-05 05:10:10,2021-05-05 05:10:10
+731,dr. Hary Wahyu Agustono,NC UB 03,dr.ryuto@gmail.com,2021-05-05 05:10:48,2021-05-05 05:10:48
+732,dr. Ahmad Heifan,NC UB 04,heifan_ahmad@yahoo.com,2021-05-05 05:11:25,2021-05-05 05:11:25
+733,dr. Maulana Hasymi Hutabarat,NC UB 05,drmaulanahutabarat@gmail.com,2021-05-05 05:12:09,2021-05-05 05:12:09
+734,dr. Yovi Maulana,NC UB 06,yovimaulanahutabarat@gmail.com,2021-05-05 05:12:47,2021-05-05 05:12:47
+735,dr. Fadli Yogi Arif,20-270521,fadli.arif@gmail.com,2021-05-05 05:13:57,2021-05-27 10:20:06
+736,dr. Rachmad Gunawan,NC USU 01,rahmadgunawan88@gmail.com,2021-05-05 05:14:37,2021-05-05 05:14:37
+737,dr. Heru Hermantrie,NC USU 02,hermantriedr@yahoo.com,2021-05-05 05:15:08,2021-05-05 05:15:08
+738,dr. Budi Achmad Mulia Siregar,NC USU 03,budigen.siregar@yahoo.com,2021-05-05 05:15:58,2021-05-05 05:41:22
+739,dr. Samuel jason Rolando Tua Tobing,NC UNPAD 05,samuel3101jason@yahoo.com,2021-05-05 06:03:13,2021-05-05 06:03:13
+740,dr. Kusuma Rizky Anggi Sutrisno,NC UNPAD 06,kusumarizky89@gmail.com,2021-05-05 06:04:02,2021-05-05 06:04:02
+741,"dr. R. M. David Jayanegara, Sp.OT",1,drbone81@gmail.com,2021-07-01 06:52:24,2021-07-01 06:52:24
+742,"dr. M. Rizal Renaldi, M.Ked. Surg, Sp.OT",2,m.rizalrenaldi@gmail.com,2021-07-01 06:58:00,2021-07-01 06:58:00
+743,"dr. Arif Wibowo, Sp.OT",3,arifwibowoicloud@gmail.com,2021-07-01 06:58:22,2021-07-01 06:58:22
+744,"dr. Heppy Chandra Waskita, Sp.OT",4,dr.heppychandra@gmail.com,2021-07-01 06:58:44,2021-07-01 06:58:44
+745,"dr. Paulus Ronald Hibono, Sp.OT",5,ronaldhibonomd@gmail.com,2021-07-01 06:59:06,2021-07-01 06:59:06
+746,"dr. Kurniawan Silalahi, Sp.OT",6,karuniaspot@gmail.com,2021-07-01 06:59:35,2021-07-01 06:59:35
+747,"dr. R. Rahendra Pratama, Sp.OT",7,hdrpratama@gmail.com,2021-07-01 07:00:02,2021-07-01 07:00:02
+748,"dr. Berlianto Tjahjadi, Sp.OT",8,Tberlianto@yahoo.com,2021-07-01 07:00:26,2021-07-01 07:00:26
+749,"dr. Reza Rahman Ramadhani, Sp.OT",9,rezarahmanramadhani@gmail.com,2021-07-01 07:01:04,2021-07-01 07:01:04
+750,"dr. Ismail Bastomi, Sp.OT",10,ismailbastomi@gmail.com,2021-07-01 07:01:29,2021-07-01 07:01:29
+751,"dr. Nyoman Orthi Laksana, Sp.OT",11,nyomanorthilaksana@gmail.com,2021-07-01 07:01:50,2021-07-01 07:01:50
+752,dr. Erick Pradykta,Adaptasi 01,dykta1618@gmail.com,2021-10-26 22:09:33,2021-10-26 22:09:33
+753,dr. Harris Kristanto,Adaptasi 01 -2022,harris1kristanto@gmail.com,2021-10-26 22:10:10,2022-04-04 12:36:37
+754,dr. Danar Lukman Akbar,UI-2,danarlukman@gmail.com,2022-05-17 14:35:57,2022-05-17 14:35:57
+755,dr. Didi Saputra Ramang,UI - 3,dsramang@gmail.com,2022-05-17 14:38:18,2022-05-17 14:38:18
+756,dr. Guntur Utama Putera,UI - 4,gunturutama17@gmail.com,2022-05-17 14:39:14,2022-05-17 14:39:14
+757,dr. Mohamnmad Walid Kuncoro,UI  - 5,walid.kuncoro@gmail.com,2022-05-17 14:40:32,2022-05-17 14:40:32
+758,dr. Petrus Aprianto,UI-6,petrus.aprianto.1989@gmail.com,2022-05-17 14:41:37,2022-05-17 14:41:37
+759,dr. Rizky Febriansyah Saleh,UI-7,riky.tujuh@gmail.com,2022-05-17 14:42:11,2022-05-17 14:42:11
+760,dr. Ronald Henry Tendean,UI-8,ronaldtendean143@yahoo.com,2022-05-17 14:43:58,2022-05-17 14:43:58
+761,dr. Ardiansyah,UI - 1A,ardi_harvard@yahoo.com,2022-05-17 14:44:39,2022-05-17 14:44:39
+762,dr. Aryo Winartomo,UI - 2A,aryowinartomo@hotmail.com,2022-05-17 14:45:54,2022-05-17 14:45:54
+763,dr. Erwin Ardian Noor,UI-3A,erwinardian@yahoo.com,2022-05-17 14:46:30,2022-05-17 14:46:30
+764,dr. I Wayan Arya Mahendra Karda,UI-4A,arya961mahendra@gmail.com,2022-05-17 14:47:14,2022-05-17 14:47:14
+765,dr. I Wayan Arya Mahendra Karda,UI - 4A,arya961mahendra@gmail.com,2022-05-17 14:49:09,2022-05-17 14:49:09
+766,dr. Muhammad Dedy Alkarni,UI-5A,dedyalkarni08@gmail.com,2022-05-17 14:49:40,2022-05-17 14:49:40
+767,dr. Riko Satriyo Wibowo,UI-6A,rikosw@gmail.com,2022-05-17 14:50:24,2022-05-17 14:50:24
+768,dr. Amanda Pratama,UNAIR-1,mndpratama@gmail.com,2022-05-17 14:51:22,2022-05-17 14:51:22
+769,dr. Arius Suwondo,UNAIR-2,arius.suwondo@gmail.com,2022-05-17 14:52:05,2022-05-17 14:53:08
+770,dr. Azmi Farhadi,UNAIR-3,azmifarhadidr@gmail.com,2022-05-17 14:52:46,2022-05-17 14:52:46
+771,dr. Caesar Haryo Bimoseno,UNAIR-4,caesarbimoseno@gmail.com,2022-05-17 14:53:59,2022-05-17 14:53:59
+772,dr. Jimmy Kuncoro,UNAIR-7,jimmykuncoro@yahoo.com,2022-05-17 14:55:16,2022-05-17 14:55:16
+773,dr. Muhammad Pandu Nugrahadi,UNAIR-9,pandunugrahadi@gmail.com,2022-05-17 15:02:02,2022-05-17 15:02:02
+774,dr. Tabita Prajasari,UNAIR-10,tabitaprajasari@gmail.com,2022-05-17 15:02:34,2022-05-17 15:02:34
+775,dr. Fachrizal Arfani Prawiragara,UNAIR-1A,arfanight@gmail.com,2022-05-17 15:03:12,2022-05-17 15:03:12
+776,dr. Yusuf Rizal,UNAIR-2A,uchuwp.rizal@gmail.com,2022-05-17 15:03:50,2022-05-17 15:03:50
+777,dr. Rizal Alexander Lisan,UNAIR-3A,rizalalexanderl@gmail.com,2022-05-17 15:04:14,2022-05-17 15:04:14
+778,dr. Muhamad Anggi Montazeri,UNPAD-3,anggi.zerio@gmail.com,2022-05-17 15:05:41,2022-05-17 15:05:41
+779,"dr, Rifki Albana, MMR",UNPAD-4,rifkialbana@gmail.com,2022-05-17 15:06:18,2022-05-17 15:06:18
+780,dr. M Defri Saputra,UNPAD-1A,dr.defrisaputra@yahoo.com,2022-05-17 15:07:02,2022-05-17 15:07:02
+781,dr. David Rudianto Salim,UNPAD-2A,davidrsalim@yahoo.co.id,2022-05-17 15:07:25,2022-05-17 15:07:25
+782,dr. Afrisya Bimo Siwendro,UNPAD-3A,afrisyabimo.md@gmail.com,2022-05-17 15:07:54,2022-05-17 15:07:54
+783,dr. Astrawinata Guatama,UNHAS-1,astra.wg@gmail.com,2022-05-17 15:08:29,2022-05-17 15:08:29
+784,dr. Gerald Wonggokusuma,UNHAS-2,geraldwonggokusuma@gmail.com,2022-05-17 15:09:05,2022-05-17 15:09:05
+785,dr. Harry Supratama Azis,UNHAS-3,harryortopedi2018@gmail.com,2022-05-17 15:09:30,2022-05-17 15:09:30
+786,dr. Reza Romadhona Fahlevi,UNHAS-4,reza_r_fahlevi@yahoo.com,2022-05-17 15:10:00,2022-05-17 15:10:00
+787,dr. Erich Svante Subagio,UNHAS-1A,erich.subagio@gmail.com,2022-05-17 15:10:34,2022-05-17 15:10:34
+788,dr. Gerry Dwi Putro,UNHYAS-2A,gerrydwiputro@yahoo.com,2022-05-17 15:11:03,2022-05-17 15:11:03
+789,dr. Indra Harianto Rante,UNHAS-3A,ranteindra@gmail.com,2022-05-17 15:11:46,2022-05-17 15:11:46
+790,dr. Maxmillian Alexandar Kawilarang,UNHAS-4A,maxmilliankawilarang@gmail.com,2022-05-17 15:12:31,2022-05-17 15:12:31
+791,dr. Mirza Ariandi,UNHAS_5A,mirzaariandi@gmail.com,2022-05-17 15:13:15,2022-05-17 15:13:15
+792,dr. Gilang Persada Aribowo,UNS-2,gil.orthosolo@gmail.com,2022-05-17 15:14:15,2022-05-17 15:14:15
+793,dr. Sigit Bayudono,UNS-3,sigitbayudono89@gmail.com,2022-05-17 15:14:42,2022-05-17 15:14:42
+794,dr. Muhammad Erstda Trapsilantya,UNS-1A,dr.traps@gmail.com,2022-05-17 15:15:07,2022-05-17 15:15:07
+795,dr. Ibnu Yudistiro,UNS-2A,iyudistiro@gmail.com,2022-05-17 15:15:33,2022-05-17 15:15:33
+796,dr. Alan Philips Kustianto Putra Resubun,UGM-1,alan.resubun@gmail.com,2022-05-17 15:16:47,2022-05-17 15:16:47
+797,dr. Andi Karsapin Tarsan,UGM-2,dr.andikarsapint@yahoo.com,2022-05-17 15:17:19,2022-05-17 15:17:19
+798,dr. Aristida Cahyono Putra,UGM-3,aristidacahyono@gmail.com,2022-05-17 15:17:59,2022-05-17 15:17:59
+799,dr. Bagus Yudha Pratama,UGM-4,bagusyudhap@gmail.com,2022-05-17 15:18:24,2022-05-17 15:18:24
+800,dr. Mahardhika Ichsantyaridha,UGM-5,dhikaMD@gmail.com,2022-05-17 15:18:57,2022-05-17 15:18:57
+801,dr. Muhammad Riyad Filza,UGM-1A,riyad.filza@gmail.com,2022-05-17 15:19:32,2022-05-17 15:19:32
+802,dr. Sonny Wijanarko,UGM-2A,drsonnywijanarko@gmail.com,2022-05-17 15:20:18,2022-05-17 15:20:18
+803,dr. Zaky Asad Alhaq,UGM-3A,zakyasadalhaq@gmail.com,2022-05-17 15:20:45,2022-05-17 15:20:45
+804,dr. Bagus Gede Krisna Astayogi,UNUD-1,krisna.astayogi@gmail.com,2022-05-17 15:21:17,2022-05-17 15:21:17
+805,dr. Claudia Santosa,UNUD-2,csantosa.md@gmail.com,2022-05-17 15:21:47,2022-05-17 15:21:47
+806,dr. Cokorda Krishna Dalem Pemayun,UNUD-3,pemayunkrishna@gmail.com,2022-05-17 15:22:16,2022-05-17 15:22:16
+807,dr. Hans Kristian Nugraha,UNUD-4,hans.nugraha@yahoo.com,2022-05-17 15:23:06,2022-05-17 15:23:06
+808,dr. Henry Tirtosuharto,UNUD-5,tirtosuhartohenry@gmail.com,2022-05-17 15:23:28,2022-05-17 15:23:28
+809,dr. Kadek Gede Bakta Giri,UNUD-6,baktagiri19@gmail.com,2022-05-17 15:24:07,2022-05-17 15:24:07
+810,dr. Anak Agung Gde Duta Maha Putra,UNUD-1A,agungduta08@gmail.com,2022-05-17 15:24:43,2022-05-17 15:24:43
+811,dr. Celleen Rei Setiawan,UNUD-2A,celleenrei0806@gmail.com,2022-05-17 15:25:15,2022-05-17 15:25:15
+812,dr. I Gusti Ngurah Bagus Andhika Pramana,UNUD-3A,ngurahandhika@gmail.com,2022-05-17 15:25:44,2022-05-17 15:25:44
+813,dr. Rizki Zainuraditya,UNUD-4A,rzainuraditya@gmail.com,2022-05-17 15:26:11,2022-05-17 15:26:11
+814,dr. Ariffillah Salam,USU-1,to_arifillah@yahoo.com,2022-05-17 15:26:50,2022-05-17 15:26:50
+815,dr. Budi Achmad Mulia Siregar,USU-2,budigen.siregar@gmail.com,2022-05-17 15:29:41,2022-05-17 15:29:41
+816,dr. David Kalim,USU-3,davidkalim@gmail.com,2022-05-17 15:30:04,2022-05-17 15:30:04
+817,dr. Hendra,USU-4,Hendra_aje@yahoo.com,2022-05-17 15:30:30,2022-05-17 15:30:30
+818,dr. William Wiryawan,USU-5,dr.will.wirya@gmail.com,2022-05-17 15:30:50,2022-05-17 15:30:50
+819,dr. John Tuhta P. Sinurat,USU-1A,jotusi_89@yahoo.co.id,2022-05-17 15:36:41,2022-05-17 15:36:41
+820,dr. Rudy Tanudin,USU-2A,rudytanudin@gmail.com,2022-05-17 15:37:09,2022-05-17 15:37:09
+821,dr. Adhi Satriyo Utomo,UB-1,dr.adhisatryo@gmail.com,2022-05-17 15:39:58,2022-05-17 15:39:58
+822,dr. Anindita Eka Pramana Wijaya,UB-2,wijaya.anindita@yahoo.com,2022-05-17 15:41:01,2022-05-17 15:41:01
+823,dr. Rizky Daniar Rosandi,UB-3,rizqidr17@gmail.com,2022-05-17 15:41:25,2022-05-17 15:41:25
+824,dr. Yovi Maulana,UB-4,yovimaulana26@gmail.com,2022-05-17 15:41:53,2022-05-17 15:41:53
+825,dr. Yun Isnansyah,UB-5,yunisnann@gmail.com,2022-05-17 15:42:15,2022-05-17 15:42:15
+826,dr. Abdul Waris Imran,UB-1A,warisimrangp131@gmail.com,2022-05-17 15:42:38,2022-05-17 15:42:38
+827,dr. Adytia Andreyta Refa,UB-2A,adytbomby.refa@gmail.com,2022-05-17 15:43:07,2022-05-17 15:43:07
+828,dr. Aristoteles,UB-3,arisplato87@gmail.com,2022-05-17 15:43:33,2022-05-17 15:43:33
+829,dr. Ficky Fajar Sahdiniar,UB-4A,ficky88@gmail.com,2022-05-17 15:44:04,2022-05-17 15:44:04
+830,dr. Ganang Dwi Cahyono,UB-5A,ganang.dc@gmail.com,2022-05-17 15:44:35,2022-05-17 15:44:35
+831,dr. Irasiqin Wibawanto S.,UB-6A,drwibawanto@gmail.com,2022-05-17 15:44:59,2022-05-17 15:44:59
+832,dr. Ledy Kumala Devi,UB-7A,ledyortho@yahoo.com,2022-05-17 15:45:32,2022-05-17 15:45:32
+833,dr. Mohammad Syarif,UB-8A,SyarifM17@gmail.com,2022-05-17 15:46:27,2022-05-17 15:46:27
+834,dr. Sulung Breilyan,UB-9A,sulungortho@gmail.com,2022-05-17 15:46:51,2022-05-17 15:46:51
+835,dr. Einstein Yefta Endoh,AP2022 - 01,yeftaendoh14@gmail.com,2022-09-11 02:51:36,2022-09-11 02:54:32
+836,dr. Anastasia Pranoto,AP2022 - 02,anastasia.pranoto@gmail.com,2022-09-11 02:52:58,2022-09-11 03:04:23
+837,dr. Ikhwan,AP2022 - 03,ikhwanzuchri@yahoo.com,2022-09-11 02:53:43,2022-09-11 03:04:35

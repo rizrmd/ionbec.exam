@@ -1,0 +1,8 @@
+{
+  "include": [
+    "./resources/js/**/*.js"
+  ],
+  "compilerOptions": {
+    "allowJs": true
+  }
+}

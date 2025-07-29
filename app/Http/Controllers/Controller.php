@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Foundation\Bus\DispatchesJobs;
+use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
+class Controller extends BaseController
+{
+    use AuthorizesRequests;
+    use DispatchesJobs;
+    use ValidatesRequests;
+
+    protected function actionSuccess(
+        ?string $to = null,
+        string $message = 'action executed successfully!',
+    ): RedirectResponse {
+        $redirector = redirect();
+
+        $redirector = $to ? $redirector->to($to) : $redirector->back();
+
+        return $redirector->with([
+            '_executed' => true,
+            '_message' => $message,
+        ]);
+    }
+}
