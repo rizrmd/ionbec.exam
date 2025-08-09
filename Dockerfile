@@ -1,9 +1,10 @@
-FROM php:8.1-cli
+FROM php:8.1-fpm
 
-# Install system dependencies
+# Install system dependencies including nginx
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    nginx \
     netcat-traditional \
     libpng-dev \
     libonig-dev \
@@ -33,6 +34,14 @@ COPY . .
 # Complete composer setup
 RUN composer dump-autoload --optimize --no-dev
 
+# Ensure static assets are accessible
+RUN chmod -R 755 public/
+
+# Configure nginx
+COPY nginx.conf /etc/nginx/sites-available/default
+RUN rm -f /etc/nginx/sites-enabled/default && \
+    ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+
 # Create necessary directories and set permissions
 RUN mkdir -p storage/logs \
     && mkdir -p storage/framework/cache \
@@ -42,11 +51,11 @@ RUN mkdir -p storage/logs \
     && chmod -R 755 storage \
     && chmod -R 755 bootstrap/cache
 
-# Create startup script with better error handling
+# Create startup script with nginx and php-fpm
 RUN echo '#!/bin/bash\n\
 set -e\n\
 \n\
-echo "Starting Laravel application..."\n\
+echo "Starting Laravel application with Nginx..."\n\
 \n\
 # Generate APP_KEY if not set\n\
 if [ -z "$APP_KEY" ]; then\n\
@@ -110,8 +119,13 @@ php artisan migrate --force || echo "Migration failed, continuing..."\n\
 echo "Testing Laravel installation..."\n\
 php artisan --version\n\
 \n\
-echo "Starting Laravel development server on 0.0.0.0:3000..."\n\
-exec php artisan serve --host=0.0.0.0 --port=3000\n\
+# Start PHP-FPM in background\n\
+echo "Starting PHP-FPM..."\n\
+php-fpm -D\n\
+\n\
+# Start nginx in foreground\n\
+echo "Starting Nginx on port 3000..."\n\
+nginx -g "daemon off;"\n\
 ' > /usr/local/bin/start.sh && chmod +x /usr/local/bin/start.sh
 
 # Simple healthcheck - just check if port is listening (ignore HTTP status)
