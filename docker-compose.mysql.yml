@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  mysql-remote:
+    image: mysql:8.0
+    container_name: mysql_remote_client
+    restart: unless-stopped
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    command: >
+      sh -c "
+      echo 'MySQL client container for remote database connection';
+      tail -f /dev/null
+      "
+    networks:
+      - mysql_network
+    volumes:
+      - ./test-connection.sh:/test-connection.sh:ro
+      - ./.env.mysql:/.env.mysql:ro
+
+networks:
+  mysql_network:
+    driver: bridge

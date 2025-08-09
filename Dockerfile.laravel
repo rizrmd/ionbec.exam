@@ -1,0 +1,46 @@
+FROM php:8.1-cli
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    default-mysql-client \
+    redis-tools \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /app
+
+# Copy Laravel application
+COPY . /app
+
+# Install Laravel dependencies
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
+# Copy entrypoint
+COPY laravel-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/laravel-entrypoint.sh
+
+# Environment variables (can be overridden at runtime)
+ENV DATABASE_URL=mysql://mysql:S8Tz8c5ogcy6ZaSsXaoomwVTuDlLDBiIyWhdFGCLgH0nU3wDFEGUo3J9q5HnfiuK@107.155.75.50:5654/default
+ENV REDIS_URL=redis://default:43bgTxX07rGOxcDeD2Z67qc57qSAH39KEUJXCHap7W613KVNZPnLaOBdBG2Z0Yq6@107.155.75.50:9675/0
+
+# Expose port 8000 for Laravel development server
+EXPOSE 8000
+
+# Set entrypoint
+ENTRYPOINT ["laravel-entrypoint.sh"]
+
+# Default command
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
