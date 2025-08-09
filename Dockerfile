@@ -76,9 +76,7 @@ echo "Starting Laravel development server on 0.0.0.0:3000..."\n\
 exec php artisan serve --host=0.0.0.0 --port=3000\n\
 ' > /usr/local/bin/start.sh && chmod +x /usr/local/bin/start.sh
 
-# Health check - temporarily disabled for debugging
-# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-#     CMD curl -f http://localhost:3000/ || exit 1
+# No healthcheck for now - will add back after debugging
 
 # Expose port 3000
 EXPOSE 3000
