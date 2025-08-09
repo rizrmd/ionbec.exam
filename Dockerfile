@@ -63,10 +63,20 @@ fi\n\
 # Fix session configuration for different domains\n\
 echo "Current SESSION_DOMAIN: $SESSION_DOMAIN"\n\
 echo "Current APP_URL: $APP_URL"\n\
-# Clear SESSION_DOMAIN to work with any domain\n\
+\n\
+# Detect the actual URL if not matching\n\
+if [[ "$APP_URL" == *"ionbec.avolut.com"* ]]; then\n\
+    echo "Updating APP_URL to match sslip.io domain..."\n\
+    export APP_URL="http://io844g808o48ccsoscc888s0.107.155.75.50.sslip.io"\n\
+fi\n\
+\n\
+# Clear session domain and disable secure cookies for HTTP\n\
 export SESSION_DOMAIN=""\n\
 export SESSION_SECURE_COOKIE=false\n\
-echo "SESSION_DOMAIN cleared and secure cookies disabled for HTTP"\n\
+export SESSION_SAME_SITE=lax\n\
+export SANCTUM_STATEFUL_DOMAINS="localhost,127.0.0.1,io844g808o48ccsoscc888s0.107.155.75.50.sslip.io"\n\
+echo "Session configured for HTTP with domain: $APP_URL"\n\
+echo "Sanctum stateful domains: $SANCTUM_STATEFUL_DOMAINS"\n\
 \n\
 # Use file driver if Redis is not available\n\
 if [ -z "$REDIS_URL" ]; then\n\
