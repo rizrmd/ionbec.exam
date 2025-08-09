@@ -63,14 +63,21 @@ RUN echo 'server { \n\
 # Copy supervisor configuration
 RUN echo '[supervisord] \n\
 nodaemon=true \n\
+user=root \n\
+logfile=/var/log/supervisor/supervisord.log \n\
+pidfile=/var/run/supervisord.pid \n\
 [program:nginx] \n\
 command=/usr/sbin/nginx -g "daemon off;" \n\
 autostart=true \n\
 autorestart=true \n\
+stdout_logfile=/var/log/nginx/access.log \n\
+stderr_logfile=/var/log/nginx/error.log \n\
 [program:php-fpm] \n\
 command=/usr/local/sbin/php-fpm \n\
 autostart=true \n\
-autorestart=true' > /etc/supervisor/conf.d/supervisord.conf
+autorestart=true \n\
+stdout_logfile=/var/log/php-fpm.log \n\
+stderr_logfile=/var/log/php-fpm-error.log' > /etc/supervisor/conf.d/supervisord.conf
 
 # Generate application key if not exists
 RUN php artisan key:generate --force || true
@@ -80,8 +87,15 @@ RUN php artisan config:cache || true
 RUN php artisan route:cache || true
 RUN php artisan view:cache || true
 
+# Create log directories
+RUN mkdir -p /var/log/supervisor
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/ || exit 1
+
 # Expose port 80
 EXPOSE 80
 
-# Start supervisor
-CMD ["/usr/bin/supervisord"]
+# Start supervisor with explicit config
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
