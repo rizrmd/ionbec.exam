@@ -85,6 +85,12 @@ if [ -z "$REDIS_URL" ]; then\n\
     export CACHE_DRIVER=file\n\
 fi\n\
 \n\
+# Override session config if needed\n\
+if [ -f /var/www/config/session-override.php ]; then\n\
+    echo "Applying session override configuration..."\n\
+    cp /var/www/config/session-override.php /var/www/config/session.php\n\
+fi\n\
+\n\
 # Clear Laravel caches\n\
 echo "Clearing Laravel caches..."\n\
 php artisan config:clear\n\
