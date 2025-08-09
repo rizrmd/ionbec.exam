@@ -1,6 +1,6 @@
 FROM php:8.1-cli
 
-# Install system dependencies and Node.js
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -13,8 +13,6 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd \
     && pecl install redis \
     && docker-php-ext-enable redis \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
@@ -29,20 +27,11 @@ COPY composer.json composer.lock ./
 # Install PHP dependencies
 RUN composer install --no-scripts --no-autoloader --no-dev
 
-# Copy package.json and package-lock.json for better caching
-COPY package*.json ./
-
-# Install Node.js dependencies (including dev for build process)
-RUN npm ci
-
 # Copy application files
 COPY . .
 
 # Complete composer setup
 RUN composer dump-autoload --optimize --no-dev
-
-# Build frontend assets
-RUN npm run production
 
 # Create necessary directories and set permissions
 RUN mkdir -p storage/logs \
