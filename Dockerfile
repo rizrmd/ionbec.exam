@@ -39,14 +39,20 @@ RUN mkdir -p /var/www/storage/logs \
     && chmod -R 755 /var/www/storage \
     && chmod -R 755 /var/www/bootstrap/cache
 
-# Copy nginx configuration
-RUN echo 'server { \n\
+# Copy nginx configuration with proper HTTPS detection
+RUN echo 'map $http_x_forwarded_proto $fastcgi_https { \n\
+    default ""; \n\
+    https on; \n\
+} \n\
+\n\
+server { \n\
     listen 3000; \n\
     index index.php index.html; \n\
     error_log  /var/log/nginx/error.log; \n\
     access_log /var/log/nginx/access.log; \n\
     root /var/www/public; \n\
     client_max_body_size 100M; \n\
+    \n\
     location ~ \.php$ { \n\
         try_files $uri =404; \n\
         fastcgi_split_path_info ^(.+\.php)(/.+)$; \n\
@@ -55,9 +61,12 @@ RUN echo 'server { \n\
         include fastcgi_params; \n\
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \n\
         fastcgi_param PATH_INFO $fastcgi_path_info; \n\
-        fastcgi_param HTTPS $http_x_forwarded_proto if_not_empty; \n\
-        fastcgi_param HTTP_X_FORWARDED_PROTO $http_x_forwarded_proto if_not_empty; \n\
+        fastcgi_param HTTPS $fastcgi_https; \n\
+        fastcgi_param HTTP_X_FORWARDED_PROTO $http_x_forwarded_proto; \n\
+        fastcgi_param HTTP_X_FORWARDED_FOR $http_x_forwarded_for; \n\
+        fastcgi_param HTTP_X_FORWARDED_HOST $http_x_forwarded_host; \n\
     } \n\
+    \n\
     location / { \n\
         try_files $uri $uri/ /index.php?$query_string; \n\
         gzip_static on; \n\
