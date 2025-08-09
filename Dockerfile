@@ -60,6 +60,21 @@ if [ ! -f /var/www/public/mix-manifest.json ]; then\n\
     echo "{\\"/js/app.js\\": \\"/js/app.js\\",\\"/css/app.css\\": \\"/css/app.css\\"}" > /var/www/public/mix-manifest.json\n\
 fi\n\
 \n\
+# Fix session configuration for different domains\n\
+echo "Current SESSION_DOMAIN: $SESSION_DOMAIN"\n\
+echo "Current APP_URL: $APP_URL"\n\
+# Clear SESSION_DOMAIN to work with any domain\n\
+export SESSION_DOMAIN=""\n\
+export SESSION_SECURE_COOKIE=false\n\
+echo "SESSION_DOMAIN cleared and secure cookies disabled for HTTP"\n\
+\n\
+# Use file driver if Redis is not available\n\
+if [ -z "$REDIS_URL" ]; then\n\
+    echo "No REDIS_URL found, using file session driver..."\n\
+    export SESSION_DRIVER=file\n\
+    export CACHE_DRIVER=file\n\
+fi\n\
+\n\
 # Clear Laravel caches\n\
 echo "Clearing Laravel caches..."\n\
 php artisan config:clear\n\
