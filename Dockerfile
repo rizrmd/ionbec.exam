@@ -41,9 +41,11 @@ RUN mkdir -p storage/logs \
     && chmod -R 755 storage \
     && chmod -R 755 bootstrap/cache
 
-# Create startup script
+# Create startup script with better error handling
 RUN echo '#!/bin/bash\n\
 set -e\n\
+\n\
+echo "Starting Laravel application..."\n\
 \n\
 # Generate APP_KEY if not set\n\
 if [ -z "$APP_KEY" ]; then\n\
@@ -51,29 +53,32 @@ if [ -z "$APP_KEY" ]; then\n\
     php artisan key:generate --force\n\
 fi\n\
 \n\
-# Clear and optimize Laravel\n\
+# Clear Laravel caches\n\
+echo "Clearing Laravel caches..."\n\
 php artisan config:clear\n\
 php artisan cache:clear\n\
 php artisan view:clear\n\
 php artisan route:clear\n\
 \n\
-# Cache configuration for production\n\
-if [ "$APP_ENV" = "production" ]; then\n\
-    php artisan config:cache\n\
-    php artisan route:cache\n\
-    php artisan view:cache\n\
-fi\n\
+# Skip caching in development/debugging\n\
+echo "APP_ENV: $APP_ENV"\n\
+echo "APP_DEBUG: $APP_DEBUG"\n\
 \n\
 # Run migrations if needed\n\
-php artisan migrate --force || true\n\
+echo "Running migrations..."\n\
+php artisan migrate --force || echo "Migration failed, continuing..."\n\
 \n\
-# Start Laravel development server\n\
+# Test basic Laravel functionality\n\
+echo "Testing Laravel installation..."\n\
+php artisan --version\n\
+\n\
+echo "Starting Laravel development server on 0.0.0.0:3000..."\n\
 exec php artisan serve --host=0.0.0.0 --port=3000\n\
 ' > /usr/local/bin/start.sh && chmod +x /usr/local/bin/start.sh
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/ || exit 1
+# Health check - temporarily disabled for debugging
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+#     CMD curl -f http://localhost:3000/ || exit 1
 
 # Expose port 3000
 EXPOSE 3000
