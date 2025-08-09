@@ -1,9 +1,10 @@
 FROM php:8.1-fpm
 
-# Install system dependencies
+# Install system dependencies including curl for healthchecks
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    wget \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
@@ -82,13 +83,27 @@ autorestart=true \n\
 stdout_logfile=/var/log/php-fpm.log \n\
 stderr_logfile=/var/log/php-fpm-error.log' > /etc/supervisor/conf.d/supervisord.conf
 
-# Generate application key if not exists
-RUN php artisan key:generate --force || true
-
-# Cache configuration
-RUN php artisan config:cache || true
-RUN php artisan route:cache || true
-RUN php artisan view:cache || true
+# Create startup script
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+# Generate APP_KEY if not set\n\
+if [ -z "$APP_KEY" ]; then\n\
+    echo "Generating application key..."\n\
+    php artisan key:generate --force\n\
+fi\n\
+\n\
+# Clear and cache configuration\n\
+php artisan config:clear\n\
+php artisan cache:clear\n\
+php artisan view:clear\n\
+\n\
+# Run migrations if needed\n\
+php artisan migrate --force || true\n\
+\n\
+# Start supervisor\n\
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf\n\
+' > /usr/local/bin/start.sh && chmod +x /usr/local/bin/start.sh
 
 # Create log directories
 RUN mkdir -p /var/log/supervisor
@@ -100,5 +115,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Expose port 3000 (matches Traefik config)
 EXPOSE 3000
 
-# Start supervisor with explicit config
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Start with our startup script
+CMD ["/usr/local/bin/start.sh"]
