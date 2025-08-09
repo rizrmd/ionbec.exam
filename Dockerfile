@@ -4,6 +4,7 @@ FROM php:8.1-cli
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    netcat-traditional \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
@@ -76,7 +77,9 @@ echo "Starting Laravel development server on 0.0.0.0:3000..."\n\
 exec php artisan serve --host=0.0.0.0 --port=3000\n\
 ' > /usr/local/bin/start.sh && chmod +x /usr/local/bin/start.sh
 
-# No healthcheck for now - will add back after debugging
+# Simple healthcheck - just check if port is listening (ignore HTTP status)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD nc -z localhost 3000 || exit 1
 
 # Expose port 3000
 EXPOSE 3000
