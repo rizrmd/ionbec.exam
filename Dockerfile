@@ -40,11 +40,12 @@ RUN mkdir -p /var/www/storage/logs \
 
 # Copy nginx configuration
 RUN echo 'server { \n\
-    listen 80; \n\
+    listen 3000; \n\
     index index.php index.html; \n\
     error_log  /var/log/nginx/error.log; \n\
     access_log /var/log/nginx/access.log; \n\
     root /var/www/public; \n\
+    client_max_body_size 100M; \n\
     location ~ \.php$ { \n\
         try_files $uri =404; \n\
         fastcgi_split_path_info ^(.+\.php)(/.+)$; \n\
@@ -53,6 +54,8 @@ RUN echo 'server { \n\
         include fastcgi_params; \n\
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \n\
         fastcgi_param PATH_INFO $fastcgi_path_info; \n\
+        fastcgi_param HTTPS $http_x_forwarded_proto if_not_empty; \n\
+        fastcgi_param HTTP_X_FORWARDED_PROTO $http_x_forwarded_proto if_not_empty; \n\
     } \n\
     location / { \n\
         try_files $uri $uri/ /index.php?$query_string; \n\
@@ -92,10 +95,10 @@ RUN mkdir -p /var/log/supervisor
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+    CMD curl -f http://localhost:3000/ || exit 1
 
-# Expose port 80
-EXPOSE 80
+# Expose port 3000 (matches Traefik config)
+EXPOSE 3000
 
 # Start supervisor with explicit config
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
