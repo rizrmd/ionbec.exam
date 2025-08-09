@@ -48,8 +48,10 @@ RUN mkdir -p storage/logs \
     && mkdir -p storage/framework/sessions \
     && mkdir -p storage/framework/views \
     && mkdir -p bootstrap/cache \
-    && chmod -R 755 storage \
-    && chmod -R 755 bootstrap/cache
+    && chmod -R 777 storage \
+    && chmod -R 777 bootstrap/cache \
+    && chown -R www-data:www-data storage \
+    && chown -R www-data:www-data bootstrap/cache
 
 # Create startup script with nginx and php-fpm
 RUN echo '#!/bin/bash\n\
@@ -118,6 +120,13 @@ php artisan migrate --force || echo "Migration failed, continuing..."\n\
 # Test basic Laravel functionality\n\
 echo "Testing Laravel installation..."\n\
 php artisan --version\n\
+\n\
+# Ensure proper permissions at runtime\n\
+echo "Setting proper permissions for storage..."\n\
+chown -R www-data:www-data /var/www/storage\n\
+chown -R www-data:www-data /var/www/bootstrap/cache\n\
+chmod -R 777 /var/www/storage\n\
+chmod -R 777 /var/www/bootstrap/cache\n\
 \n\
 # Start PHP-FPM in background\n\
 echo "Starting PHP-FPM..."\n\
