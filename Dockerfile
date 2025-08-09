@@ -54,6 +54,12 @@ if [ -z "$APP_KEY" ]; then\n\
     php artisan key:generate --force\n\
 fi\n\
 \n\
+# Create mix-manifest.json if it doesnt exist\n\
+if [ ! -f /var/www/public/mix-manifest.json ]; then\n\
+    echo "Creating mix-manifest.json..."\n\
+    echo "{\\"/js/app.js\\": \\"/js/app.js\\",\\"/css/app.css\\": \\"/css/app.css\\"}" > /var/www/public/mix-manifest.json\n\
+fi\n\
+\n\
 # Clear Laravel caches\n\
 echo "Clearing Laravel caches..."\n\
 php artisan config:clear\n\
