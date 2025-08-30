@@ -163,6 +163,14 @@ echo "APP_DEBUG: $APP_DEBUG"\n\
 echo "Running migrations..."\n\
 php artisan migrate --force || echo "Migration failed, continuing..."\n\
 \n\
+# Laravel optimization as recommended by Coolify\n\
+echo "Optimizing Laravel for production..."\n\
+php artisan optimize:clear\n\
+php artisan config:clear\n\
+php artisan route:clear\n\
+php artisan view:clear\n\
+php artisan optimize\n\
+\n\
 # Test basic Laravel functionality\n\
 echo "Testing Laravel installation..."\n\
 php artisan --version\n\
