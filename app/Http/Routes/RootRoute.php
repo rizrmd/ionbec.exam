@@ -20,6 +20,15 @@ class RootRoute extends BaseRoute
             'uses' => $this->uses('index'),
         ]);
 
+        // Debug route to test if routing is working
+        $this->router->get('/debug', function () {
+            return response()->json([
+                'status' => 'Laravel routing is working',
+                'timestamp' => now(),
+                'routes_count' => count(\Route::getRoutes())
+            ]);
+        });
+
         $this->router->get('/attachment/stream/{attachment_uuid}', [
             'as' => 'attachment.stream',
             'uses' => 'App\Http\Controllers\AttachmentController@stream',

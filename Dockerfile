@@ -143,6 +143,10 @@ php artisan package:discover --ansi\n\
 echo "Checking registered routes..."\n\
 php artisan route:list --json | head -5 || echo "No routes found or route:list failed"\n\
 \n\
+# Test the root route directly\n\
+echo "Testing root route response..."\n\
+curl -s -o /dev/null -w "HTTP Status: %{http_code}" http://localhost:3000/ || echo "Route test failed"\n\
+\n\
 # Skip caching in development/debugging\n\
 echo "APP_ENV: $APP_ENV"\n\
 echo "APP_DEBUG: $APP_DEBUG"\n\
