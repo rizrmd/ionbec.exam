@@ -45,15 +45,15 @@
    DB_USERNAME=postgres
    DB_PASSWORD=6LP0Ojegy7IUU6kaX9lLkmZRUiAdAUNOltWyL3LegfYGR6rPQtB4DUSVqjdA78ES
    
-   # Redis (if available in Coolify)
+   # Redis (using existing Redis service)
    REDIS_HOST=redis
    REDIS_PASSWORD=null
    REDIS_PORT=6379
    
-   # Session/Cache
-   SESSION_DRIVER=file
-   CACHE_DRIVER=file
-   QUEUE_CONNECTION=sync
+   # Session/Cache (using Redis)
+   SESSION_DRIVER=redis
+   CACHE_DRIVER=redis
+   QUEUE_CONNECTION=redis
    SESSION_LIFETIME=120
    
    # Other
