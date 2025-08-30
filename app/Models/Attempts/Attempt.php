@@ -7,6 +7,7 @@ use App\Models\Exams\Exam;
 use App\Models\Exams\Item;
 use App\Models\Takers\Taker;
 use App\Models\Exams\Question;
+use App\Traits\BelongsToClient;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Models\Deliveries\Delivery;
@@ -29,6 +30,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 class Attempt extends Model
 {
     use HashableId;
+    use BelongsToClient;
 
     /**
      * The table associated with the model.
@@ -51,6 +53,7 @@ class Attempt extends Model
         'extra_minute',
         'ended_at',
         'finish_scoring',
+        'client_id',
     ];
 
     protected $hidden = [

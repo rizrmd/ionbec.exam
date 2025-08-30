@@ -2,6 +2,7 @@
 
 namespace App\Models\Exams;
 
+use App\Traits\BelongsToClient;
 use Illuminate\Support\Str;
 use App\Models\Attempts\Attempt;
 use App\Models\Categories\Category;
@@ -26,6 +27,7 @@ use App\Providers\Question\Contracts\QuestionType;
 class Question extends Model
 {
     use HashableId;
+    use BelongsToClient;
 
     /**
      * The table associated with the model.
@@ -39,7 +41,7 @@ class Question extends Model
      *
      * @var array
      */
-    protected $fillable = ['item_id', 'type', 'question', 'score'];
+    protected $fillable = ['item_id', 'type', 'question', 'score', 'client_id'];
 
     /**
      * The relations to eager load on every query.

@@ -3,6 +3,7 @@
 namespace App\Models\Attachments;
 
 use App\Models\Accounts\User;
+use App\Traits\BelongsToClient;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations;
 
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations;
  */
 class Attachment extends Model
 {
+    use BelongsToClient;
     /**
      * The table associated with the model.
      *
@@ -33,6 +35,7 @@ class Attachment extends Model
         'title',
         'mime',
         'description',
+        'client_id',
     ];
 
     /**

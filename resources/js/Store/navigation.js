@@ -10,14 +10,31 @@ import {
   SearchCircleIcon,
   UserGroupIcon,
   UserIcon,
-  ClipboardListIcon
+  ClipboardListIcon,
+  OfficeBuildingIcon
 } from "@heroicons/vue/outline"
 import {defineStore} from 'pinia'
 import route from "@/Libs/ziggy"
 import {Inertia} from "@inertiajs/inertia"
 import {reactive} from "vue"
 
-const defaultSidebarNavigation = [
+const getDefaultSidebarNavigation = () => [
+  {
+    name: 'Dashboard',
+    href: route('back-office.root-dashboard'),
+    routeGroup: 'back-office.root-dashboard',
+    icon: HomeIcon,
+    current: false,
+    allowed: ['root'],
+  },
+  {
+    name: 'Client Management',
+    href: route('back-office.clients.index'),
+    routeGroup: 'back-office.clients',
+    icon: OfficeBuildingIcon,
+    current: false,
+    allowed: ['root'],
+  },
   {
     name: 'Dashboard',
     href: route('back-office.dashboard'),
@@ -90,6 +107,7 @@ const defaultSidebarNavigation = [
     routeGroup: 'back-office.scoring',
     icon: ChartBarIcon,
     current: false,
+    allowed: ['administrator', 'scorer'],
   },
   {
     name: 'Results',
@@ -97,6 +115,7 @@ const defaultSidebarNavigation = [
     routeGroup: 'back-office.result',
     icon: ChartPieIcon,
     current: false,
+    allowed: ['administrator', 'scorer'],
   },
   {
     descriptionAbove: 'Settings',
@@ -105,6 +124,14 @@ const defaultSidebarNavigation = [
     routeGroup: 'back-office.profile',
     icon: UserIcon,
     current: false,
+  },
+  {
+    name: 'User Management',
+    href: route('back-office.users.index'),
+    icon: UserGroupIcon,
+    routeGroup: 'back-office.users',
+    current: false,
+    allowed: ['administrator'],
   },
   {
     name: 'Users & Access',
@@ -116,18 +143,23 @@ const defaultSidebarNavigation = [
   },
 ]
 
-const defaultUserNavigation = [
+const getDefaultUserNavigation = () => [
   {name: 'Your Profile', href: route('back-office.profile.index')},
   // {name: 'Settings', href: '#'},
   {name: 'Sign out', href: '#', onClick: () => Inertia.post(route('logout'))},
 ]
 
 export default defineStore('navigation', () => {
-  const userNavigation = reactive([...defaultUserNavigation])
-  const sidebarNavigation = reactive([...defaultSidebarNavigation])
+  const userNavigation = reactive([...getDefaultUserNavigation()])
+  const sidebarNavigation = reactive([...getDefaultSidebarNavigation()])
 
   const refreshCurrentActivePage = () => {
-    const currentRoute = route().current().split('.');
+    const currentRouteName = route().current();
+    if (!currentRouteName) {
+      return;
+    }
+    
+    const currentRoute = currentRouteName.split('.');
     if (currentRoute.length >= 2) {
       sidebarNavigation.forEach(item => {
         if (item.routeGroup !== undefined) {
@@ -138,7 +170,7 @@ export default defineStore('navigation', () => {
         }
       })
     } else {
-      sidebarNavigation.forEach(item => item.current = (route().current().includes(item?.routeGroup)))
+      sidebarNavigation.forEach(item => item.current = (currentRouteName.includes(item?.routeGroup)))
     }
   }
 

@@ -4,6 +4,7 @@ namespace App\Models\Categories;
 
 use App\Models\Exams\Item;
 use App\Models\Exams\Question;
+use App\Traits\BelongsToClient;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations;
 use Veelasky\LaravelHashId\Eloquent\HashableId;
@@ -19,10 +20,11 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 class Category extends Model
 {
     use HashableId;
+    use BelongsToClient;
 
     protected $table = 'categories';
 
-    protected $fillable = ['name', 'description', 'type', 'code'];
+    protected $fillable = ['name', 'description', 'type', 'code', 'client_id'];
 
     protected $appends = ['slug', 'question_total', 'hash'];
 

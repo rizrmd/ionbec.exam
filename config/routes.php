@@ -86,6 +86,9 @@ return [
 
         App\Http\Controllers\BackOffice\UserController::class,
         App\Http\Controllers\BackOffice\ProfileController::class,
+        App\Http\Controllers\BackOffice\ClientManagementController::class,
+        App\Http\Controllers\BackOffice\RootDashboardController::class,
+        App\Http\Controllers\BackOffice\UserManagementController::class,
         /** @inject back-office **/
     ],
     'exam' => [

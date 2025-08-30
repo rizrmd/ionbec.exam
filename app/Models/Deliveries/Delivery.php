@@ -9,6 +9,7 @@ use App\Models\Takers\Taker;
 use App\Scopes\DeliveryScope;
 use App\Models\Log\ActivityLog;
 use App\Models\Attempts\Attempt;
+use App\Traits\BelongsToClient;
 use App\Attributes\DeliveryAttributes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations;
@@ -37,6 +38,7 @@ class Delivery extends Model
     use HashableId;
     use DeliveryAttributes;
     use DeliveryScope;
+    use BelongsToClient;
 
     /**
      * The table associated with the model.
@@ -51,7 +53,7 @@ class Delivery extends Model
      * @var array
      */
     protected $fillable = [
-        'exam_id', 'group_id', 'name', 'is_anytime', 'scheduled_at', 'ended_at', 'duration', 'automatic_start',
+        'exam_id', 'group_id', 'name', 'is_anytime', 'scheduled_at', 'ended_at', 'duration', 'automatic_start', 'client_id',
     ];
 
     /**

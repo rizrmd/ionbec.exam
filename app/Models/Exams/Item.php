@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use App\Models\Categories\Category;
 use App\Knowledge\Exam\Item\ItemType;
 use App\Models\Attachments\Attachment;
+use App\Traits\BelongsToClient;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations;
 use Veelasky\LaravelHashId\Eloquent\HashableId;
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 class Item extends Model
 {
     use HashableId;
+    use BelongsToClient;
 
     /**
      * The table associated with the model.
@@ -34,7 +36,7 @@ class Item extends Model
      *
      * @var array
      */
-    protected $fillable = ['title', 'content', 'type'];
+    protected $fillable = ['title', 'content', 'type', 'client_id'];
 
     /**
      * The accessors to append to the model's array form.

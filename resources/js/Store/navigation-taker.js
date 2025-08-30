@@ -44,7 +44,12 @@ export default defineStore('navigation-taker', () => {
   const sidebarNavigation = reactive([...defaultSidebarNavigation])
 
   const refreshCurrentActivePage = () => {
-    const currentRoute = route().current().split('.');
+    const currentRouteName = route().current();
+    if (!currentRouteName) {
+      return;
+    }
+    
+    const currentRoute = currentRouteName.split('.');
     if (currentRoute.length >= 2) {
       sidebarNavigation.forEach(item => {
         if (item.routeGroup !== undefined) {
@@ -55,7 +60,7 @@ export default defineStore('navigation-taker', () => {
         }
       })
     } else {
-      sidebarNavigation.forEach(item => item.current = (route().current().includes(item?.routeGroup)))
+      sidebarNavigation.forEach(item => item.current = (currentRouteName.includes(item?.routeGroup)))
     }
   }
 

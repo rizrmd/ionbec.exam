@@ -5,6 +5,7 @@ namespace App\Models\Takers;
 use Carbon\Carbon;
 use Carbon\Traits\Date;
 use App\Models\Deliveries\Delivery;
+use App\Traits\BelongsToClient;
 use Illuminate\Database\Eloquent\Model;
 use Veelasky\LaravelHashId\Eloquent\HashableId;
 
@@ -22,6 +23,7 @@ use Veelasky\LaravelHashId\Eloquent\HashableId;
 class Group extends Model
 {
     use HashableId;
+    use BelongsToClient;
 
     /**
      * The table associated with the model.
@@ -35,7 +37,7 @@ class Group extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'description', 'closed_at'];
+    protected $fillable = ['name', 'description', 'closed_at', 'client_id'];
 
     protected $hidden = ['id'];
     protected $appends = ['hash', 'closed_in'];

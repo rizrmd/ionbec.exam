@@ -14,7 +14,7 @@ const appName = window.document.getElementsByTagName('title')[0]?.innerText || '
 
 createInertiaApp({
   title: (title) => `${title} - ${appName}`,
-  resolve: (name) => require(`./Pages/${name}.vue`),
+  resolve: (name) => import(`./Pages/${name}.vue`).then(module => module.default),
   setup({el, app, props, plugin}) {
     createApp({render: () => h(app, props)})
       .use(createPinia())

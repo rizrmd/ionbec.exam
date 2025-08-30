@@ -38,6 +38,43 @@ class CalculateScore implements ShouldQueue
      */
     public function handle()
     {
+        // Check if Rust service is available
+        $useRustService = env('USE_RUST_SCORING', true);
+        
+        if ($useRustService) {
+            try {
+                // Use Rust service for scoring
+                $rustService = app(\App\Services\RustService::class);
+                $result = $rustService->calculateScoreForAttempt($this->attempt->id);
+                
+                if (!isset($result['error'])) {
+                    // Successfully calculated using Rust
+                    event(new ScoringEvent($this->attempt->fresh()));
+                    
+                    \Log::info('Score calculated using Rust service', [
+                        'attempt_id' => $this->attempt->id,
+                        'score' => $result['score'] ?? 0,
+                        'processing_time_ms' => $result['processing_time_ms'] ?? 0
+                    ]);
+                    
+                    return;
+                }
+                
+                // Fall back to PHP if Rust fails
+                \Log::warning('Rust scoring failed, falling back to PHP', [
+                    'attempt_id' => $this->attempt->id,
+                    'error' => $result['error'] ?? 'Unknown error'
+                ]);
+            } catch (\Exception $e) {
+                // Fall back to PHP if Rust service is unavailable
+                \Log::warning('Rust service unavailable, using PHP scoring', [
+                    'attempt_id' => $this->attempt->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        // Original PHP implementation (fallback)
         // why distinct? because somehow, one question can be answered twice (bug?)
         $attemptQuestionsQuery = $this->attempt->attemptQuestions()->distinct('question_id'); // 100
 

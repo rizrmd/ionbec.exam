@@ -1,0 +1,32 @@
+# Example Docker Compose override for Rust services
+# Copy this to docker-compose.override.yml to enable Rust services
+version: '3.8'
+
+services:
+  # Example Rust service that could be added
+  # rust-service:
+  #   image: rust:1.75-alpine
+  #   command: cargo run --release
+  #   volumes:
+  #     - ./rust-app:/app
+  #   working_dir: /app
+  #   networks:
+  #     - backend
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:password@postgres:5432/ionbec_exam
+  #     - REDIS_URL=redis://redis:6379
+
+  # PostgreSQL database (if needed for Rust services)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: ionbec_exam
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: password
+  #   volumes:
+  #     - ./docker/data/postgres:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - backend

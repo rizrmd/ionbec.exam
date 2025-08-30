@@ -1,4 +1,5 @@
 import ziggyRoute from 'ziggy-js'
+import { Ziggy } from '../ziggy'
 
 const route = (name, params = undefined, absolute = undefined) => {
   return ziggyRoute(name, params, absolute, Ziggy)

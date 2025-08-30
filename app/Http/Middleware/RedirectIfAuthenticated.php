@@ -23,6 +23,9 @@ class RedirectIfAuthenticated
             if (Auth::guard($guard)->check()) {
                 if ('web' === $guard) {
                     $roles = Auth::guard($guard)->user()->roles->pluck('slug')->toArray();
+                    if (in_array('root', $roles)) {
+                        return redirect()->route('back-office.clients.index');
+                    }
                     if (in_array('administrator', $roles)) {
                         return redirect()->route('back-office.dashboard');
                     }

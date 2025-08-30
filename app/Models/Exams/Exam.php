@@ -2,6 +2,7 @@
 
 namespace App\Models\Exams;
 
+use App\Traits\BelongsToClient;
 use Illuminate\Support\Collection;
 use App\Models\Deliveries\Delivery;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,7 @@ use Veelasky\LaravelHashId\Eloquent\HashableId;
 class Exam extends Model
 {
     use HashableId;
+    use BelongsToClient;
 
     /**
      * The table associated with the model.
@@ -31,7 +33,7 @@ class Exam extends Model
      *
      * @var array
      */
-    protected $fillable = ['code', 'name', 'description', 'options', 'is_mcq', 'is_random', 'is_interview'];
+    protected $fillable = ['code', 'name', 'description', 'options', 'is_mcq', 'is_random', 'is_interview', 'client_id'];
 
     /**
      * The relations to eager load on every query.

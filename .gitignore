@@ -1,3 +1,4 @@
+# Laravel
 /node_modules
 /public/hot
 /public/storage
@@ -6,20 +7,71 @@
 /public/js
 /public/mix-manifest.json
 /storage/*.key
+/storage/logs/*.log
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
 /vendor
-.DS_Store
-.env
-.env.backup
 .phpunit.result.cache
 .php-cs-fixer.cache
-docker-compose.override.yml
 Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
-/.idea
-/.vscode
+
+# Environment files
+.env
+.env.backup
 .env.*
+!.env.example
 !.env.testing
 !.env.docker
+
+# Docker
+docker-compose.override.yml
 /docker/datadir
+/docker/data
+
+# Rust
+/rust-service/target
+/rust-service/Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# IDE
+/.idea
+/.vscode
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.cache
+*.bak
+*.backup
+*.old
+
+# Test files
+/coverage
+*.pid
+*.seed
+*.pid.lock
+
+# Build artifacts
+/build
+/dist
+/out

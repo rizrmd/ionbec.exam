@@ -31,7 +31,6 @@ services:
                 max-file: "3"
         restart: unless-stopped
         depends_on:
-            - db
             - redis
         volumes:
             # laravel comes up with public dir inside workdir, so we will mount only /var/www
@@ -41,21 +40,6 @@ services:
         networks:
             - backend
         working_dir: /var/www
-    db:
-        image: mysql/mysql-server:latest
-        volumes:
-            - ${DOCKER_DATA_PATH_HOST}/mysql:/var/lib/mysql
-        restart: unless-stopped
-        command: --default-authentication-plugin=mysql_native_password
-        environment:
-            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-            MYSQL_DATABASE: ${DB_DATABASE}
-            MYSQL_USER: ${DB_USERNAME}
-            MYSQL_PASSWORD: ${DB_PASSWORD}
-        networks:
-            - backend
-        ports:
-            - ":3306"
     redis:
         image: redis
         restart: unless-stopped
@@ -63,11 +47,24 @@ services:
             - ${DOCKER_DATA_PATH_HOST}/redis:/data
         networks:
             - backend
+    # Uncomment if you want to use local PostgreSQL instead of external
+    # postgres:
+    #     image: postgres:15-alpine
+    #     restart: unless-stopped
+    #     environment:
+    #         POSTGRES_DB: ${DB_DATABASE}
+    #         POSTGRES_USER: ${DB_USERNAME}
+    #         POSTGRES_PASSWORD: ${DB_PASSWORD}
+    #     volumes:
+    #         - ${DOCKER_DATA_PATH_HOST}/postgres:/var/lib/postgresql/data
+    #     ports:
+    #         - "5432:5432"
+    #     networks:
+    #         - backend
     horizon:
         image: ghcr.io/digital-entropy/dokar-php/cli:8.1
         restart: unless-stopped
         depends_on:
-            - db
             - redis
         volumes:
             - ./:/var/www
@@ -84,7 +81,6 @@ services:
         image: ghcr.io/digital-entropy/dokar-php/cli:8.1
         restart: unless-stopped
         depends_on:
-            - db
             - redis
         volumes:
             - ./:/var/www
@@ -116,3 +112,20 @@ services:
             - SOKETI_DEFAULT_APP_SECRET=${PUSHER_APP_SECRET}
         networks:
             - backend
+    rust-service:
+        build:
+            context: ./rust-service
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        ports:
+            - "${RUST_SERVICE_PORT:-3000}:3000"
+        environment:
+            - RUST_LOG=${RUST_LOG:-info}
+            - DATABASE_URL=postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_DATABASE}
+            - REDIS_URL=redis://redis:6379
+        depends_on:
+            - redis
+        networks:
+            - backend
+        volumes:
+            - ./storage/app/public:/app/storage:ro

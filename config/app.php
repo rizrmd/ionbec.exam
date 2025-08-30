@@ -18,6 +18,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Main Domain
+    |--------------------------------------------------------------------------
+    |
+    | This value is the main domain where root administrators can access
+    | the application. This domain is not associated with any client.
+    |
+    */
+
+    'main_domain' => env('APP_MAIN_DOMAIN', 'localhost'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

@@ -3,6 +3,7 @@
 namespace App\Models\Takers;
 
 use App\Models\Attempts\Attempt;
+use App\Traits\BelongsToClient;
 use Illuminate\Support\Facades\DB;
 use App\Models\Deliveries\Delivery;
 use Illuminate\Database\Eloquent\Relations;
@@ -24,6 +25,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class Taker extends Authenticatable
 {
     use HashableId;
+    use BelongsToClient;
 
     /**
      * The table associated with the model.
@@ -37,7 +39,7 @@ class Taker extends Authenticatable
      *
      * @var array
      */
-    protected $fillable = ['name', 'reg', 'email', 'password', 'is_verified'];
+    protected $fillable = ['name', 'reg', 'email', 'password', 'is_verified', 'client_id'];
 
     protected $hidden = ['id'];
     protected $appends = ['hash'];

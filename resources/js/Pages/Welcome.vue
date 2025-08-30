@@ -31,7 +31,9 @@ const userRoles = computed( () => {
 })
 
 const getUserRoute = () => {
-  if (userRoles.value.includes('administrator')) {
+  if (userRoles.value.includes('root')) {
+    return route('back-office.root-dashboard')
+  } else if (userRoles.value.includes('administrator')) {
     return route('back-office.dashboard')
   } else {
     return route('back-office.scoring.index');
