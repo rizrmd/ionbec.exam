@@ -34,6 +34,8 @@ class ImportLegacyDatabase extends Command
     protected $mysqlConnection;
     protected $client;
     protected $isDryRun = false;
+    protected $deliveryMap = []; // Map legacy delivery IDs to new delivery IDs
+    protected $takerMap = []; // Map legacy taker IDs to new taker IDs
     protected $statistics = [
         'clients' => 0,
         'users' => 0,
@@ -62,7 +64,10 @@ class ImportLegacyDatabase extends Command
                 return $this->verifyImportedData();
             }
             
-            DB::beginTransaction();
+            // Skip transactions for live runs to avoid timeout issues
+            if ($this->isDryRun) {
+                DB::beginTransaction();
+            }
             
             $this->importClient();
             $this->importRoles();
@@ -76,7 +81,6 @@ class ImportLegacyDatabase extends Command
                 DB::rollBack();
                 $this->info('🔄 Dry run completed - transaction rolled back');
             } else {
-                DB::commit();
                 $this->info('✅ Import completed successfully');
             }
             
@@ -276,16 +280,26 @@ class ImportLegacyDatabase extends Command
             $this->info("Processing taker: {$legacyTaker->name}");
             
             if (!$this->isDryRun) {
-                $taker = Taker::create([
-                    'name' => $legacyTaker->name,
-                    'reg' => $legacyTaker->reg,
-                    'email' => $legacyTaker->email,
-                    'password' => $legacyTaker->password,
-                    'is_verified' => $legacyTaker->is_verified,
-                    'client_id' => $this->client->id,
-                    'created_at' => $legacyTaker->created_at,
-                    'updated_at' => $legacyTaker->updated_at,
-                ]);
+                // Use updateOrCreate to handle duplicate emails in legacy data
+                $uniqueKey = $legacyTaker->email 
+                    ? ['email' => $legacyTaker->email, 'client_id' => $this->client->id]
+                    : ['name' => $legacyTaker->name, 'client_id' => $this->client->id];
+                
+                $taker = Taker::updateOrCreate(
+                    $uniqueKey,
+                    [
+                        'name' => $legacyTaker->name,
+                        'reg' => $legacyTaker->reg,
+                        'email' => $legacyTaker->email,
+                        'password' => $legacyTaker->password,
+                        'is_verified' => $legacyTaker->is_verified,
+                        'created_at' => $legacyTaker->created_at,
+                        'updated_at' => $legacyTaker->updated_at,
+                    ]
+                );
+                
+                // Store mapping for attempts import
+                $this->takerMap[$legacyTaker->id] = $taker->id;
                 
                 // Attach to groups
                 foreach ($takerRecords as $record) {
@@ -295,6 +309,9 @@ class ImportLegacyDatabase extends Command
                         ]);
                     }
                 }
+            } else {
+                // In dry run, we still need to build the mapping for testing
+                $this->takerMap[$legacyTaker->id] = $takerId; // Use legacy ID as placeholder
             }
             
             $this->statistics['takers']++;
@@ -316,6 +333,7 @@ class ImportLegacyDatabase extends Command
             
             if (!$this->isDryRun) {
                 $exam = Exam::create([
+                    'code' => $legacyExam->code,
                     'name' => $legacyExam->name,
                     'title' => $legacyExam->title ?? $legacyExam->name,
                     'description' => $legacyExam->description,
@@ -332,7 +350,11 @@ class ImportLegacyDatabase extends Command
         }
         
         // Import Questions
-        $legacyQuestions = $this->mysqlConnection->table('questions')->get();
+        $legacyQuestions = $this->mysqlConnection
+            ->table('questions as q')
+            ->join('exam_item as ei', 'q.item_id', '=', 'ei.item_id')
+            ->select('q.*', 'ei.exam_id')
+            ->get();
         
         foreach ($legacyQuestions as $legacyQuestion) {
             if (!$this->isDryRun && isset($examMap[$legacyQuestion->exam_id])) {
@@ -357,19 +379,52 @@ class ImportLegacyDatabase extends Command
         
         $legacyDeliveries = $this->mysqlConnection->table('deliveries')->get();
         
+        // Build mappings from legacy to new IDs
+        $examMap = [];
+        $exams = Exam::where('client_id', $this->client->id)->get();
+        foreach ($exams as $exam) {
+            // Find legacy exam by code
+            $legacyExam = $this->mysqlConnection->table('exams')->where('code', $exam->code)->first();
+            if ($legacyExam) {
+                $examMap[$legacyExam->id] = $exam->id;
+            }
+        }
+        
+        $groupMap = [];
+        $groups = Group::where('client_id', $this->client->id)->get();
+        foreach ($groups as $group) {
+            // Find legacy group by code
+            $legacyGroup = $this->mysqlConnection->table('groups')->where('code', $group->code)->first();
+            if ($legacyGroup) {
+                $groupMap[$legacyGroup->id] = $group->id;
+            }
+        }
+        
         foreach ($legacyDeliveries as $legacyDelivery) {
             $this->info("Processing delivery: {$legacyDelivery->id}");
             
             if (!$this->isDryRun) {
-                Delivery::create([
-                    'exam_id' => $legacyDelivery->exam_id,
-                    'group_id' => $legacyDelivery->group_id,
+                // Map legacy IDs to new IDs
+                $newExamId = $examMap[$legacyDelivery->exam_id] ?? null;
+                $newGroupId = $groupMap[$legacyDelivery->group_id] ?? null;
+                
+                if (!$newExamId || !$newGroupId) {
+                    $this->warn("⚠️  Skipping delivery {$legacyDelivery->id} - missing exam or group mapping");
+                    continue;
+                }
+                
+                $delivery = Delivery::create([
+                    'exam_id' => $newExamId,
+                    'group_id' => $newGroupId,
                     'started_at' => $legacyDelivery->started_at,
                     'ended_at' => $legacyDelivery->ended_at,
                     'client_id' => $this->client->id,
                     'created_at' => $legacyDelivery->created_at,
                     'updated_at' => $legacyDelivery->updated_at,
                 ]);
+                
+                // Store mapping for attempts import
+                $this->deliveryMap[$legacyDelivery->id] = $delivery->id;
             }
             
             $this->statistics['deliveries']++;
@@ -385,10 +440,21 @@ class ImportLegacyDatabase extends Command
         $legacyAttempts = $this->mysqlConnection->table('attempts')->get();
         
         foreach ($legacyAttempts as $legacyAttempt) {
+            $this->info("Processing attempt: {$legacyAttempt->id}");
+            
             if (!$this->isDryRun) {
+                // Map legacy IDs to new IDs
+                $newTakerId = $this->takerMap[$legacyAttempt->taker_id] ?? null;
+                $newDeliveryId = $this->deliveryMap[$legacyAttempt->delivery_id] ?? null;
+                
+                if (!$newTakerId || !$newDeliveryId) {
+                    $this->warn("⚠️  Skipping attempt {$legacyAttempt->id} - missing taker or delivery mapping");
+                    continue;
+                }
+                
                 Attempt::create([
-                    'taker_id' => $legacyAttempt->taker_id,
-                    'delivery_id' => $legacyAttempt->delivery_id,
+                    'taker_id' => $newTakerId,
+                    'delivery_id' => $newDeliveryId,
                     'started_at' => $legacyAttempt->started_at,
                     'finished_at' => $legacyAttempt->finished_at,
                     'score' => $legacyAttempt->score,
