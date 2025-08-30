@@ -1,126 +1,155 @@
-networks:
-    frontend:
-        driver: ${DOCKER_NETWORKS_DRIVER:-bridge}
-    backend:
-        driver: ${DOCKER_NETWORKS_DRIVER:-bridge}
+version: '3.8'
 
 services:
-    gateway:
-        image: nginx
-        restart: unless-stopped
-        volumes:
-            - ./docker/matter/gateway:/etc/nginx/conf.d
-        ports:
-            - "${DOCKER_PORT:-3001}:80"
-        networks:
-            - frontend
-            - backend
-        depends_on:
-            - octane
-            - soketi
-    octane:
-        build:
-            context: .
-            dockerfile: docker/image/Dockerfile
-        logging:
-            options:
-                max-size: "10m"
-                max-file: "3"
-        restart: unless-stopped
-        depends_on:
-            - redis
-        environment:
-            DOCKER_ENV: ${APP_ENV}
-        networks:
-            - backend
-        working_dir: /var/www
-    redis:
-        image: redis
-        restart: unless-stopped
-        volumes:
-            - redis_data:/data
-        networks:
-            - backend
-    # Uncomment if you want to use local PostgreSQL instead of external
-    # postgres:
-    #     image: postgres:15-alpine
-    #     restart: unless-stopped
-    #     environment:
-    #         POSTGRES_DB: ${DB_DATABASE}
-    #         POSTGRES_USER: ${DB_USERNAME}
-    #         POSTGRES_PASSWORD: ${DB_PASSWORD}
-    #     volumes:
-    #         - ${DOCKER_DATA_PATH_HOST}/postgres:/var/lib/postgresql/data
-    #     ports:
-    #         - "5432:5432"
-    #     networks:
-    #         - backend
-    horizon:
-        build:
-            context: .
-            dockerfile: docker/image/Dockerfile
-        restart: unless-stopped
-        depends_on:
-            - redis
-        networks:
-            - backend
-        environment:
-            - USER=${DOCKER_USER:-dokar}
-            - PUID=${DOCKER_PUID:-1000}
-            - PGID=${DOCKER_PGID:-1000}
-        working_dir: /var/www
-        command: ["sh", "-c", "sleep 10 && php artisan horizon"]
-    scheduler:
-        build:
-            context: .
-            dockerfile: docker/image/Dockerfile
-        restart: unless-stopped
-        depends_on:
-            - redis
-        networks:
-            - backend
-        environment:
-            - USER=${DOCKER_USER:-dokar}
-            - PUID=${DOCKER_PUID:-1000}
-            - PGID=${DOCKER_PGID:-1000}
-        working_dir: /var/www
-        command: ["sh", "-c", "sleep 5 && while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"]
-    soketi:
-        image: quay.io/soketi/soketi:latest-16-alpine
-        restart: unless-stopped
-        ports:
-            - 6001
-        logging:
-            options:
-                max-size: "10m"
-        environment:
-            - DEBUG=${APP_DEBUG}
-            - METRICS_SERVER_PORT='9601'
-            - SOKETI_DB_REDIS_HOST=redis
-            - SOKETI_DB_REDIS_PORT=6379
-            - SOKETI_DB_REDIS_KEY_PREFIX=soketi
-            - SOKETI_DEFAULT_APP_ID=${PUSHER_APP_ID}
-            - SOKETI_DEFAULT_APP_KEY=${PUSHER_APP_KEY}
-            - SOKETI_DEFAULT_APP_SECRET=${PUSHER_APP_SECRET}
-        networks:
-            - backend
-    rust-service:
-        build:
-            context: ./rust-service
-            dockerfile: Dockerfile
-        restart: unless-stopped
-        ports:
-            - "${RUST_SERVICE_PORT:-3000}:3000"
-        environment:
-            - RUST_LOG=${RUST_LOG:-info}
-            - DATABASE_URL=postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_DATABASE}
-            - REDIS_URL=redis://redis:6379
-        depends_on:
-            - redis
-        networks:
-            - backend
-        volumes:
-            - ./storage/app/public:/app/storage:ro
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      # App Configuration
+      APP_NAME: ${APP_NAME:-Laravel}
+      APP_ENV: ${APP_ENV:-production}
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-http://localhost}
+      
+      # Database Configuration (External Postgres)
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      
+      # Redis Configuration (Internal)
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+      REDIS_PORT: 6379
+      
+      # Cache/Session Configuration
+      CACHE_DRIVER: ${CACHE_DRIVER:-redis}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+      
+      # Mail Configuration
+      MAIL_MAILER: ${MAIL_MAILER:-smtp}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+      MAIL_FROM_NAME: "${MAIL_FROM_NAME:-${APP_NAME}}"
+      
+      # Pusher/Broadcasting
+      BROADCAST_DRIVER: ${BROADCAST_DRIVER:-pusher}
+      PUSHER_APP_ID: ${PUSHER_APP_ID}
+      PUSHER_APP_KEY: ${PUSHER_APP_KEY}
+      PUSHER_APP_SECRET: ${PUSHER_APP_SECRET}
+      PUSHER_APP_CLUSTER: ${PUSHER_APP_CLUSTER:-mt1}
+      
+      # Multi-tenant Configuration
+      SESSION_DOMAIN: ""
+      SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-false}
+      SANCTUM_STATEFUL_DOMAINS: "*"
+    volumes:
+      # Application storage
+      - app_storage:/var/www/storage
+      - app_cache:/var/www/bootstrap/cache
+    depends_on:
+      - redis
+    networks:
+      - app_network
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Queue Worker
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    environment:
+      # Same environment variables as app service
+      APP_NAME: ${APP_NAME:-Laravel}
+      APP_ENV: ${APP_ENV:-production}
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CACHE_DRIVER: ${CACHE_DRIVER:-redis}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+    volumes:
+      - app_storage:/var/www/storage
+      - app_cache:/var/www/bootstrap/cache
+    depends_on:
+      - redis
+    networks:
+      - app_network
+
+  # Scheduler
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    environment:
+      # Same environment variables as app service
+      APP_NAME: ${APP_NAME:-Laravel}
+      APP_ENV: ${APP_ENV:-production}
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CACHE_DRIVER: ${CACHE_DRIVER:-redis}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+    volumes:
+      - app_storage:/var/www/storage
+      - app_cache:/var/www/bootstrap/cache
+    depends_on:
+      - redis
+    networks:
+      - app_network
 
 volumes:
-    redis_data:
+  app_storage:
+    driver: local
+  app_cache:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge
