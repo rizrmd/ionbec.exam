@@ -1,14 +1,6 @@
 FROM ghcr.io/digital-entropy/dokar-php/octane:8.1
 
-ARG USER_CONTAINER=dokar
-ARG PUID=1000
-ARG PGID=1000
-
-# Create user if it doesn't exist
-RUN if ! grep -q ${PGID} /etc/group; then groupadd -g ${PGID} ${USER_CONTAINER}; fi && \
-    useradd --gid ${PGID} --uid ${PUID} -m ${USER_CONTAINER}
-
-# Install PostgreSQL client and tools for potential Rust integration
+# Install PostgreSQL client and tools
 RUN apt-get update && apt-get install -y \
     postgresql-client \
     curl \
@@ -21,11 +13,10 @@ WORKDIR /var/www
 # Copy Laravel application files
 COPY . /var/www
 
-# Set proper permissions
-RUN chown -R ${USER_CONTAINER}:${USER_CONTAINER} /var/www
-
-# Switch to non-root user
-USER ${USER_CONTAINER}
-
-# Install composer dependencies
+# Install composer dependencies as root (simpler approach)
 RUN composer install --no-dev --optimize-autoloader
+
+# Set proper permissions for www-data user (standard web user)
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+
+# The base image will handle the user switching

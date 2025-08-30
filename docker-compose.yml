@@ -21,10 +21,6 @@ services:
     octane:
         build:
             context: docker/image
-            args:
-                - USER_CONTAINER=${DOCKER_USER:-dokar}
-                - PUID=${DOCKER_PUID:-1000}
-                - PGID=${DOCKER_PGID:-1000}
         logging:
             options:
                 max-size: "10m"
@@ -61,10 +57,6 @@ services:
     horizon:
         build:
             context: docker/image
-            args:
-                - USER_CONTAINER=${DOCKER_USER:-dokar}
-                - PUID=${DOCKER_PUID:-1000}
-                - PGID=${DOCKER_PGID:-1000}
         restart: unless-stopped
         depends_on:
             - redis
@@ -79,10 +71,6 @@ services:
     scheduler:
         build:
             context: docker/image
-            args:
-                - USER_CONTAINER=${DOCKER_USER:-dokar}
-                - PUID=${DOCKER_PUID:-1000}
-                - PGID=${DOCKER_PGID:-1000}
         restart: unless-stopped
         depends_on:
             - redis
