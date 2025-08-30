@@ -5,6 +5,9 @@ use Illuminate\Contracts\Http\Kernel;
 
 define('LARAVEL_START', microtime(true));
 
+// Debug what's reaching PHP
+error_log("REQUEST_URI: " . ($_SERVER['REQUEST_URI'] ?? 'none') . " | QUERY_STRING: " . ($_SERVER['QUERY_STRING'] ?? 'none') . " | PATH_INFO: " . ($_SERVER['PATH_INFO'] ?? 'none'));
+
 /*
 |--------------------------------------------------------------------------
 | Check If The Application Is Under Maintenance
