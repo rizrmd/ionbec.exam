@@ -171,9 +171,9 @@ echo "Starting Nginx on port 3000..."\n\
 nginx -g "daemon off;"\n\
 ' > /usr/local/bin/start.sh && chmod +x /usr/local/bin/start.sh
 
-# Simple healthcheck - just check if port is listening (ignore HTTP status)
+# Healthcheck that verifies the Laravel app is responding
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD nc -z localhost 3000 || exit 1
+    CMD curl -f http://localhost:3000/ || nc -z localhost 3000 || exit 1
 
 # Expose port 3000
 EXPOSE 3000
