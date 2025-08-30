@@ -13,10 +13,19 @@ WORKDIR /var/www
 # Copy Laravel application files
 COPY . /var/www
 
-# Install composer dependencies as root (simpler approach)
-RUN composer install --no-dev --optimize-autoloader
+# Install composer dependencies as root
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# Set proper permissions for www-data user (standard web user)
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+# Install npm dependencies and build assets as root
+RUN npm ci && npm run production
+
+# Run Laravel post-install scripts
+RUN composer run-script post-autoload-dump
+
+# Set proper permissions for www-data user
+RUN chown -R www-data:www-data /var/www
+
+# Clean up node_modules to reduce image size (optional)
+RUN rm -rf /var/www/node_modules
 
 # The base image will handle the user switching
