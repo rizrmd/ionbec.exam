@@ -44,7 +44,7 @@ services:
         image: redis
         restart: unless-stopped
         volumes:
-            - ${DOCKER_DATA_PATH_HOST:-./docker/data}/redis:/data
+            - redis_data:/data
         networks:
             - backend
     # Uncomment if you want to use local PostgreSQL instead of external
@@ -129,3 +129,6 @@ services:
             - backend
         volumes:
             - ./storage/app/public:/app/storage:ro
+
+volumes:
+    redis_data:
