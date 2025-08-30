@@ -11,7 +11,7 @@ services:
         volumes:
             - ./docker/matter/gateway:/etc/nginx/conf.d
         ports:
-            - "${DOCKER_PORT:-8080}:80"
+            - "${DOCKER_PORT:-3001}:80"
         networks:
             - frontend
             - backend
