@@ -36,8 +36,8 @@ RUN composer install --no-scripts --no-autoloader --no-dev
 # Copy package.json and package-lock.json for better caching
 COPY package.json package-lock.json* ./
 
-# Install npm dependencies
-RUN npm ci --only=production
+# Install npm dependencies (including dev dependencies for build)
+RUN npm ci
 
 # Copy application files
 COPY . .
