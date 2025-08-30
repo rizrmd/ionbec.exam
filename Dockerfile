@@ -1,5 +1,9 @@
 FROM php:8.1-fpm
 
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
 # Install system dependencies including nginx
 RUN apt-get update && apt-get install -y \
     git \
@@ -29,8 +33,17 @@ COPY composer.json composer.lock ./
 # Install PHP dependencies
 RUN composer install --no-scripts --no-autoloader --no-dev
 
+# Copy package.json and package-lock.json for better caching
+COPY package.json package-lock.json* ./
+
+# Install npm dependencies
+RUN npm ci --only=production
+
 # Copy application files
 COPY . .
+
+# Build frontend assets
+RUN npm run production
 
 # Complete composer setup and ensure all packages are properly discovered
 RUN composer dump-autoload --optimize --no-dev && \
