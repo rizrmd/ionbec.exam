@@ -32,8 +32,9 @@ RUN composer install --no-scripts --no-autoloader --no-dev
 # Copy application files
 COPY . .
 
-# Complete composer setup
-RUN composer dump-autoload --optimize --no-dev
+# Complete composer setup and ensure all packages are properly discovered
+RUN composer dump-autoload --optimize --no-dev && \
+    php artisan package:discover --ansi
 
 # Ensure static assets are accessible
 RUN chmod -R 755 public/
@@ -120,6 +121,14 @@ php artisan config:clear\n\
 php artisan cache:clear\n\
 php artisan view:clear\n\
 php artisan route:clear\n\
+\n\
+# Clear and regenerate package discovery\n\
+echo "Rediscovering packages..."\n\
+php artisan package:discover --ansi\n\
+\n\
+# List routes to verify they are loaded\n\
+echo "Checking registered routes..."\n\
+php artisan route:list --json | head -5 || echo "No routes found or route:list failed"\n\
 \n\
 # Skip caching in development/debugging\n\
 echo "APP_ENV: $APP_ENV"\n\

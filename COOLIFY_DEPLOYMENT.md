@@ -31,7 +31,7 @@
    Copy these environment variables to the application settings:
 
    ```env
-   APP_NAME=IONBEC
+   APP_NAME=MDXM
    APP_ENV=production
    APP_KEY=base64:BXmuQm+4JdpqL3GD+pTWlCBmE2+VjQjn2+yjLjqF43s=
    APP_DEBUG=false
@@ -48,7 +48,7 @@
    # Redis (using existing Redis service - standalone-redis:u8s0cgsks4gcwo84ccskwok4)
    # Note: The Redis service name in Coolify network is typically the container name
    # You may need to adjust REDIS_HOST based on the actual container name
-   REDIS_HOST=redis
+   REDIS_HOST=u8s0cgsks4gcwo84ccskwok4
    REDIS_PASSWORD=null
    REDIS_PORT=6379
    
