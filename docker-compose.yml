@@ -42,7 +42,7 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
-      MAIL_FROM_NAME: "${MAIL_FROM_NAME:-${APP_NAME}}"
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Laravel}
       
       # Pusher/Broadcasting
       BROADCAST_DRIVER: ${BROADCAST_DRIVER:-pusher}
