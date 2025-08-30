@@ -53,7 +53,7 @@ RUN composer dump-autoload --optimize --no-dev && \
 RUN chmod -R 755 public/
 
 # Configure nginx
-COPY nginx.conf /etc/nginx/sites-available/default
+COPY deployment/docker/nginx.conf /etc/nginx/sites-available/default
 RUN rm -f /etc/nginx/sites-enabled/default && \
     ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
