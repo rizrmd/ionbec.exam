@@ -32,9 +32,6 @@ services:
         restart: unless-stopped
         depends_on:
             - redis
-        volumes:
-            # laravel comes up with public dir inside workdir, so we will mount only /var/www
-            - ./:/var/www
         environment:
             DOCKER_ENV: ${APP_ENV}
         networks:
@@ -62,12 +59,15 @@ services:
     #     networks:
     #         - backend
     horizon:
-        image: ghcr.io/digital-entropy/dokar-php/cli:8.1
+        build:
+            context: docker/image
+            args:
+                - USER_CONTAINER=${DOCKER_USER:-dokar}
+                - PUID=${DOCKER_PUID:-1000}
+                - PGID=${DOCKER_PGID:-1000}
         restart: unless-stopped
         depends_on:
             - redis
-        volumes:
-            - ./:/var/www
         networks:
             - backend
         environment:
@@ -77,12 +77,15 @@ services:
         working_dir: /var/www
         command: ["sh", "-c", "sleep 10 && php artisan horizon"]
     scheduler:
-        image: ghcr.io/digital-entropy/dokar-php/cli:8.1
+        build:
+            context: docker/image
+            args:
+                - USER_CONTAINER=${DOCKER_USER:-dokar}
+                - PUID=${DOCKER_PUID:-1000}
+                - PGID=${DOCKER_PGID:-1000}
         restart: unless-stopped
         depends_on:
             - redis
-        volumes:
-            - ./:/var/www
         networks:
             - backend
         environment:
