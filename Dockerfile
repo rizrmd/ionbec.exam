@@ -89,11 +89,22 @@ export SANCTUM_STATEFUL_DOMAINS="localhost,127.0.0.1,io844g808o48ccsoscc888s0.10
 echo "Session configured for HTTP with domain: $APP_URL"\n\
 echo "Sanctum stateful domains: $SANCTUM_STATEFUL_DOMAINS"\n\
 \n\
-# Use file driver if Redis is not available\n\
-if [ -z "$REDIS_URL" ]; then\n\
-    echo "No REDIS_URL found, using file session driver..."\n\
+# Check Redis connectivity\n\
+if [ ! -z "$REDIS_HOST" ]; then\n\
+    echo "Testing Redis connection at $REDIS_HOST:${REDIS_PORT:-6379}..."\n\
+    if nc -z -v -w5 $REDIS_HOST ${REDIS_PORT:-6379} 2>/dev/null; then\n\
+        echo "Redis is reachable at $REDIS_HOST:${REDIS_PORT:-6379}"\n\
+    else\n\
+        echo "Warning: Cannot reach Redis at $REDIS_HOST:${REDIS_PORT:-6379}, falling back to file drivers"\n\
+        export SESSION_DRIVER=file\n\
+        export CACHE_DRIVER=file\n\
+        export QUEUE_CONNECTION=sync\n\
+    fi\n\
+else\n\
+    echo "No REDIS_HOST found, using file session driver..."\n\
     export SESSION_DRIVER=file\n\
     export CACHE_DRIVER=file\n\
+    export QUEUE_CONNECTION=sync\n\
 fi\n\
 \n\
 # Override session config if needed\n\

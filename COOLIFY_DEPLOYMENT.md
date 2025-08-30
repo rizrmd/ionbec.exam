@@ -45,7 +45,9 @@
    DB_USERNAME=postgres
    DB_PASSWORD=6LP0Ojegy7IUU6kaX9lLkmZRUiAdAUNOltWyL3LegfYGR6rPQtB4DUSVqjdA78ES
    
-   # Redis (using existing Redis service)
+   # Redis (using existing Redis service - standalone-redis:u8s0cgsks4gcwo84ccskwok4)
+   # Note: The Redis service name in Coolify network is typically the container name
+   # You may need to adjust REDIS_HOST based on the actual container name
    REDIS_HOST=redis
    REDIS_PASSWORD=null
    REDIS_PORT=6379
@@ -73,11 +75,19 @@
 
 ## Application Features
 - Laravel 8.x application
-- PostgreSQL database (external)
-- Redis caching (optional)
+- PostgreSQL database (external at 107.155.75.50:5986)
+- Redis caching (using standalone-redis service in Coolify)
 - Nginx + PHP-FPM
 - Automated migrations on startup
 - Health check on port 3000
+
+## Redis Configuration
+- **Existing Redis Service**: Your Coolify has a healthy Redis service (UUID: u8s0cgsks4gcwo84ccskwok4)
+- **Container Name**: Typically accessible as `redis` within the Coolify network
+- **Important**: If the application can't connect to Redis, check:
+  1. The actual container name: `docker ps | grep redis`
+  2. Network connectivity between app and Redis containers
+  3. Update `REDIS_HOST` if the container name is different (e.g., `coolify-redis`, `redis-u8s0cgsks4gcwo84ccskwok4`)
 
 ## Post-Deployment Verification
 1. Check application is running: `http://mdxm.107.155.75.50.sslip.io`
