@@ -139,6 +139,14 @@ php artisan route:clear\n\
 echo "Rediscovering packages..."\n\
 php artisan package:discover --ansi\n\
 \n\
+# Force clear any cached routes that might interfere\n\
+echo "Clearing any cached routes..."\n\
+rm -f bootstrap/cache/routes-*.php\n\
+\n\
+# Force route registration by running artisan commands\n\
+echo "Forcing route registration..."\n\
+php artisan yalr:display || echo "Yalr command not available"\n\
+\n\
 # List routes to verify they are loaded\n\
 echo "Checking registered routes..."\n\
 php artisan route:list --json | head -5 || echo "No routes found or route:list failed"\n\
