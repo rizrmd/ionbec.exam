@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -7,7 +5,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:3000"
+      - "3000:3000"
     environment:
       # App Configuration
       APP_NAME: ${APP_NAME:-Laravel}
@@ -141,6 +139,25 @@ services:
       - redis
     networks:
       - app_network
+
+  # Rust Service for CSV processing and scoring
+  rust-service:
+    build:
+      context: ./rust-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${RUST_SERVICE_PORT:-3001}:3000"
+    environment:
+      RUST_LOG: ${RUST_LOG:-info}
+      DATABASE_URL: postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_DATABASE}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - app_network
+    volumes:
+      - app_storage:/app/storage:ro
 
 volumes:
   app_storage:
