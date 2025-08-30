@@ -86,21 +86,23 @@ if [ ! -f /var/www/public/mix-manifest.json ]; then\n\
     echo "{\\"/js/app.js\\": \\"/js/app.js\\",\\"/css/app.css\\": \\"/css/app.css\\"}" > /var/www/public/mix-manifest.json\n\
 fi\n\
 \n\
-# Fix session configuration for different domains\n\
-echo "Current SESSION_DOMAIN: $SESSION_DOMAIN"\n\
-echo "Current APP_URL: $APP_URL"\n\
+# Dynamic domain configuration for multi-tenant setup\n\
+echo "Configuring for dynamic multi-tenant domains..."\n\
+echo "Current APP_URL: ${APP_URL:-not set}"\n\
 \n\
-# Detect the actual URL if not matching\n\
-if [[ "$APP_URL" == *"ionbec.avolut.com"* ]]; then\n\
-    echo "Updating APP_URL to match sslip.io domain..."\n\
-    export APP_URL="http://io844g808o48ccsoscc888s0.107.155.75.50.sslip.io"\n\
+# If APP_URL is not set, use a wildcard configuration\n\
+if [ -z "$APP_URL" ]; then\n\
+    echo "APP_URL not set, using dynamic configuration"\n\
+    export APP_URL="http://localhost:3000"\n\
 fi\n\
 \n\
-# Clear session domain and disable secure cookies for HTTP\n\
+# Configure session for any domain (multi-tenant support)\n\
 export SESSION_DOMAIN=""\n\
 export SESSION_SECURE_COOKIE=false\n\
 export SESSION_SAME_SITE=lax\n\
-export SANCTUM_STATEFUL_DOMAINS="localhost,127.0.0.1,io844g808o48ccsoscc888s0.107.155.75.50.sslip.io"\n\
+\n\
+# Allow Sanctum to work with any domain by using wildcard\n\
+export SANCTUM_STATEFUL_DOMAINS="*"\n\
 echo "Session configured for HTTP with domain: $APP_URL"\n\
 echo "Sanctum stateful domains: $SANCTUM_STATEFUL_DOMAINS"\n\
 \n\
@@ -145,11 +147,15 @@ rm -f bootstrap/cache/routes-*.php\n\
 \n\
 # Force route registration by running artisan commands\n\
 echo "Forcing route registration..."\n\
-php artisan yalr:display || echo "Yalr command not available"\n\
+php artisan route:clear\n\
+php artisan route:cache || echo "Route caching not available in this environment"\n\
+\n\
+# Display YALR routes if available\n\
+php artisan yalr:display || echo "YALR routes check skipped"\n\
 \n\
 # List routes to verify they are loaded\n\
 echo "Checking registered routes..."\n\
-php artisan route:list --json | head -5 || echo "No routes found or route:list failed"\n\
+php artisan route:list --compact | head -10 || echo "Unable to display routes"\n\
 \n\
 # Test the root route directly\n\
 echo "Testing root route response..."\n\
