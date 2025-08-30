@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT DISTINCT q.id, q.item_id, q.type as question_type\n        FROM questions q\n        INNER JOIN items i ON i.id = q.item_id\n        INNER JOIN exam_item ei ON ei.item_id = i.id\n        WHERE ei.exam_id = $1\n        ORDER BY q.id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "item_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "question_type",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "35c206e071786f7bf097946891901bb0845690a0924f8753ac9cef1d52483f1b"
+}

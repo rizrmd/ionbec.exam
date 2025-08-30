@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
-use tokio::fs;
 use csv::ReaderBuilder;
 use std::time::Instant;
 

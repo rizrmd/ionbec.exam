@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT DISTINCT ON (question_id) \n            question_id,\n            answer,\n            is_correct,\n            score\n        FROM attempt_question\n        WHERE attempt_id = $1\n        ORDER BY question_id, id DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "question_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "answer",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "is_correct",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "score",
+        "type_info": "Numeric"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "06688d89cb0edd223acb09e1bd3f0be9fbde1c378510f9e2fd5e76d902c3eec1"
+}

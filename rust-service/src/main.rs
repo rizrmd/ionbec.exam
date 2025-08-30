@@ -30,6 +30,7 @@ struct HealthResponse {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct ProcessRequest {
     task_type: String,
     data: serde_json::Value,
@@ -146,7 +147,7 @@ async fn health_check(State(state): State<Arc<AppState>>) -> Json<HealthResponse
 }
 
 async fn process_task(
-    State(state): State<Arc<AppState>>,
+    State(_state): State<Arc<AppState>>,
     Json(payload): Json<ProcessRequest>,
 ) -> Result<Json<ProcessResponse>, StatusCode> {
     info!("Processing task: {}", payload.task_type);
@@ -189,6 +190,7 @@ struct ScoreRequest {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct Answer {
     question_id: i32,
     answer: String,
@@ -230,6 +232,7 @@ struct ExamValidationRequest {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct Question {
     id: i32,
     text: String,

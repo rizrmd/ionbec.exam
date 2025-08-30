@@ -1,7 +1,9 @@
+use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
-use sqlx::{PgPool, Row};
+use sqlx::{PgPool, Row, FromRow};
 use std::collections::HashMap;
-use tracing::{info, error, debug};
+use std::str::FromStr;
+use tracing::info;
 
 #[derive(Debug, Deserialize)]
 pub struct CalculateScoreRequest {
@@ -18,33 +20,35 @@ pub struct CalculateScoreResponse {
     pub processing_time_ms: u64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, FromRow)]
+#[allow(dead_code)]
 struct Attempt {
-    id: i64,
-    exam_id: i64,
-    delivery_id: i64,
-    taker_id: i64,
+    id: i32,
+    exam_id: i32,
+    delivery_id: i32,
+    attempted_by: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Item {
-    id: i64,
+    id: i32,
     is_vignette: bool,
 }
 
 #[derive(Debug)]
 struct Question {
-    id: i64,
-    item_id: i64,
+    id: i32,
+    item_id: i32,
     question_type: String,
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 struct AttemptQuestion {
-    question_id: i64,
+    question_id: i32,
     answer: Option<String>,
-    is_correct: Option<bool>,
-    score: Option<f64>,
+    is_correct: bool,
+    score: Option<f32>,
 }
 
 pub async fn calculate_score_for_attempt(
@@ -76,8 +80,8 @@ pub async fn calculate_score_for_attempt(
     }
     
     // 3. Fetch all items and questions for this exam
-    let items = fetch_exam_items(pool, attempt.exam_id).await?;
-    let questions = fetch_exam_questions(pool, attempt.exam_id).await?;
+    let items = fetch_exam_items(pool, attempt.exam_id.into()).await?;
+    let questions = fetch_exam_questions(pool, attempt.exam_id.into()).await?;
     
     // 4. Calculate total questions count
     let total_questions = questions.len() as i32;
@@ -85,17 +89,17 @@ pub async fn calculate_score_for_attempt(
     // 5. Create lookup maps for efficient processing
     let mut question_map: HashMap<i64, Question> = HashMap::new();
     for question in questions {
-        question_map.insert(question.id, question);
+        question_map.insert(question.id.into(), question);
     }
     
     let mut item_map: HashMap<i64, Item> = HashMap::new();
     for item in &items {
-        item_map.insert(item.id, item.clone());
+        item_map.insert(item.id.into(), item.clone());
     }
     
     let mut attempt_question_map: HashMap<i64, AttemptQuestion> = HashMap::new();
     for aq in attempt_questions {
-        attempt_question_map.insert(aq.question_id, aq);
+        attempt_question_map.insert(aq.question_id.into(), aq);
     }
     
     // 6. Calculate scores
@@ -124,7 +128,7 @@ pub async fn calculate_score_for_attempt(
                         "multiple-choice" => {
                             has_mcq = true;
                             // Auto-score MCQ: 100 if correct, 0 if wrong
-                            let score = if attempt_question.is_correct.unwrap_or(false) {
+                            let score = if attempt_question.is_correct {
                                 100.0
                             } else {
                                 0.0
@@ -136,12 +140,12 @@ pub async fn calculate_score_for_attempt(
                         }
                         "essay" => {
                             // Use manually set score (don't override)
-                            item_score += attempt_question.score.unwrap_or(0.0);
+                            item_score += attempt_question.score.unwrap_or(0.0) as f64;
                         }
                         "interview" => {
                             has_interview = true;
                             // Use manually set score (don't override)
-                            item_score += attempt_question.score.unwrap_or(0.0);
+                            item_score += attempt_question.score.unwrap_or(0.0) as f64;
                         }
                         _ => {
                             // Unknown type, treat as 0
@@ -170,15 +174,15 @@ pub async fn calculate_score_for_attempt(
             total_items += item_question_count;
         }
         
-        processed_items.insert(item.id, ProcessedItem {
-            score: item_score,
+        processed_items.insert(item.id.into(), ProcessedItem {
+            score: item_score as f64,
             question_count: item_question_count,
         });
     }
     
     // 7. Calculate final score and progress
     let final_score = if total_items > 0 {
-        total_score / total_items as f64
+        (total_score as f64) / (total_items as f64)
     } else {
         0.0
     };
@@ -187,7 +191,7 @@ pub async fn calculate_score_for_attempt(
     let progress = ((answered_count as f64 / total_questions as f64) * 100.0).ceil() as i32;
     
     // 8. Update attempt in database
-    update_attempt_score(pool, attempt_id, final_score, progress).await?;
+    update_attempt_score(pool, attempt_id, final_score as f64, progress).await?;
     
     // 9. Log performance metrics
     let processing_time = start.elapsed().as_millis() as u64;
@@ -198,7 +202,7 @@ pub async fn calculate_score_for_attempt(
     
     Ok(CalculateScoreResponse {
         attempt_id,
-        score: final_score,
+        score: final_score as f64,
         progress,
         total_questions,
         answered_questions: answered_count,
@@ -207,21 +211,17 @@ pub async fn calculate_score_for_attempt(
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct ProcessedItem {
     score: f64,
     question_count: i32,
 }
 
 async fn fetch_attempt(pool: &PgPool, attempt_id: i64) -> Result<Attempt, String> {
-    sqlx::query_as!(
-        Attempt,
-        r#"
-        SELECT id, exam_id, delivery_id, taker_id
-        FROM attempts
-        WHERE id = $1
-        "#,
-        attempt_id
+    sqlx::query_as::<_, Attempt>(
+        "SELECT id, exam_id, delivery_id, attempted_by FROM attempts WHERE id = $1"
     )
+    .bind(attempt_id as i32)
     .fetch_one(pool)
     .await
     .map_err(|e| format!("Failed to fetch attempt: {}", e))
@@ -232,19 +232,10 @@ async fn fetch_attempt_questions(
     attempt_id: i64,
 ) -> Result<Vec<AttemptQuestion>, String> {
     // Get distinct questions (in case of duplicates)
-    let rows = sqlx::query!(
-        r#"
-        SELECT DISTINCT ON (question_id) 
-            question_id,
-            answer,
-            is_correct,
-            score
-        FROM attempt_question
-        WHERE attempt_id = $1
-        ORDER BY question_id, id DESC
-        "#,
-        attempt_id
+    let rows = sqlx::query(
+        "SELECT DISTINCT ON (question_id) question_id, answer, is_correct, score FROM attempt_question WHERE attempt_id = $1 ORDER BY question_id, id DESC"
     )
+    .bind(attempt_id as i32)
     .fetch_all(pool)
     .await
     .map_err(|e| format!("Failed to fetch attempt questions: {}", e))?;
@@ -252,25 +243,19 @@ async fn fetch_attempt_questions(
     Ok(rows
         .into_iter()
         .map(|row| AttemptQuestion {
-            question_id: row.question_id,
-            answer: row.answer,
-            is_correct: row.is_correct,
-            score: row.score,
+            question_id: row.get::<i32, _>("question_id"),
+            answer: row.get::<Option<String>, _>("answer"),
+            is_correct: row.get::<bool, _>("is_correct"),
+            score: row.get::<Option<BigDecimal>, _>("score").map(|bd| bd.to_string().parse::<f32>().unwrap_or(0.0)),
         })
         .collect())
 }
 
 async fn fetch_exam_items(pool: &PgPool, exam_id: i64) -> Result<Vec<Item>, String> {
-    let rows = sqlx::query!(
-        r#"
-        SELECT DISTINCT i.id, i.is_vignette
-        FROM items i
-        INNER JOIN exam_item ei ON ei.item_id = i.id
-        WHERE ei.exam_id = $1
-        ORDER BY i.id
-        "#,
-        exam_id
+    let rows = sqlx::query(
+        "SELECT DISTINCT i.id, i.is_vignette FROM items i INNER JOIN exam_item ei ON ei.item_id = i.id WHERE ei.exam_id = $1 ORDER BY i.id"
     )
+    .bind(exam_id as i32)
     .fetch_all(pool)
     .await
     .map_err(|e| format!("Failed to fetch exam items: {}", e))?;
@@ -278,24 +263,17 @@ async fn fetch_exam_items(pool: &PgPool, exam_id: i64) -> Result<Vec<Item>, Stri
     Ok(rows
         .into_iter()
         .map(|row| Item {
-            id: row.id,
-            is_vignette: row.is_vignette.unwrap_or(false),
+            id: row.get::<i32, _>("id"),
+            is_vignette: row.get::<bool, _>("is_vignette"),
         })
         .collect())
 }
 
 async fn fetch_exam_questions(pool: &PgPool, exam_id: i64) -> Result<Vec<Question>, String> {
-    let rows = sqlx::query!(
-        r#"
-        SELECT DISTINCT q.id, q.item_id, q.type as question_type
-        FROM questions q
-        INNER JOIN items i ON i.id = q.item_id
-        INNER JOIN exam_item ei ON ei.item_id = i.id
-        WHERE ei.exam_id = $1
-        ORDER BY q.id
-        "#,
-        exam_id
+    let rows = sqlx::query(
+        "SELECT DISTINCT q.id, q.item_id, q.type as question_type FROM questions q INNER JOIN items i ON i.id = q.item_id INNER JOIN exam_item ei ON ei.item_id = i.id WHERE ei.exam_id = $1 ORDER BY q.id"
     )
+    .bind(exam_id as i32)
     .fetch_all(pool)
     .await
     .map_err(|e| format!("Failed to fetch exam questions: {}", e))?;
@@ -303,9 +281,9 @@ async fn fetch_exam_questions(pool: &PgPool, exam_id: i64) -> Result<Vec<Questio
     Ok(rows
         .into_iter()
         .map(|row| Question {
-            id: row.id,
-            item_id: row.item_id,
-            question_type: row.question_type.unwrap_or_else(|| "unknown".to_string()),
+            id: row.get::<i32, _>("id"),
+            item_id: row.get::<i32, _>("item_id"),
+            question_type: row.get::<String, _>("question_type"),
         })
         .collect())
 }
@@ -316,17 +294,13 @@ async fn update_attempt_question_score(
     question_id: i64,
     score: f64,
 ) -> Result<(), String> {
-    sqlx::query!(
-        r#"
-        UPDATE attempt_question
-        SET score = $3, is_correct = $4
-        WHERE attempt_id = $1 AND question_id = $2
-        "#,
-        attempt_id,
-        question_id,
-        score,
-        score >= 100.0
+    sqlx::query(
+        "UPDATE attempt_question SET score = $3, is_correct = $4 WHERE attempt_id = $1 AND question_id = $2"
     )
+    .bind(attempt_id as i32)
+    .bind(question_id as i32)
+    .bind(BigDecimal::from_str(&score.to_string()).unwrap())
+    .bind(score >= 100.0)
     .execute(pool)
     .await
     .map_err(|e| format!("Failed to update attempt question score: {}", e))?;
@@ -340,16 +314,12 @@ async fn update_attempt_score(
     score: f64,
     progress: i32,
 ) -> Result<(), String> {
-    sqlx::query!(
-        r#"
-        UPDATE attempts
-        SET score = $2, progress = $3, finished_scoring = true
-        WHERE id = $1
-        "#,
-        attempt_id,
-        score,
-        progress
+    sqlx::query(
+        "UPDATE attempts SET score = $2, progress = $3 WHERE id = $1"
     )
+    .bind(attempt_id as i32)
+    .bind(BigDecimal::from_str(&score.to_string()).unwrap())
+    .bind(progress)
     .execute(pool)
     .await
     .map_err(|e| format!("Failed to update attempt score: {}", e))?;
