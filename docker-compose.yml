@@ -1,8 +1,8 @@
 networks:
     frontend:
-        driver: ${DOCKER_NETWORKS_DRIVER}
+        driver: ${DOCKER_NETWORKS_DRIVER:-bridge}
     backend:
-        driver: ${DOCKER_NETWORKS_DRIVER}
+        driver: ${DOCKER_NETWORKS_DRIVER:-bridge}
 
 services:
     gateway:
@@ -11,7 +11,7 @@ services:
         volumes:
             - ./docker/matter/gateway:/etc/nginx/conf.d
         ports:
-            - ${DOCKER_PORT}:80
+            - "${DOCKER_PORT:-8000}:80"
         networks:
             - frontend
             - backend
@@ -22,9 +22,9 @@ services:
         build:
             context: docker/image
             args:
-                - USER_CONTAINER=${DOCKER_USER}
-                - PUID=${DOCKER_PUID}
-                - PGID=${DOCKER_PGID}
+                - USER_CONTAINER=${DOCKER_USER:-dokar}
+                - PUID=${DOCKER_PUID:-1000}
+                - PGID=${DOCKER_PGID:-1000}
         logging:
             options:
                 max-size: "10m"
@@ -44,7 +44,7 @@ services:
         image: redis
         restart: unless-stopped
         volumes:
-            - ${DOCKER_DATA_PATH_HOST}/redis:/data
+            - ${DOCKER_DATA_PATH_HOST:-./docker/data}/redis:/data
         networks:
             - backend
     # Uncomment if you want to use local PostgreSQL instead of external
@@ -72,9 +72,9 @@ services:
         networks:
             - backend
         environment:
-            - USER=${DOCKER_USER}
-            - PUID=${DOCKER_PUID}
-            - PGID=${DOCKER_PGID}
+            - USER=${DOCKER_USER:-dokar}
+            - PUID=${DOCKER_PUID:-1000}
+            - PGID=${DOCKER_PGID:-1000}
         working_dir: /var/www
         entrypoint: [ /entrypoint.d/entrypoint.sh ]
     scheduler:
@@ -88,9 +88,9 @@ services:
         networks:
             - backend
         environment:
-            - USER=${DOCKER_USER}
-            - PUID=${DOCKER_PUID}
-            - PGID=${DOCKER_PGID}
+            - USER=${DOCKER_USER:-dokar}
+            - PUID=${DOCKER_PUID:-1000}
+            - PGID=${DOCKER_PGID:-1000}
         working_dir: /var/www
         entrypoint: [ /entrypoint.d/entrypoint.sh ]
     soketi:
