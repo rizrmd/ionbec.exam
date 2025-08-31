@@ -154,7 +154,7 @@ services:
       SOKETI_DEFAULT_APP_ENABLE_CLIENT_MESSAGES: "true"
       SOKETI_DEFAULT_APP_ENABLE_WEBHOOKS: "false"
     ports:
-      - "6001:6001"
+      - "6000:6001"
       - "9601:9601"
     networks:
       - app_network
