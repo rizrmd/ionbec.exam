@@ -195,7 +195,8 @@ return [
         /*
          * Third-party Package Service Providers...
          */
-        Dentro\Yalr\RouteServiceProvider::class,
+        // Temporarily disabled - YALR is overriding our routes
+        // Dentro\Yalr\RouteServiceProvider::class,
     ],
 
     /*
