@@ -23,34 +23,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // Emergency route registration - directly register test routes
-        Route::get('/direct-test', function () {
-            return 'Direct test route works!';
-        });
-        
-        Route::get('/direct-health', function () {
-            return response()->json([
-                'status' => 'ok',
-                'message' => 'Direct health route works!',
-                'timestamp' => now()->toIso8601String(),
-            ]);
-        });
-        
-        // Force load web.php routes if file exists
-        if (file_exists(base_path('routes/web.php'))) {
-            Route::middleware('web')->group(base_path('routes/web.php'));
-        }
-        
-        // Force load the main root route from YALR
-        try {
-            if (class_exists(\App\Http\Routes\RootRoute::class)) {
-                Route::middleware('web')->group(function () {
-                    Route::get('/', [\App\Http\Controllers\RootController::class, 'index'])->name('root');
-                });
-            }
-        } catch (\Exception $e) {
-            error_log("Failed to load root route: " . $e->getMessage());
-        }
         
         // Trust proxies for proper HTTPS detection
         if ($this->app->environment('production')) {

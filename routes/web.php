@@ -34,5 +34,34 @@ Route::get('/test', function () {
 
 // Add a simple root fallback for debugging
 Route::get('/', function () {
+    // Check if Inertia page exists, otherwise show debug info
+    if (class_exists(\Inertia\Inertia::class)) {
+        try {
+            return \Inertia\Inertia::render('Welcome', [
+                'canLogin' => Route::has('login'),
+                'canRegister' => Route::has('register'),
+                'laravelVersion' => \Illuminate\Foundation\Application::VERSION,
+                'phpVersion' => PHP_VERSION,
+            ]);
+        } catch (\Exception $e) {
+            return 'Inertia error: ' . $e->getMessage();
+        }
+    }
     return 'Root route from web.php is working! Laravel ' . app()->version();
+});
+
+// Catch-all route for debugging
+Route::fallback(function () {
+    return response()->json([
+        'message' => 'Route not found, but Laravel is working',
+        'path' => request()->path(),
+        'method' => request()->method(),
+        'all_routes' => collect(Route::getRoutes())->map(function ($route) {
+            return [
+                'uri' => $route->uri(),
+                'methods' => $route->methods(),
+                'name' => $route->getName(),
+            ];
+        })->take(10),
+    ], 404);
 });
