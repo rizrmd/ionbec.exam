@@ -39,14 +39,16 @@ class Kernel extends HttpKernel
             Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             Middleware\HandleInertiaRequests::class,
-            Middleware\IdentifyTenant::class,
+            // Temporarily disabled - causing 404 errors
+            // Middleware\IdentifyTenant::class,
         ],
 
         'api' => [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            Middleware\IdentifyTenant::class,
+            // Temporarily disabled - causing 404 errors
+            // Middleware\IdentifyTenant::class,
         ],
 
         'exam' => [
@@ -58,7 +60,8 @@ class Kernel extends HttpKernel
             Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             Middleware\HandleInertiaRequests::class,
-            Middleware\IdentifyTenant::class,
+            // Temporarily disabled - causing 404 errors
+            // Middleware\IdentifyTenant::class,
             Middleware\ExamMiddleware::class,
         ],
     ];

@@ -159,6 +159,8 @@ php artisan route:clear || true\n\
 # Clear and regenerate package discovery\n\
 echo "Rediscovering packages..."\n\
 rm -f bootstrap/cache/packages.php bootstrap/cache/services.php\n\
+rm -f bootstrap/cache/routes-*.php\n\
+rm -f bootstrap/cache/routes.php\n\
 php artisan package:discover --ansi 2>/dev/null || echo "Package discovery completed"\n\
 \n\
 # Force clear any cached routes that might interfere\n\
