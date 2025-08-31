@@ -111,7 +111,13 @@ fi\n\
 \n\
 # Configure session for any domain (multi-tenant support)\n\
 export SESSION_DOMAIN=""\n\
-export SESSION_SECURE_COOKIE=false\n\
+# Check if we're using HTTPS based on APP_URL\n\
+if [[ "$APP_URL" == https://* ]]; then\n\
+    export SESSION_SECURE_COOKIE=true\n\
+    export ASSET_URL="$APP_URL"\n\
+else\n\
+    export SESSION_SECURE_COOKIE=false\n\
+fi\n\
 export SESSION_SAME_SITE=lax\n\
 \n\
 # Allow Sanctum to work with any domain by using wildcard\n\
