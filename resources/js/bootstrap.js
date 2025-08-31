@@ -23,13 +23,12 @@ window.Pusher = require('pusher-js')
 
 window.Echo = new Echo({
   broadcaster: 'pusher',
-  enabledTransports: ['ws', 'wss'],
-  key: process.env.MIX_PUSHER_APP_KEY,
-  cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-  wsHost: !!process.env.MIX_PUSHER_APP_HOST ? process.env.MIX_PUSHER_APP_HOST : window.location.hostname,
-  wsPort: !!process.env.MIX_PUSHER_PORT ? process.env.MIX_PUSHER_PORT : window.location.port,
-  wssHost: !!process.env.MIX_PUSHER_APP_HOST ? process.env.MIX_PUSHER_APP_HOST : window.location.hostname,
-  wssPort: !!process.env.MIX_PUSHER_PORT ? process.env.MIX_PUSHER_PORT : window.location.port,
-  forceTLS: false,
+  key: 'ionbec_key',
+  wsHost: window.location.hostname,
+  wsPort: window.location.protocol === 'https:' ? 443 : (window.location.port || 3000),
+  wssPort: window.location.protocol === 'https:' ? 443 : (window.location.port || 3000),
+  forceTLS: window.location.protocol === 'https:',
   disableStats: true,
+  enabledTransports: window.location.protocol === 'https:' ? ['wss'] : ['ws'],
+  authEndpoint: '/broadcasting/auth',
 })

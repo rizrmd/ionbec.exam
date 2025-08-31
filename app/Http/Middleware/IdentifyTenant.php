@@ -27,7 +27,21 @@ class IdentifyTenant
             // If no client found, check if this is the main domain for root access
             $mainDomain = config('app.main_domain', env('APP_URL'));
             
-            if (!str_contains($mainDomain, $domain)) {
+            // Extract host from APP_URL if it's a full URL
+            $mainHost = parse_url($mainDomain, PHP_URL_HOST) ?: $mainDomain;
+            
+            // Allow access if:
+            // 1. Domain matches the main domain exactly
+            // 2. Domain is localhost/127.0.0.1
+            // 3. Domain ends with .local (for local development)
+            // 4. No client check (for initial setup)
+            $isMainDomain = ($domain === $mainHost) || 
+                           ($domain === 'localhost') || 
+                           ($domain === '127.0.0.1') ||
+                           str_ends_with($domain, '.local') ||
+                           str_ends_with($domain, '.sslip.io');
+            
+            if (!$isMainDomain) {
                 abort(404, 'Client not found for this domain');
             }
             

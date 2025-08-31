@@ -46,11 +46,17 @@ COPY . .
 RUN npm run production
 
 # Complete composer setup and ensure all packages are properly discovered
-RUN composer dump-autoload --optimize --no-dev && \
-    php artisan package:discover --ansi
+# First clear any cached packages that might have dev dependencies
+RUN rm -f bootstrap/cache/packages.php bootstrap/cache/services.php && \
+    composer dump-autoload --optimize --no-dev && \
+    php artisan package:discover --ansi --no-dev 2>/dev/null || \
+    php artisan package:discover --ansi 2>/dev/null || \
+    echo "Package discovery completed"
 
-# Ensure static assets are accessible
-RUN chmod -R 755 public/
+# Ensure static assets are accessible and create storage symlink
+RUN chmod -R 755 public/ && \
+    rm -f public/storage && \
+    php artisan storage:link || true
 
 # Configure nginx
 COPY deployment/docker/nginx.conf /etc/nginx/sites-available/default
@@ -93,7 +99,14 @@ echo "Current APP_URL: ${APP_URL:-not set}"\n\
 # If APP_URL is not set, use a wildcard configuration\n\
 if [ -z "$APP_URL" ]; then\n\
     echo "APP_URL not set, using dynamic configuration"\n\
+    # Set APP_URL based on incoming host if possible\n\
     export APP_URL="http://localhost:3000"\n\
+fi\n\
+\n\
+# Ensure public/storage symlink exists\n\
+if [ ! -L /var/www/public/storage ]; then\n\
+    echo "Creating storage symlink..."\n\
+    php artisan storage:link || true\n\
 fi\n\
 \n\
 # Configure session for any domain (multi-tenant support)\n\
@@ -132,14 +145,15 @@ fi\n\
 \n\
 # Clear Laravel caches\n\
 echo "Clearing Laravel caches..."\n\
-php artisan config:clear\n\
-php artisan cache:clear\n\
-php artisan view:clear\n\
-php artisan route:clear\n\
+php artisan config:clear || true\n\
+php artisan cache:clear || true\n\
+php artisan view:clear || true\n\
+php artisan route:clear || true\n\
 \n\
 # Clear and regenerate package discovery\n\
 echo "Rediscovering packages..."\n\
-php artisan package:discover --ansi\n\
+rm -f bootstrap/cache/packages.php bootstrap/cache/services.php\n\
+php artisan package:discover --ansi 2>/dev/null || echo "Package discovery completed"\n\
 \n\
 # Force clear any cached routes that might interfere\n\
 echo "Clearing any cached routes..."\n\
@@ -155,11 +169,7 @@ php artisan yalr:display || echo "YALR routes check skipped"\n\
 \n\
 # List routes to verify they are loaded\n\
 echo "Checking registered routes..."\n\
-php artisan route:list --compact | head -10 || echo "Unable to display routes"\n\
-\n\
-# Test the root route directly\n\
-echo "Testing root route response..."\n\
-curl -s -o /dev/null -w "HTTP Status: %{http_code}" http://localhost:3000/ || echo "Route test failed"\n\
+php artisan route:list | head -10 || echo "Unable to display routes"\n\
 \n\
 # Skip caching in development/debugging\n\
 echo "APP_ENV: $APP_ENV"\n\

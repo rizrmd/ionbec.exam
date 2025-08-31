@@ -69,7 +69,14 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "beyondcode/laravel-dump-server",
+                "laravel/sail",
+                "spatie/laravel-ignition",
+                "fakerphp/faker",
+                "mockery/mockery",
+                "phpunit/phpunit"
+            ]
         }
     },
     "config": {
