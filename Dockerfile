@@ -164,6 +164,8 @@ php artisan package:discover --ansi 2>/dev/null || echo "Package discovery compl
 # Force clear any cached routes that might interfere\n\
 echo "Clearing any cached routes..."\n\
 rm -f bootstrap/cache/routes-*.php\n\
+rm -f bootstrap/cache/routes.php\n\
+php artisan route:clear || true\n\
 \n\
 # Force route registration by running artisan commands\n\
 echo "Forcing route registration..."\n\

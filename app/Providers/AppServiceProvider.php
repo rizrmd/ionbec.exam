@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Route;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Emergency route registration - directly register test routes
+        Route::get('/direct-test', function () {
+            return 'Direct test route works!';
+        });
+        
+        Route::get('/direct-health', function () {
+            return response()->json([
+                'status' => 'ok',
+                'message' => 'Direct health route works!',
+                'timestamp' => now()->toIso8601String(),
+            ]);
+        });
+        
         // Trust proxies for proper HTTPS detection
         if ($this->app->environment('production')) {
             // Trust all proxies (since we're behind Coolify's proxy)

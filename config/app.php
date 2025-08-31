@@ -190,11 +190,11 @@ return [
         App\Providers\HorizonServiceProvider::class,
         App\Providers\FortifyServiceProvider::class,
         App\Providers\JetstreamServiceProvider::class,
+        App\Providers\RouteServiceProvider::class,
         
         /*
          * Third-party Package Service Providers...
          */
-        App\Providers\RouteServiceProvider::class,
         Dentro\Yalr\RouteServiceProvider::class,
     ],
 
