@@ -170,7 +170,8 @@ php artisan route:clear || true\n\
 # Force route registration by running artisan commands\n\
 echo "Forcing route registration..."\n\
 php artisan route:clear\n\
-php artisan route:cache || echo "Route caching not available in this environment"\n\
+# DO NOT cache routes - it's preventing our dynamic routes from loading\n\
+# php artisan route:cache || echo "Route caching not available in this environment"\n\
 \n\
 # Display YALR routes if available\n\
 php artisan yalr:display || echo "YALR routes check skipped"\n\
@@ -196,7 +197,10 @@ php artisan optimize:clear\n\
 php artisan config:clear\n\
 php artisan route:clear\n\
 php artisan view:clear\n\
-php artisan optimize\n\
+# Don't use optimize as it caches routes\n\
+php artisan config:cache\n\
+php artisan view:cache\n\
+# php artisan optimize\n\
 \n\
 # Test basic Laravel functionality\n\
 echo "Testing Laravel installation..."\n\
