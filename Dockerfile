@@ -175,7 +175,10 @@ php artisan yalr:display || echo "YALR routes check skipped"\n\
 \n\
 # List routes to verify they are loaded\n\
 echo "Checking registered routes..."\n\
-php artisan route:list | head -10 || echo "Unable to display routes"\n\
+php artisan route:list --path=/ || echo "Unable to display root route"\n\
+echo ""\n\
+echo "Checking if YALR routes are registered..."\n\
+php artisan route:list | grep -c "root" || echo "Root route not found"\n\
 \n\
 # Skip caching in development/debugging\n\
 echo "APP_ENV: $APP_ENV"\n\
