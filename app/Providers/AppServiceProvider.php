@@ -27,7 +27,11 @@ class AppServiceProvider extends ServiceProvider
             // Trust all proxies (since we're behind Coolify's proxy)
             request()->setTrustedProxies(
                 ['127.0.0.1', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'],
-                \Illuminate\Http\Request::HEADER_X_FORWARDED_ALL
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR | 
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST | 
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT | 
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO | 
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_AWS_ELB
             );
             
             // Force HTTPS scheme
