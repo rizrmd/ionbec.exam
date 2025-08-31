@@ -87,6 +87,16 @@ class Attempt extends Model
     }
 
     /**
+     * Alias for taker relationship (used in RootDashboardController)
+     *
+     * @return Relations\BelongsTo
+     */
+    public function attemptedBy(): Relations\BelongsTo
+    {
+        return $this->belongsTo(Taker::class, 'attempted_by', 'id');
+    }
+
+    /**
      * Define `belongsTo` relationship with Exam model.
      *
      * @return Relations\BelongsTo
