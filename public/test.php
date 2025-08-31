@@ -21,21 +21,21 @@ foreach ($routes as $route) {
     echo "  $methods $uri [$name]\n";
 }
 
-echo "\n\nLooking for test routes:\n";
-$testRoute = $router->getRoutes()->match(
-    app('request')->create('/test', 'GET')
-);
-if ($testRoute) {
-    echo "  /test route found!\n";
-} else {
-    echo "  /test route NOT found\n";
-}
+echo "\n\nService Providers Status:\n";
+$providers = $app->getLoadedProviders();
+echo "Total providers loaded: " . count($providers) . "\n";
 
-$healthRoute = $router->getRoutes()->match(
-    app('request')->create('/health', 'GET')
-);
-if ($healthRoute) {
-    echo "  /health route found!\n";
-} else {
-    echo "  /health route NOT found\n";
+echo "\nKey providers:\n";
+$keyProviders = [
+    'App\Providers\RouteServiceProvider',
+    'Dentro\Yalr\RouteServiceProvider',
+    'App\Providers\AppServiceProvider',
+];
+
+foreach ($keyProviders as $provider) {
+    if (isset($providers[$provider])) {
+        echo "  ✓ $provider is loaded\n";
+    } else {
+        echo "  ✗ $provider is NOT loaded\n";
+    }
 }

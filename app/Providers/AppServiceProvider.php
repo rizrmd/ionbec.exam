@@ -36,6 +36,22 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
         
+        // Force load web.php routes if file exists
+        if (file_exists(base_path('routes/web.php'))) {
+            Route::middleware('web')->group(base_path('routes/web.php'));
+        }
+        
+        // Force load the main root route from YALR
+        try {
+            if (class_exists(\App\Http\Routes\RootRoute::class)) {
+                Route::middleware('web')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\RootController::class, 'index'])->name('root');
+                });
+            }
+        } catch (\Exception $e) {
+            error_log("Failed to load root route: " . $e->getMessage());
+        }
+        
         // Trust proxies for proper HTTPS detection
         if ($this->app->environment('production')) {
             // Trust all proxies (since we're behind Coolify's proxy)

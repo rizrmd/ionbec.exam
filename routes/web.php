@@ -31,3 +31,8 @@ Route::get('/health', function () {
 Route::get('/test', function () {
     return 'Laravel routing is working!';
 });
+
+// Add a simple root fallback for debugging
+Route::get('/', function () {
+    return 'Root route from web.php is working! Laravel ' . app()->version();
+});
