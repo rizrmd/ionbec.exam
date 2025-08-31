@@ -194,6 +194,7 @@ return [
         /*
          * Third-party Package Service Providers...
          */
+        App\Providers\RouteServiceProvider::class,
         Dentro\Yalr\RouteServiceProvider::class,
     ],
 
