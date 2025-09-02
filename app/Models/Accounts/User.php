@@ -72,7 +72,15 @@ class User extends Authenticatable
     protected static function bootBelongsToClient()
     {
         // Don't apply global scope during authentication
-        if (!request()->is('login') && !request()->is('two-factor-challenge')) {
+        $request = request();
+        $isAuthRoute = $request->is('login*') || 
+                      $request->is('logout*') || 
+                      $request->is('two-factor*') || 
+                      str_contains($request->getPathInfo(), '/login') ||
+                      str_contains($request->getPathInfo(), '/logout') ||
+                      str_contains($request->getPathInfo(), '/two-factor');
+        
+        if (!$isAuthRoute) {
             static::addGlobalScope(new \App\Scopes\ClientScope);
         }
 
