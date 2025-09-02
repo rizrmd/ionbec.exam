@@ -72,17 +72,17 @@ class User extends Authenticatable
     protected static function bootBelongsToClient()
     {
         // Don't apply global scope during authentication
-        $request = request();
-        $isAuthRoute = $request->is('login*') || 
-                      $request->is('logout*') || 
-                      $request->is('two-factor*') || 
-                      str_contains($request->getPathInfo(), '/login') ||
-                      str_contains($request->getPathInfo(), '/logout') ||
-                      str_contains($request->getPathInfo(), '/two-factor');
-        
-        if (!$isAuthRoute) {
-            static::addGlobalScope(new \App\Scopes\ClientScope);
+        // Skip scope if we're in authentication context or no request context
+        if (app()->runningInConsole() || 
+            !app()->bound('request') || 
+            in_array(optional(request())->getPathInfo(), ['/login', '/logout', '/two-factor-challenge']) ||
+            optional(request())->is('login*') ||
+            optional(request())->is('logout*') ||
+            optional(request())->is('two-factor*')) {
+            return;
         }
+        
+        static::addGlobalScope(new \App\Scopes\ClientScope);
 
         // Automatically set client_id when creating
         static::creating(function ($model) {
