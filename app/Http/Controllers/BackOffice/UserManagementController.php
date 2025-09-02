@@ -142,8 +142,10 @@ class UserManagementController extends Controller
         $roles = Role::where('slug', '!=', Role::ROOT)
             ->get();
 
-        // Load user with their roles
-        $user->load('roles');
+        // Load user with their roles without client scope
+        $user->load(['roles' => function ($query) {
+            $query->withoutGlobalScopes();
+        }]);
 
         return Inertia::render('BackOffice/UserManagement/Edit', [
             'user' => $user,

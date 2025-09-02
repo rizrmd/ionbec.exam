@@ -19,7 +19,9 @@ class AllowedRoleMiddleware
     {
         $roles = array_map(function ($role) {
             return $role['slug'];
-        }, $request->user()->load('roles')->roles->toArray());
+        }, $request->user()->load(['roles' => function ($query) {
+            $query->withoutGlobalScopes();
+        }])->roles->toArray());
         $allowed = explode('|', $rolesAllowed);
 
         if (0 === count(array_intersect($allowed, $roles))) {
