@@ -45,13 +45,35 @@ class FortifyServiceProvider extends ServiceProvider
                 'ip' => $request->ip()
             ]);
             
-            // Find user without any scopes first
-            $user = \App\Models\Accounts\User::withoutGlobalScopes()->where('username', $username)->first();
+            // For client domains, find the correct user based on client_id
+            $client = \App\Models\Client::findByDomain($domain);
+            
+            if ($client) {
+                Log::info('Client domain detected', [
+                    'domain' => $domain,
+                    'client_id' => $client->id
+                ]);
+                
+                // Find user with matching username AND client_id
+                $user = \App\Models\Accounts\User::withoutGlobalScopes()
+                    ->where('username', $username)
+                    ->where('client_id', $client->id)
+                    ->first();
+            } else {
+                Log::info('No client found for domain', ['domain' => $domain]);
+                
+                // For non-client domains, find user without client_id (global admin)
+                $user = \App\Models\Accounts\User::withoutGlobalScopes()
+                    ->where('username', $username)
+                    ->whereNull('client_id')
+                    ->first();
+            }
             
             if (!$user) {
                 Log::warning('Login failed - user not found', [
                     'username' => $username,
-                    'domain' => $domain
+                    'domain' => $domain,
+                    'expected_client_id' => $client?->id
                 ]);
                 return null;
             }
@@ -60,33 +82,10 @@ class FortifyServiceProvider extends ServiceProvider
                 Log::warning('Login failed - wrong password', [
                     'username' => $username,
                     'user_id' => $user->id,
+                    'user_client_id' => $user->client_id,
                     'domain' => $domain
                 ]);
                 return null;
-            }
-            
-            // For client domains, verify user belongs to the correct client
-            $client = \App\Models\Client::findByDomain($domain);
-            
-            if ($client) {
-                Log::info('Client domain detected', [
-                    'domain' => $domain,
-                    'client_id' => $client->id,
-                    'user_client_id' => $user->client_id
-                ]);
-                
-                if ($user->client_id !== $client->id) {
-                    Log::warning('Login failed - user does not belong to client domain', [
-                        'username' => $username,
-                        'user_id' => $user->id,
-                        'user_client_id' => $user->client_id,
-                        'domain_client_id' => $client->id,
-                        'domain' => $domain
-                    ]);
-                    return null; // User doesn't belong to this client
-                }
-            } else {
-                Log::info('No client found for domain', ['domain' => $domain]);
             }
             
             Log::info('Login successful', [
