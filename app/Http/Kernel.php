@@ -39,8 +39,7 @@ class Kernel extends HttpKernel
             Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             Middleware\HandleInertiaRequests::class,
-            // Temporarily disabled - causing 404 errors
-            // Middleware\IdentifyTenant::class,
+            Middleware\IdentifyTenant::class,
         ],
 
         'api' => [
@@ -60,8 +59,7 @@ class Kernel extends HttpKernel
             Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             Middleware\HandleInertiaRequests::class,
-            // Temporarily disabled - causing 404 errors
-            // Middleware\IdentifyTenant::class,
+            Middleware\IdentifyTenant::class,
             Middleware\ExamMiddleware::class,
         ],
     ];

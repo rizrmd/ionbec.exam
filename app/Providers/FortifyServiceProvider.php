@@ -33,6 +33,11 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         
+        // Configure logout response
+        Fortify::logoutResponse(function ($request) {
+            return redirect($request->getSchemeAndHttpHost() . '/login');
+        });
+        
         // Custom authentication to handle multi-tenant login
         Fortify::authenticateUsing(function ($request) {
             $username = $request->input('username');
