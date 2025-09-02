@@ -2,12 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Debug: Log that this file is being loaded
-if (!defined('WEB_ROUTES_LOADED')) {
-    define('WEB_ROUTES_LOADED', true);
-    error_log('WEB ROUTES FILE IS BEING LOADED');
-}
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes - Fallback for debugging
