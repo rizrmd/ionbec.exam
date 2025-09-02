@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -10,6 +11,14 @@ use Illuminate\Support\Facades\Route;
 
 // This is a fallback route file to help debug routing issues
 // The main routes are handled by dentro/yalr package
+
+// Custom logout route for proper domain redirect
+Route::post('/logout', function (Illuminate\Http\Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect($request->getSchemeAndHttpHost() . '/login');
+})->name('logout');
 
 Route::get('/test-traefik-config', function () {
     try {
