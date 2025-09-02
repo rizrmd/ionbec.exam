@@ -26,6 +26,10 @@ const submit = () => {
     remember: form.remember ? 'on' : '',
   })).post(route('login'), {
     onFinish: () => form.reset('password'),
+    onSuccess: () => {
+      // Force redirect to dashboard after successful login
+      window.location.href = '/back-office/dashboard';
+    }
   });
 };
 </script>
