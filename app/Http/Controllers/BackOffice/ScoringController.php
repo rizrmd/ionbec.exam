@@ -55,8 +55,8 @@ class ScoringController extends Controller
         });
 
         // Cache tests and groups separately (longer cache time)
-        $tests = Cache::remember('all_exams', 3600, fn() => Exam::select('id', 'name', 'hash')->get());
-        $groups = Cache::remember('all_groups', 3600, fn() => Group::select('id', 'name', 'hash')->get());
+        $tests = Cache::remember('all_exams', 3600, fn() => Exam::select('id', 'name')->get());
+        $groups = Cache::remember('all_groups', 3600, fn() => Group::select('id', 'name')->get());
 
         return Inertia::render('BackOffice/Scoring/Index', [
             'payload' => $data,
