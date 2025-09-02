@@ -225,11 +225,12 @@ const removeDomain = (index) => {
 
 const submit = () => {
   // Filter out empty domains
-  const filteredDomains = form.domains.filter(domain => domain.trim() !== '')
+  const filteredDomains = form.domains.filter(domain => domain && domain.trim() !== '')
   
   form.transform((data) => ({
     ...data,
-    domains: filteredDomains
-  })).put(route('back-office.clients.update', props.client.id))
+    domains: filteredDomains,
+    _method: 'PUT'
+  })).post(route('back-office.clients.update', props.client.id))
 }
 </script>
