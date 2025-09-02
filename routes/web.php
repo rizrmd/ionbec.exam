@@ -17,6 +17,28 @@ if (!defined('WEB_ROUTES_LOADED')) {
 // This is a fallback route file to help debug routing issues
 // The main routes are handled by dentro/yalr package
 
+Route::get('/test-traefik-config', function () {
+    try {
+        $service = app(\App\Services\TraefikDomainService::class);
+        
+        // Test write permissions
+        if (!$service->testWrite()) {
+            return response()->json(['error' => 'Cannot write to Traefik config directory'], 500);
+        }
+        
+        // Update config
+        $service->updateMdxmConfig();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'mdxm.yaml updated successfully',
+            'clients' => \App\Models\Client::where('is_active', true)->whereNotNull('domains')->count()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
+
 Route::get('/health', function () {
     return response()->json([
         'status' => 'ok',

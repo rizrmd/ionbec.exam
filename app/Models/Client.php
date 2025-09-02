@@ -10,6 +10,7 @@ use App\Models\Takers\Taker;
 use App\Models\Takers\Group;
 use App\Models\Deliveries\Delivery;
 use App\Models\Attempts\Attempt;
+use App\Services\TraefikDomainService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -102,5 +103,18 @@ class Client extends Model
         }
         
         return asset('storage/' . $this->logo);
+    }
+    
+    protected static function booted()
+    {
+        static::saved(function (Client $client) {
+            if ($client->wasChanged(['domains', 'is_active'])) {
+                app(TraefikDomainService::class)->updateMdxmConfig();
+            }
+        });
+        
+        static::deleted(function (Client $client) {
+            app(TraefikDomainService::class)->updateMdxmConfig();
+        });
     }
 }
