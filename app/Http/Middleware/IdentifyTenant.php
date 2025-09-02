@@ -58,8 +58,9 @@ class IdentifyTenant
             if (Auth::check()) {
                 $user = Auth::user();
                 
-                // Verify user belongs to this client
-                if ($user->client_id && $user->client_id !== $client->id) {
+                // Verify user belongs to this client (skip check for login/logout routes)
+                $isAuthRoute = in_array($request->path(), ['login', 'logout']);
+                if (!$isAuthRoute && $user->client_id && $user->client_id !== $client->id) {
                     Auth::logout();
                     return redirect('/login')->with('error', 'You do not have access to this client.');
                 }
