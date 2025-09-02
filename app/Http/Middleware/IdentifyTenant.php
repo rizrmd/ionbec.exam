@@ -50,9 +50,9 @@ class IdentifyTenant
                 abort(404, 'Client not found for this domain');
             }
             
-            // This is the main domain, allow access for root users
-            if (Auth::check() && !Auth::user()->hasRole('root')) {
-                abort(403, 'Access denied. Root access required for main domain.');
+            // This is the main domain, allow access for root and administrator users
+            if (Auth::check() && !Auth::user()->hasRole('root') && !Auth::user()->hasRole('administrator')) {
+                abort(403, 'Access denied. Root or administrator access required for main domain.');
             }
         } else {
             // Store client in the request and session

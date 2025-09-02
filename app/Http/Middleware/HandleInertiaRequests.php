@@ -18,7 +18,9 @@ class HandleInertiaRequests extends Middleware
     {
         return array_merge(parent::share($request), [
             'app.name' => static fn () => config('app.name'),
-            'auth.user' => static fn () => $request->user()?->load('roles'),
+            'auth.user' => static fn () => $request->user()?->load(['roles' => function ($query) {
+                $query->withoutGlobalScopes();
+            }]),
             'auth.taker' => static fn () => auth()->guard('taker')->user(),
             'jetstream.flash' => static fn () => [
                 'style' => $request->session()->get('_executed', false) ? 'success' : 'danger',
