@@ -13,6 +13,7 @@ use Dentro\Yalr\Attributes\Post;
 use App\Models\Deliveries\Delivery;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Jobs\Group\AddTestTakerToGroup;
 use Veelasky\LaravelHashId\Rules\ExistsByHash;
 
@@ -101,8 +102,11 @@ class AuthController extends Controller
         if (Auth::guard('taker')->attempt($credentials)) {
             $request->session()->regenerate();
             $taker = auth()->guard('taker')->user();
+            Log::info('Taker login successful', ['email' => $credentials['email'], 'taker_id' => $taker->id]);
+            
             if (! $taker->is_verified) {
                 auth()->guard('taker')->logout();
+                Log::warning('Taker login blocked - not verified', ['email' => $credentials['email'], 'taker_id' => $taker->id]);
 
                 return back()->withErrors([
                     'email' => 'Taker not verified! please contact admin.',
@@ -110,6 +114,18 @@ class AuthController extends Controller
             }
 
             return redirect()->route('taker.dashboard');
+        }
+
+        // Check if taker exists but password is wrong
+        $taker = Taker::where('email', $credentials['email'])->first();
+        if ($taker) {
+            Log::warning('Taker login failed - wrong password', [
+                'email' => $credentials['email'],
+                'taker_id' => $taker->id,
+                'is_verified' => $taker->is_verified
+            ]);
+        } else {
+            Log::warning('Taker login failed - email not found', ['email' => $credentials['email']]);
         }
 
         return back()->withErrors([
