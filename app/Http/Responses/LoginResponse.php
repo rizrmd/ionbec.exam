@@ -16,14 +16,16 @@ class LoginResponse implements LoginResponseContract
      */
     public function toResponse($request)
     {
-        $home = Fortify::redirects('login') ?? '/back-office/dashboard';
+        \Log::info('LoginResponse::toResponse called', [
+            'headers' => $request->headers->all(),
+            'is_inertia' => $request->header('X-Inertia'),
+            'expects_json' => $request->expectsJson(),
+        ]);
 
-        // For API requests, return JSON
-        if ($request->expectsJson() && !$request->header('X-Inertia')) {
-            return new JsonResponse(['two_factor' => false], 200);
-        }
+        $home = '/back-office/dashboard';
 
-        // For Inertia and regular web requests, always redirect
-        return redirect()->intended($home);
+        // Always redirect for Inertia requests
+        // Inertia will handle the redirect properly
+        return redirect($home);
     }
 }
