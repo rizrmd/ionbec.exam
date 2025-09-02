@@ -39,7 +39,10 @@ class IdentifyTenant
                            ($domain === 'localhost') || 
                            ($domain === '127.0.0.1') ||
                            str_ends_with($domain, '.local') ||
-                           str_ends_with($domain, '.sslip.io');
+                           str_ends_with($domain, '.sslip.io') ||
+                           str_ends_with($domain, '.coolify.io') ||
+                           str_ends_with($domain, '.internal') ||
+                           (strpos($domain, ':') !== false && strpos($domain, 'localhost') === 0);
             
             if (!$isMainDomain) {
                 abort(404, 'Client not found for this domain');
