@@ -31,7 +31,7 @@ class ScoringController extends Controller
         
         $data = Cache::remember($cacheKey, 300, function () use ($request) {
             $deliveries = Delivery::query()
-                ->select('id', 'name', 'scheduled_at', 'exam_id', 'group_id', 'hash')
+                ->select('id', 'name', 'scheduled_at', 'exam_id', 'group_id')
                 ->with([
                     'exam:id,name',
                     'group:id,name'
@@ -89,7 +89,7 @@ class ScoringController extends Controller
 
             // Get paginated attempts with minimal data
             $attempts = Attempt::query()
-                ->select('id', 'delivery_id', 'exam_id', 'taker_id', 'score', 'started_at', 'ended_at', 'hash')
+                ->select('id', 'delivery_id', 'exam_id', 'taker_id', 'score', 'started_at', 'ended_at')
                 ->where('delivery_id', $delivery->id)
                 ->where('exam_id', $delivery->exam_id);
             
