@@ -31,7 +31,7 @@ class ScoringControllerOptimized extends Controller
         
         $data = Cache::remember($cacheKey, 300, function () use ($request) {
             $deliveries = Delivery::query()
-                ->select('id', 'name', 'scheduled_at', 'exam_id', 'group_id')
+                ->select('id', 'name', 'scheduled_at', 'exam_id', 'group_id', 'hash')
                 ->with([
                     'exam:id,name',
                     'group:id,name'
@@ -55,8 +55,8 @@ class ScoringControllerOptimized extends Controller
         });
 
         // Cache tests and groups separately (longer cache time)
-        $tests = Cache::remember('all_exams', 3600, fn() => Exam::select('id', 'name')->get());
-        $groups = Cache::remember('all_groups', 3600, fn() => Group::select('id', 'name')->get());
+        $tests = Cache::remember('all_exams', 3600, fn() => Exam::select('id', 'name', 'hash')->get());
+        $groups = Cache::remember('all_groups', 3600, fn() => Group::select('id', 'name', 'hash')->get());
 
         return Inertia::render('BackOffice/Scoring/Index', [
             'payload' => $data,
@@ -89,7 +89,7 @@ class ScoringControllerOptimized extends Controller
 
             // Get paginated attempts with minimal data
             $attempts = Attempt::query()
-                ->select('id', 'delivery_id', 'exam_id', 'taker_id', 'score', 'started_at', 'ended_at')
+                ->select('id', 'delivery_id', 'exam_id', 'taker_id', 'score', 'started_at', 'ended_at', 'hash')
                 ->where('delivery_id', $delivery->id)
                 ->where('exam_id', $delivery->exam_id);
             
