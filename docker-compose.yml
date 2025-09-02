@@ -178,7 +178,7 @@ services:
     networks:
       - app_network
     volumes:
-      - app_storage:/app/storage:ro
+      - app_storage:/var/www/storage:ro
 
 volumes:
   app_storage:

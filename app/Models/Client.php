@@ -109,12 +109,26 @@ class Client extends Model
     {
         static::saved(function (Client $client) {
             if ($client->wasChanged(['domains', 'is_active'])) {
-                app(TraefikDomainService::class)->updateMdxmConfig();
+                try {
+                    app(TraefikDomainService::class)->updateMdxmConfig();
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to update Traefik config on Client save', [
+                        'client_id' => $client->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
         });
         
         static::deleted(function (Client $client) {
-            app(TraefikDomainService::class)->updateMdxmConfig();
+            try {
+                app(TraefikDomainService::class)->updateMdxmConfig();
+            } catch (\Exception $e) {
+                \Log::warning('Failed to update Traefik config on Client delete', [
+                    'client_id' => $client->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
         });
     }
 }

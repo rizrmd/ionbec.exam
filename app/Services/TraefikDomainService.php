@@ -94,10 +94,29 @@ class TraefikDomainService
     {
         $yamlContent = Yaml::dump($config, 4, 2);
         
+        // Ensure directory exists
+        $directory = dirname(self::CONFIG_PATH);
+        if (!is_dir($directory)) {
+            if (!mkdir($directory, 0755, true)) {
+                throw new \RuntimeException("Cannot create directory: {$directory}");
+            }
+        }
+        
+        // Check if directory is writable
+        if (!is_writable($directory)) {
+            throw new \RuntimeException("Directory not writable: {$directory}");
+        }
+        
         // Atomic write to prevent corruption
         $tempFile = self::CONFIG_PATH . '.tmp';
-        file_put_contents($tempFile, $yamlContent);
-        rename($tempFile, self::CONFIG_PATH);
+        if (file_put_contents($tempFile, $yamlContent) === false) {
+            throw new \RuntimeException("Failed to write temp config file");
+        }
+        
+        if (!rename($tempFile, self::CONFIG_PATH)) {
+            unlink($tempFile);
+            throw new \RuntimeException("Failed to rename temp config file");
+        }
     }
     
     public function testWrite(): bool
