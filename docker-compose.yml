@@ -22,9 +22,9 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       
-      # Redis Configuration (Internal)
-      REDIS_HOST: redis
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+      # Redis Configuration (External)
+      REDIS_HOST: u8s0cgsks4gcwo84ccskwok4
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-43bgTxX07rGOxcDeD2Z67qc57qSAH39KEUJXCHap7W613KVNZPnLaOBdBG2Z0Yq6}
       REDIS_PORT: 6379
       
       # Cache/Session Configuration
@@ -81,7 +81,8 @@ services:
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-      REDIS_HOST: redis
+      REDIS_HOST: u8s0cgsks4gcwo84ccskwok4
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-43bgTxX07rGOxcDeD2Z67qc57qSAH39KEUJXCHap7W613KVNZPnLaOBdBG2Z0Yq6}
       REDIS_PORT: 6379
       CACHE_DRIVER: ${CACHE_DRIVER:-redis}
       SESSION_DRIVER: ${SESSION_DRIVER:-redis}
@@ -111,7 +112,8 @@ services:
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-      REDIS_HOST: redis
+      REDIS_HOST: u8s0cgsks4gcwo84ccskwok4
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-43bgTxX07rGOxcDeD2Z67qc57qSAH39KEUJXCHap7W613KVNZPnLaOBdBG2Z0Yq6}
       REDIS_PORT: 6379
       CACHE_DRIVER: ${CACHE_DRIVER:-redis}
       SESSION_DRIVER: ${SESSION_DRIVER:-redis}
@@ -152,7 +154,7 @@ services:
     environment:
       RUST_LOG: ${RUST_LOG:-info}
       DATABASE_URL: postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_DATABASE}
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://default:${REDIS_PASSWORD:-43bgTxX07rGOxcDeD2Z67qc57qSAH39KEUJXCHap7W613KVNZPnLaOBdBG2Z0Yq6}@u8s0cgsks4gcwo84ccskwok4:6379
     networks:
       - app_network
     volumes:
