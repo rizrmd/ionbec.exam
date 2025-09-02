@@ -5,6 +5,8 @@ namespace App\Providers;
 use Laravel\Jetstream\Jetstream;
 use App\Actions\Jetstream\DeleteUser;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use App\Http\Responses\LoginResponse;
 
 class JetstreamServiceProvider extends ServiceProvider
 {
@@ -15,6 +17,8 @@ class JetstreamServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        // Override Fortify's login response to handle Inertia properly
+        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
     }
 
     /**
