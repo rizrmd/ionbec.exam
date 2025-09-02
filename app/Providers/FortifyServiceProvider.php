@@ -31,5 +31,28 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
+        
+        // Custom authentication to handle multi-tenant login
+        Fortify::authenticateUsing(function ($request) {
+            $username = $request->input('username');
+            $password = $request->input('password');
+            
+            // Find user without any scopes first
+            $user = \App\Models\Accounts\User::withoutGlobalScopes()->where('username', $username)->first();
+            
+            if (!$user || !\Hash::check($password, $user->password)) {
+                return null;
+            }
+            
+            // For client domains, verify user belongs to the correct client
+            $domain = $request->getHost();
+            $client = \App\Models\Client::findByDomain($domain);
+            
+            if ($client && $user->client_id !== $client->id) {
+                return null; // User doesn't belong to this client
+            }
+            
+            return $user;
+        });
     }
 }
