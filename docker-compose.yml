@@ -57,6 +57,8 @@ services:
       # Application storage
       - app_storage:/var/www/storage
       - app_cache:/var/www/bootstrap/cache
+      # Traefik dynamic configuration  
+      - traefik_dynamic:/traefik-dynamic
     depends_on:
       - redis
     networks:
@@ -184,6 +186,8 @@ volumes:
   app_cache:
     driver: local
   redis_data:
+    driver: local
+  traefik_dynamic:
     driver: local
 
 networks:
