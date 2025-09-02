@@ -59,24 +59,8 @@ services:
       - app_cache:/var/www/bootstrap/cache
       # Traefik dynamic configuration  
       - traefik_dynamic:/traefik-dynamic
-    depends_on:
-      - redis
     networks:
       - app_network
-
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    networks:
-      - app_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
 
   # Queue Worker
   queue:
@@ -105,8 +89,6 @@ services:
     volumes:
       - app_storage:/var/www/storage
       - app_cache:/var/www/bootstrap/cache
-    depends_on:
-      - redis
     networks:
       - app_network
 
@@ -137,8 +119,6 @@ services:
     volumes:
       - app_storage:/var/www/storage
       - app_cache:/var/www/bootstrap/cache
-    depends_on:
-      - redis
     networks:
       - app_network
 
@@ -173,8 +153,6 @@ services:
       RUST_LOG: ${RUST_LOG:-info}
       DATABASE_URL: postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_DATABASE}
       REDIS_URL: redis://redis:6379
-    depends_on:
-      - redis
     networks:
       - app_network
     volumes:
@@ -184,8 +162,6 @@ volumes:
   app_storage:
     driver: local
   app_cache:
-    driver: local
-  redis_data:
     driver: local
   traefik_dynamic:
     driver: local
