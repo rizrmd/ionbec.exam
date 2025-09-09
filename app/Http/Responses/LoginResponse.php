@@ -17,16 +17,35 @@ class LoginResponse implements LoginResponseContract
      */
     public function toResponse($request)
     {
+        $domain = $request->getHost();
+        $user = auth()->user();
+        
         \Log::info('LoginResponse::toResponse called', [
-            'host' => $request->getHost(),
+            'host' => $domain,
             'path' => $request->path(),
             'is_inertia' => $request->header('X-Inertia'),
             'expects_json' => $request->expectsJson(),
-            'user_id' => auth()->id(),
-            'user_client_id' => auth()->user()?->client_id,
+            'user_id' => $user?->id,
+            'user_client_id' => $user?->client_id,
         ]);
 
-        $home = '/back-office/dashboard';
+        // Check if this is a client domain
+        $client = \App\Models\Client::findByDomain($domain);
+        
+        if ($client && $user && $user->client_id === $client->id) {
+            // User logging in on their client domain - redirect to client interface
+            $home = '/dashboard';
+        } else {
+            // Default back-office login
+            $home = '/back-office/dashboard';
+        }
+
+        \Log::info('LoginResponse redirect decision', [
+            'domain' => $domain,
+            'client_found' => $client ? $client->name : null,
+            'user_client_match' => $client && $user ? $user->client_id === $client->id : false,
+            'redirect_to' => $home
+        ]);
 
         // Always redirect to dashboard after login
         return redirect($home);
