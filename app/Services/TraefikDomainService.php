@@ -87,6 +87,17 @@ class TraefikDomainService
             }
         }
         
+        // Add the service definition
+        if (!empty($config['http']['routers'])) {
+            $config['http']['services'][self::SERVICE_NAME] = [
+                'loadBalancer' => [
+                    'servers' => [
+                        ['url' => self::SERVICE_URL]
+                    ]
+                ]
+            ];
+        }
+        
         return $config;
     }
     
