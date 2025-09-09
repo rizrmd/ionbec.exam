@@ -5,6 +5,7 @@ namespace App\Http\Responses;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Fortify;
 use Illuminate\Http\JsonResponse;
+use Inertia\Inertia;
 
 class LoginResponse implements LoginResponseContract
 {
@@ -17,15 +18,22 @@ class LoginResponse implements LoginResponseContract
     public function toResponse($request)
     {
         \Log::info('LoginResponse::toResponse called', [
-            'headers' => $request->headers->all(),
+            'host' => $request->getHost(),
+            'path' => $request->path(),
             'is_inertia' => $request->header('X-Inertia'),
             'expects_json' => $request->expectsJson(),
+            'user_id' => auth()->id(),
+            'user_client_id' => auth()->user()?->client_id,
         ]);
 
         $home = '/back-office/dashboard';
 
-        // Always redirect for Inertia requests
-        // Inertia will handle the redirect properly
+        // For Inertia requests, use Inertia location redirect
+        if ($request->header('X-Inertia')) {
+            return Inertia::location($home);
+        }
+
+        // For regular requests, use standard redirect
         return redirect($home);
     }
 }

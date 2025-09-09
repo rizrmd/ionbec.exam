@@ -95,7 +95,10 @@ class FortifyServiceProvider extends ServiceProvider
             Log::info('Login successful', [
                 'username' => $username,
                 'user_id' => $user->id,
-                'domain' => $domain
+                'user_client_id' => $user->client_id,
+                'domain' => $domain,
+                'is_client_domain' => $client !== null,
+                'client_id' => $client?->id,
             ]);
             
             return $user;
