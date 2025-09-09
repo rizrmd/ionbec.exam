@@ -33,8 +33,9 @@ class LoginResponse implements LoginResponseContract
         $client = \App\Models\Client::findByDomain($domain);
         
         if ($client && $user && $user->client_id === $client->id) {
-            // User logging in on their client domain - redirect to client interface
-            $home = '/dashboard';
+            // User logging in on their client domain - redirect to root
+            // Client domains have limited routes, so redirect to home page
+            $home = '/';
         } else {
             // Default back-office login
             $home = '/back-office/dashboard';
