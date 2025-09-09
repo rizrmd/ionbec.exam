@@ -45,14 +45,25 @@ class AppServiceProvider extends ServiceProvider
             \URL::forceScheme('https');
         }
         
-        // Use APP_URL if set, otherwise dynamically determine
-        if (config('app.url')) {
-            \URL::forceRootUrl(config('app.url'));
-        } elseif (request()->getHttpHost()) {
+        // Dynamic URL generation based on current request domain
+        if (request()->getHttpHost()) {
             $scheme = request()->secure() || request()->header('X-Forwarded-Proto') === 'https' ? 'https' : 'http';
-            $appUrl = $scheme . '://' . request()->getHttpHost();
-            config(['app.url' => $appUrl]);
-            \URL::forceRootUrl($appUrl);
+            $currentUrl = $scheme . '://' . request()->getHttpHost();
+            
+            // Check if this is a client domain
+            $currentDomain = request()->getHost();
+            $client = \App\Models\Client::findByDomain($currentDomain);
+            
+            if ($client) {
+                // For client domains, use the current domain for URL generation
+                \URL::forceRootUrl($currentUrl);
+                config(['app.url' => $currentUrl]);
+            } else {
+                // For main domain, use APP_URL if set, otherwise current URL
+                $mainUrl = config('app.url') ?: $currentUrl;
+                \URL::forceRootUrl($mainUrl);
+                config(['app.url' => $mainUrl]);
+            }
         }
     }
 }
