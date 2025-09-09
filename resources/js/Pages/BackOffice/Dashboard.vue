@@ -1,12 +1,5 @@
 <template>
   <dashboard-layout title="Dashboard">
-    <div class="mb-8 max-w-full mx-auto sm:px-6 lg:px-0 grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="col-span-4 flex flex-row gap-2 bg-orange-50 text-orange-600 px-2.5 py-2 rounded-md border border-orange-200 text-sm"><ExclamationCircleIcon class="w-4"/> Please contact Server Administrator to increase max participants. Upgrading may takes 30 minutes.</div>
-      <card-counter title="CPU" :icon="ChipIcon" :count="serverInfo.cpu.count" suffix="Core(s)"/>
-      <card-counter title="RAM" :icon="ServerIcon" :count="serverInfo.ram.total" suffix="GB"/>
-      <card-counter title="Disk" :icon="DesktopComputerIcon" :count="serverInfo.disk.total"/>
-      <card-counter title="Max. Participants" :icon="UserGroupIcon" :count="Math.round(serverInfo.ram.total / 0.145)" prefix="(recommended)"/>
-    </div>
 
     <div class="max-w-full mx-auto sm:px-6 lg:px-0 grid grid-cols-1 md:grid-cols-4 gap-4">
       <card-counter title="Total Categories" :icon="TagIcon" :count="countCategory" @click="Inertia.visit(route('back-office.category.index'))"/>
@@ -87,7 +80,7 @@
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import Card from '@/Components/Card'
 import CardCounter from '@/Components/CardCounter'
-import {PlusIcon, TagIcon, ExclamationCircleIcon, BadgeCheckIcon, SearchCircleIcon, ClipboardListIcon, ChipIcon, ServerIcon, DesktopComputerIcon, UserGroupIcon} from '@heroicons/vue/outline'
+import {PlusIcon, TagIcon, BadgeCheckIcon, SearchCircleIcon, ClipboardListIcon} from '@heroicons/vue/outline'
 import {Link} from '@inertiajs/inertia-vue3';
 import {toRefs} from "vue";
 import moment from "moment";
@@ -114,9 +107,6 @@ const props = defineProps({
     type: Object,
   },
   logs: {
-    type: Object,
-  },
-  serverInfo: {
     type: Object,
   }
 });
