@@ -45,10 +45,17 @@ class LoginResponse implements LoginResponseContract
             'domain' => $domain,
             'client_found' => $client ? $client->name : null,
             'user_client_match' => $client && $user ? $user->client_id === $client->id : false,
-            'redirect_to' => $home
+            'redirect_to' => $home,
+            'full_url' => $request->getSchemeAndHttpHost() . $home
         ]);
 
-        // Always redirect to dashboard after login
+        // For client domains, use full URL to ensure we stay on the correct domain
+        if ($client && $user && $user->client_id === $client->id) {
+            $fullUrl = $request->getSchemeAndHttpHost() . $home;
+            return redirect($fullUrl);
+        }
+
+        // Default back-office redirect
         return redirect($home);
     }
 }
