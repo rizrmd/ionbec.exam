@@ -116,6 +116,12 @@
                         title="Manage users">
                         <UserGroupIcon class="h-5 w-5" aria-hidden="true"/>
                       </button>
+                      <button
+                        @click="openCloneModal(client)"
+                        class="text-purple-600 hover:text-purple-900"
+                        title="Clone client">
+                        <DocumentDuplicateIcon class="h-5 w-5" aria-hidden="true"/>
+                      </button>
                       <Link 
                         :href="route('back-office.clients.edit', client.id)"
                         class="text-blue-600 hover:text-blue-900"
@@ -171,17 +177,26 @@
       </div>
     </template>
   </JetConfirmationModal>
+
+  <!-- Clone Client Modal -->
+  <CloneClientModal 
+    :show="showCloneModal" 
+    :client="cloningClient || {}"
+    @close="closeCloneModal"
+    @cloned="handleClientCloned"
+  />
 </template>
 
 <script setup>
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
-import { PlusIcon, SearchIcon, PencilAltIcon, UserGroupIcon } from '@heroicons/vue/outline'
+import { PlusIcon, SearchIcon, PencilAltIcon, UserGroupIcon, DocumentDuplicateIcon } from '@heroicons/vue/outline'
 import { computed, reactive, ref, onMounted } from 'vue'
 import { Inertia } from "@inertiajs/inertia"
 import { Link, useForm } from "@inertiajs/inertia-vue3"
 import Pagination from '@/Components/Pagination.vue'
 import JetConfirmationModal from '@/Jetstream/ConfirmationModal'
 import JetBanner from '@/Jetstream/Banner'
+import CloneClientModal from '@/Components/CloneClientModal.vue'
 import urlParser from "@/Libs/urlParser"
 
 const props = defineProps({
@@ -213,6 +228,10 @@ const deleteForm = useForm({})
 const deletingClient = ref(null)
 const isDeleting = computed(() => deletingClient.value !== null)
 
+// Clone modal state
+const showCloneModal = ref(false)
+const cloningClient = ref(null)
+
 const confirmDelete = (client) => {
   deletingClient.value = client
 }
@@ -240,6 +259,22 @@ const toggleStatus = (client) => {
 
 const goToUsers = (clientId) => {
   Inertia.visit(route('back-office.users.index', { client_id: clientId }))
+}
+
+// Clone modal functions
+const openCloneModal = (client) => {
+  cloningClient.value = client
+  showCloneModal.value = true
+}
+
+const closeCloneModal = () => {
+  showCloneModal.value = false
+  cloningClient.value = null
+}
+
+const handleClientCloned = () => {
+  // Refresh the page to show the new client
+  Inertia.reload()
 }
 
 onMounted(() => {

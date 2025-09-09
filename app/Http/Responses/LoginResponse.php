@@ -28,12 +28,7 @@ class LoginResponse implements LoginResponseContract
 
         $home = '/back-office/dashboard';
 
-        // For Inertia requests, use Inertia location redirect
-        if ($request->header('X-Inertia')) {
-            return Inertia::location($home);
-        }
-
-        // For regular requests, use standard redirect
+        // Always redirect to dashboard after login
         return redirect($home);
     }
 }

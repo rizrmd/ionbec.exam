@@ -4,10 +4,12 @@ namespace App\Http\Controllers\BackOffice;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Jobs\CloneClientJob;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Response;
 use Dentro\Yalr\Attributes\Get;
 use Dentro\Yalr\Attributes\Post;
@@ -202,5 +204,54 @@ class ClientManagementController extends Controller
         ];
 
         return response()->json($stats);
+    }
+
+    #[Post('/back-office/clients/{client}/clone', name: 'back-office.clients.clone')]
+    public function clone(Request $request, Client $client): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:clients,slug',
+            'options' => 'array'
+        ]);
+
+        $options = array_merge([
+            'clone_categories' => true,
+            'clone_questions' => true,
+            'clone_exams' => true,
+            'clone_groups' => true,
+        ], $validated['options'] ?? []);
+
+        $job = new CloneClientJob(
+            $client,
+            $validated['name'],
+            $validated['slug'],
+            $options
+        );
+
+        dispatch($job);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Client cloning started successfully',
+            'job_id' => $job->getJobId(),
+            'original_client' => $client->name,
+            'new_client_name' => $validated['name']
+        ]);
+    }
+
+    #[Get('/back-office/clients/suggest-slug/{name}', name: 'back-office.clients.suggest-slug')]
+    public function suggestSlug(string $name): JsonResponse
+    {
+        $baseSlug = Str::slug($name);
+        $slug = $baseSlug;
+        $counter = 1;
+
+        while (Client::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
+        return response()->json(['slug' => $slug]);
     }
 }
