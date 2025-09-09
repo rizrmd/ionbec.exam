@@ -58,7 +58,7 @@ services:
       - app_storage:/var/www/storage
       - app_cache:/var/www/bootstrap/cache
       # Traefik dynamic configuration  
-      - traefik_dynamic:/traefik-dynamic
+      - /data/coolify/proxy/dynamic:/traefik-dynamic
     networks:
       - app_network
 
@@ -164,8 +164,6 @@ volumes:
   app_storage:
     driver: local
   app_cache:
-    driver: local
-  traefik_dynamic:
     driver: local
 
 networks:
