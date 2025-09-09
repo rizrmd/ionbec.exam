@@ -75,11 +75,19 @@ Route::get('/', function () {
     return 'Root route from web.php is working! Laravel ' . app()->version();
 });
 
-// Catch-all route for debugging
+// Catch-all route for debugging (exclude auth routes)
 Route::fallback(function () {
+    $path = request()->path();
+    
+    // Don't override auth routes - let Fortify handle them
+    $authRoutes = ['login', 'register', 'password/reset', 'password/confirm', 'email/verify'];
+    if (in_array($path, $authRoutes) || str_starts_with($path, 'password/') || str_starts_with($path, 'email/')) {
+        abort(404);
+    }
+    
     return response()->json([
         'message' => 'Route not found, but Laravel is working',
-        'path' => request()->path(),
+        'path' => $path,
         'method' => request()->method(),
         'all_routes' => collect(Route::getRoutes())->map(function ($route) {
             return [
