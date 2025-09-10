@@ -134,6 +134,9 @@ class ClientManagementController extends Controller
                 Storage::disk('public')->delete($client->logo);
             }
             $validated['logo'] = $request->file('logo')->store('client-logos', 'public');
+        } else {
+            // Don't update logo field if no new file is uploaded
+            unset($validated['logo']);
         }
 
         $validated['domains'] = array_filter($validated['domains']);

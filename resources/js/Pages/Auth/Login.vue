@@ -1,5 +1,6 @@
 <script setup>
-import {Head, Link, useForm} from '@inertiajs/inertia-vue3';
+import {Head, Link, useForm, usePage} from '@inertiajs/inertia-vue3';
+import {computed} from 'vue';
 import JetAuthenticationCard from '@/Jetstream/AuthenticationCard.vue';
 import JetAuthenticationCardLogo from '@/Jetstream/AuthenticationCardLogo.vue';
 import JetButton from '@/Jetstream/Button.vue';
@@ -13,6 +14,10 @@ defineProps({
   canResetPassword: Boolean,
   status: String,
 });
+
+const client = computed(() => usePage().props.value.client)
+const clientName = computed(() => client.value?.name || 'National Orthopaedic and Traumatology Board Examination')
+const clientLogo = computed(() => client.value?.logo_url || '/images/logo.png')
 
 const form = useForm({
   username: '',
@@ -37,7 +42,7 @@ const submit = () => {
     <template #logo>
       <div class="flex justify-center pt-8 sm:justify-start sm:pt-0">
         <a href="/">
-          <img alt="" src="/images/logo.png">
+          <img :alt="clientName" :src="clientLogo">
         </a>
       </div>
     </template>
@@ -49,7 +54,7 @@ const submit = () => {
     </div>
 
     <form @submit.prevent="submit">
-      <div class="text-2xl font-bold mt-2 mb-4 text-center">User Sign In</div>
+      <div class="text-2xl font-bold mt-2 mb-4 text-center">{{ clientName }} - User Sign In</div>
       <div>
         <JetLabel for="username" value="Username"/>
         <input type="text" id="username" autocomplete="username" v-model="form.username" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required autofocus/>

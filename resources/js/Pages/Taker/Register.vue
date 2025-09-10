@@ -1,5 +1,5 @@
 <script setup>
-import {Head, Link, useForm} from '@inertiajs/inertia-vue3';
+import {Head, Link, useForm, usePage} from '@inertiajs/inertia-vue3';
 import JetAuthenticationCard from '@/Jetstream/AuthenticationCard.vue';
 import JetLabel from '@/Jetstream/Label.vue';
 import JetValidationErrors from '@/Jetstream/ValidationErrors.vue';
@@ -13,6 +13,10 @@ defineProps({
   canResetPassword: Boolean,
   status: String,
 });
+
+const client = computed(() => usePage().props.value.client)
+const clientName = computed(() => client.value?.name || 'National Orthopaedic and Traumatology Board Examination')
+const clientLogo = computed(() => client.value?.logo_url || '/images/logo.png')
 
 const form = useForm({
   name: '',
@@ -52,7 +56,7 @@ watch(withGroup, function (newVal, prevVal) {
     <template #logo>
       <div class="flex justify-center pt-8 sm:justify-start sm:pt-0">
         <a href="/">
-          <img alt="" src="/images/logo.png">
+          <img :alt="clientName" :src="clientLogo">
         </a>
       </div>
     </template>
@@ -64,7 +68,7 @@ watch(withGroup, function (newVal, prevVal) {
     </div>
 
     <form @submit.prevent="submit">
-      <div class="text-2xl font-bold mt-2 mb-4 text-center">Candidate Sign Up</div>
+      <div class="text-2xl font-bold mt-2 mb-4 text-center">{{ clientName }} - Candidate Sign Up</div>
 
       <div>
         <JetLabel for="name" value="Name"/>

@@ -58,22 +58,28 @@ Route::get('/test', function () {
 });
 
 // Add a simple root fallback for debugging
-Route::get('/', function () {
+Route::get('/', function (Illuminate\Http\Request $request) {
     // Check if Inertia page exists, otherwise show debug info
     if (class_exists(\Inertia\Inertia::class)) {
         try {
+            $client = $request->attributes->get('client');
+            
             return \Inertia\Inertia::render('Welcome', [
                 'canLogin' => Route::has('login'),
                 'canRegister' => Route::has('register'),
                 'laravelVersion' => \Illuminate\Foundation\Application::VERSION,
                 'phpVersion' => PHP_VERSION,
+                'client' => $client ? [
+                    'name' => $client->name,
+                    'logo_url' => $client->logo_url,
+                ] : null,
             ]);
         } catch (\Exception $e) {
             return 'Inertia error: ' . $e->getMessage();
         }
     }
     return 'Root route from web.php is working! Laravel ' . app()->version();
-});
+})->middleware('web');
 
 // Catch-all route for debugging (exclude auth routes)
 Route::fallback(function () {

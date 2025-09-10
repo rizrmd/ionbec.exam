@@ -26,8 +26,8 @@
               </div>
             </TransitionChild>
             <div class="flex-shrink-0 flex items-center px-4">
-              <img :src="logo" alt="IONBEC" class="h-8 w-auto">
-              <h2 class="ml-1">IONBEC</h2>
+              <img :src="clientLogo" :alt="clientName" class="h-8 w-auto">
+              <h2 class="ml-1">{{ clientName }}</h2>
             </div>
             <div class="mt-5 flex-1 h-0 overflow-y-auto">
               <nav class="px-2 space-y-1">
@@ -53,8 +53,8 @@
       <!-- Sidebar component, swap this element with another sidebar if you like -->
       <div class="flex flex-col flex-grow border-r border-gray-200 pt-5 bg-white overflow-y-auto">
         <div class="flex items-center justify-center flex-shrink-0 px-4">
-          <img alt="IONBEC" class="h-8 w-auto" src="/images/logo.png">
-          <h2 class="ml-1">IONBEC</h2>
+          <img :alt="clientName" class="h-8 w-auto" :src="clientLogo">
+          <h2 class="ml-1">{{ clientName }}</h2>
         </div>
         <div class="mt-5 flex-grow flex flex-col">
           <nav class="flex-1 px-2 pb-4 space-y-1">
@@ -158,7 +158,8 @@
 </template>
 
 <script setup>
-import {ref, toRefs} from 'vue'
+import {ref, toRefs, computed} from 'vue'
+import {usePage} from '@inertiajs/inertia-vue3'
 import {
   Dialog,
   DialogOverlay,
@@ -195,6 +196,10 @@ const navigationStore = useNavigationStore()
 const {sidebarNavigation, userNavigation} = storeToRefs(navigationStore)
 
 const {title} = toRefs(props)
+
+const client = computed(() => usePage().props.value.client)
+const clientName = computed(() => client.value?.name || 'IONBEC')
+const clientLogo = computed(() => client.value?.logo_url || logo)
 
 const sidebarOpen = ref(false)
 const closeSidebar = () => sidebarOpen.value = false

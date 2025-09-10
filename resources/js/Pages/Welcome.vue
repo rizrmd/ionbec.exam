@@ -4,11 +4,12 @@ import JetValidationErrors from '@/Jetstream/ValidationErrors'
 import {computed} from "vue";
 import Notification from "@/Components/Notification";
 
-defineProps({
+const props = defineProps({
   canLogin: Boolean,
   canRegister: Boolean,
   laravelVersion: String,
   phpVersion: String,
+  client: Object,
 });
 
 const form = useForm({
@@ -67,12 +68,12 @@ const getUserRoute = () => {
 
     <div class="max-w-6xl sm:px-6 lg:px-8">
       <div class="flex justify-center pt-8 sm:justify-start sm:pt-0">
-        <img alt="" src="/images/logo.png">
+        <img alt="" :src="props.client?.logo_url || '/images/logo.png'">
       </div>
     </div>
 
     <div>
-      <h2>National Orthopaedic and Traumatology Board Examination</h2>
+      <h2>{{ props.client?.name || 'National Orthopaedic and Traumatology Board Examination' }}</h2>
     </div>
 
     <div class="shadow ring-1 ring-black ring-opacity-5 rounded-lg bg-white mt-8 p-3">
@@ -80,7 +81,7 @@ const getUserRoute = () => {
       <div class="flex flex-row">
         <input id="search-name"
                v-model="form.token"
-               class="inline-flex focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-l-md"
+               class="focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-l-md"
                placeholder="Insert exam-token"
                type="text">
         <button

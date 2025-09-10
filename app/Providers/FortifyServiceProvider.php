@@ -37,6 +37,14 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         
+        // Configure Inertia views for authentication
+        Fortify::loginView(function () {
+            return \Inertia\Inertia::render('Auth/Login', [
+                'canResetPassword' => \Illuminate\Support\Facades\Route::has('password.request'),
+                'status' => session('status'),
+            ]);
+        });
+        
         // Custom authentication to handle multi-tenant login
         Fortify::authenticateUsing(function ($request) {
             $username = $request->input('username');

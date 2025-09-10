@@ -1,6 +1,7 @@
 <script setup>
 import {ChevronLeftIcon} from '@heroicons/vue/outline'
-import {Head as InertiaHead, Link} from '@inertiajs/inertia-vue3'
+import {Head as InertiaHead, Link, usePage} from '@inertiajs/inertia-vue3'
+import {computed} from 'vue'
 
 const props = defineProps({
   taker: {
@@ -11,6 +12,10 @@ const props = defineProps({
   }
 })
 
+const client = computed(() => usePage().props.value.client)
+const clientName = computed(() => client.value?.name || 'National Orthopaedic and Traumatology Board Examination')
+const clientLogo = computed(() => client.value?.logo_url || '/images/logo.png')
+
 </script>
 
 <template>
@@ -18,11 +23,11 @@ const props = defineProps({
   <div class="container mx-auto pt-20 pb-12 px-4 min-h-screen">
     <div class="flex flex-col items-top justify-center min-w-full min-h-full text-center">
       <div class="flex justify-center pt-8">
-        <img alt="" src="/images/logo.png">
+        <img :alt="clientName" :src="clientLogo">
       </div>
 
       <div>
-        <h2>National Orthopaedic and Traumatology Board Examination</h2>
+        <h2>{{ clientName }}</h2>
       </div>
 
       <div class="mt-10">
