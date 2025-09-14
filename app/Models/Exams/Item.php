@@ -80,7 +80,10 @@ class Item extends Model
      */
     public function exams(): Relations\BelongsToMany
     {
-        return $this->belongsToMany(Exam::class, 'exam_item', 'item_id', 'exam_id')->withPivot(['order']);
+        return $this->belongsToMany(Exam::class, 'exam_item', 'item_id', 'exam_id')
+            ->withPivot(['order'])
+            ->where('exams.client_id', $this->client_id)
+            ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
     /**

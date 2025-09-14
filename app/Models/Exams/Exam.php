@@ -113,6 +113,8 @@ class Exam extends Model
      */
     public function deliveries(): Relations\HasMany
     {
-        return $this->hasMany(Delivery::class, 'exam_id', 'id');
+        return $this->hasMany(Delivery::class, 'exam_id', 'id')
+            ->where('deliveries.client_id', $this->client_id)
+            ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 }

@@ -81,7 +81,9 @@ class Question extends Model
      */
     public function item(): Relations\BelongsTo
     {
-        return $this->belongsTo(Item::class, 'item_id');
+        return $this->belongsTo(Item::class, 'item_id')
+            ->where('items.client_id', $this->client_id)
+            ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
     /**

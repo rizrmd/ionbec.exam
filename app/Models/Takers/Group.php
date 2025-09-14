@@ -62,7 +62,10 @@ class Group extends Model
      */
     public function takers()
     {
-        return $this->belongsToMany(Taker::class, 'group_taker', 'group_id', 'taker_id')->withPivot(['taker_code']);
+        return $this->belongsToMany(Taker::class, 'group_taker', 'group_id', 'taker_id')
+            ->withPivot(['taker_code'])
+            ->where('takers.client_id', $this->client_id)
+            ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
     /**
@@ -72,6 +75,8 @@ class Group extends Model
      */
     public function deliveries()
     {
-        return $this->hasMany(Delivery::class, 'group_id', 'id');
+        return $this->hasMany(Delivery::class, 'group_id', 'id')
+            ->where('deliveries.client_id', $this->client_id)
+            ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 }

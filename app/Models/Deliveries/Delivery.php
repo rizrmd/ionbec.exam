@@ -98,7 +98,8 @@ class Delivery extends Model
     public function exam(): Relations\BelongsTo
     {
         return $this->belongsTo(Exam::class, 'exam_id', 'id')
-            ->where('exams.client_id', $this->client_id);
+            ->where('exams.client_id', $this->client_id)
+            ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
     /**
@@ -108,7 +109,9 @@ class Delivery extends Model
      */
     public function group(): Relations\BelongsTo
     {
-        return $this->belongsTo(Group::class, 'group_id', 'id');
+        return $this->belongsTo(Group::class, 'group_id', 'id')
+            ->where('groups.client_id', $this->client_id)
+            ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
     /**

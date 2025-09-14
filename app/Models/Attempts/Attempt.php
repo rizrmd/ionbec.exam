@@ -85,7 +85,9 @@ class Attempt extends Model
      */
     public function taker(): Relations\BelongsTo
     {
-        return $this->belongsTo(Taker::class, 'attempted_by', 'id');
+        return $this->belongsTo(Taker::class, 'attempted_by', 'id')
+            ->where('takers.client_id', $this->client_id)
+            ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
     /**
@@ -106,7 +108,8 @@ class Attempt extends Model
     public function exam(): Relations\BelongsTo
     {
         return $this->belongsTo(Exam::class, 'exam_id', 'id')
-            ->where('exams.client_id', $this->client_id);
+            ->where('exams.client_id', $this->client_id)
+            ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
     /**
@@ -116,7 +119,9 @@ class Attempt extends Model
      */
     public function delivery(): Relations\BelongsTo
     {
-        return $this->belongsTo(Delivery::class, 'delivery_id', 'id');
+        return $this->belongsTo(Delivery::class, 'delivery_id', 'id')
+            ->where('deliveries.client_id', $this->client_id)
+            ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
     public function takerCode(): Attribute

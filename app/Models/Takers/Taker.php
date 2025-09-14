@@ -51,7 +51,10 @@ class Taker extends Authenticatable
      */
     public function groups(): Relations\BelongsToMany
     {
-        return $this->belongsToMany(Group::class, 'group_taker', 'taker_id', 'group_id')->withPivot(['taker_code']);
+        return $this->belongsToMany(Group::class, 'group_taker', 'taker_id', 'group_id')
+            ->withPivot(['taker_code'])
+            ->where('groups.client_id', $this->client_id)
+            ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
     public function attempts(): Relations\HasMany
@@ -71,7 +74,10 @@ class Taker extends Authenticatable
      */
     public function deliveries(): Relations\BelongsToMany
     {
-        return $this->belongsToMany(Delivery::class, 'delivery_taker', 'taker_id', 'delivery_id')->withPivot(['token', 'is_login']);
+        return $this->belongsToMany(Delivery::class, 'delivery_taker', 'taker_id', 'delivery_id')
+            ->withPivot(['token', 'is_login'])
+            ->where('deliveries.client_id', $this->client_id)
+            ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
     public function hasGroup($id)
