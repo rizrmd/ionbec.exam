@@ -88,7 +88,7 @@ class Client extends Model
     public static function findByDomain(string $domain): ?self
     {
         return static::where('is_active', true)
-            ->where('domains', 'like', '%"' . $domain . '"%')
+            ->whereRaw('domains::text LIKE ?', ['%"' . $domain . '"%'])
             ->first();
     }
 
