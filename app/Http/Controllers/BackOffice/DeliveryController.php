@@ -460,11 +460,19 @@ class DeliveryController extends Controller
 
     private function getBaseDataDetail(Delivery $delivery, $getIdQuestions = false): array
     {
-        $delivery->load('exam.items.questions', 'group.takers', 'attempts');
+        // Load relationships separately due to ClientScope issues
+        $delivery->load('group.takers', 'attempts');
+        
+        // Load exam using our fixed relationship
+        $exam = $delivery->exam;
         $questions = [];
-        foreach ($delivery->exam->items as $item) {
-            foreach ($item->questions as $question) {
-                $questions[] = $question->id;
+        
+        if ($exam) {
+            $exam->load('items.questions');
+            foreach ($exam->items as $item) {
+                foreach ($item->questions as $question) {
+                    $questions[] = $question->id;
+                }
             }
         }
 
