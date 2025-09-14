@@ -4,7 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title inertia>{{ config('app.name', 'IONBEC') }}</title>
+  @php
+    $client = request()->attributes->get('client');
+    $title = $client ? $client->name : config('app.name', 'IONBEC');
+    $favicon = $client && $client->logo_url ? $client->logo_url : '/images/logo.png';
+  @endphp
+
+  <title inertia>{{ $title }}</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="{{ $favicon }}">
 
   <!-- Fonts -->
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
