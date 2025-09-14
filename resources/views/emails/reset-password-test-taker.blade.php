@@ -82,7 +82,7 @@
       <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
         <tr>
           <td bgcolor="#ffffff" align="center" valign="top" style="border-left: 1px solid #E7E8EB; border-right: 1px solid #E7E8EB; border-top: 1px solid #E7E8EB; padding: 48px 48px 16px 48px; border-radius: 4px 4px 0px 0px; color: #111111; text-align: left; font-weight: 400; letter-spacing: 4px; line-height: 48px;">
-            <img src="{{ asset('/images/logo.png')  }}" width="60" height="60" style="display: block; border: 0px;" />
+            <img src="{{ $client && $client->logo_url ? $client->logo_url : asset('/images/logo.png') }}" width="60" height="60" style="display: block; border: 0px;" />
           </td>
         </tr>
       </table>
@@ -139,7 +139,7 @@
         </tr>
         <tr>
           <td bgcolor="#ffffff" align="left" style="border-left: 1px solid #E7E8EB; border-right: 1px solid #E7E8EB; border-bottom: 1px solid #E7E8EB; padding: 8px 48px 48px 48px; border-radius: 0px 0px 4px 4px; color: #393D42; font-size: 12px; font-weight: 400; line-height: 15px; letter-spacing: 0.015em;">
-            <p style="margin: 0;">Kind regards,<br><b>IONBEC</b></p>
+            <p style="margin: 0;">Kind regards,<br><b>{{ $client ? $client->name : 'IONBEC' }}</b></p>
           </td>
         </tr>
       </table>

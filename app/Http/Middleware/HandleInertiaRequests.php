@@ -22,6 +22,7 @@ class HandleInertiaRequests extends Middleware
                 $query->withoutGlobalScopes();
             }]),
             'auth.taker' => static fn () => auth()->guard('taker')->user(),
+            'client' => static fn () => $request->attributes->get('client'),
             'jetstream.flash' => static fn () => [
                 'style' => $request->session()->get('_executed', false) ? 'success' : 'danger',
                 'banner' => $request->session()->get('_message'),
