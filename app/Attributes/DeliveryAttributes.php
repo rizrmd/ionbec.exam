@@ -44,14 +44,22 @@ trait DeliveryAttributes
 
     public function getTakersCountAttribute()
     {
-        /** @var Group $group */
-        $group = $this->group()->firstOrFail();
+        if (!$this->group_id) {
+            return 0;
+        }
 
-        return $group?->takers()->count();
+        /** @var Group $group */
+        $group = $this->group()->first();
+
+        return $group ? $group->takers()->count() : 0;
     }
 
     public function getQuestionsCountAttribute()
     {
+        if (!$this->exam_id) {
+            return 0;
+        }
+
         return $this->exam instanceof Exam ? $this->exam->totalQuestions() : 0;
     }
 

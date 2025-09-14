@@ -31,9 +31,9 @@ class ScoringController extends Controller
         
         $data = Cache::remember($cacheKey, 300, function () use ($request) {
             $deliveries = Delivery::query()
-                ->select('id', 'name', 'scheduled_at', 'exam_id', 'group_id', 'hash')
+                ->select('id', 'name', 'scheduled_at', 'exam_id', 'group_id', 'hash', 'duration', 'automatic_start', 'is_anytime', 'last_status')
                 ->with([
-                    'exam:id,name',
+                    'exam:id,name,is_interview',
                     'group:id,name'
                 ])
                 ->orderBy('scheduled_at', 'DESC');
@@ -89,7 +89,7 @@ class ScoringController extends Controller
 
             // Get paginated attempts with minimal data
             $attempts = Attempt::query()
-                ->select('id', 'delivery_id', 'exam_id', 'attempted_by', 'score', 'started_at', 'ended_at', 'hash')
+                ->select('id', 'delivery_id', 'exam_id', 'attempted_by', 'score', 'progress', 'started_at', 'ended_at', 'hash', 'finish_scoring')
                 ->where('delivery_id', $delivery->id)
                 ->where('exam_id', $delivery->exam_id);
             
@@ -106,7 +106,7 @@ class ScoringController extends Controller
                 'takerCount' => $takerCount,
                 'scoringCount' => $scoringCount,
                 'questionCount' => $questionCount,
-                'attempts' => $attempts->with(['taker:id,name,email'])
+                'attempts' => $attempts->with(['taker:id,name,email', 'delivery.group:id,name,code'])
                     ->paginate($request->input('perPage', 15))
                     ->withQueryString()
             ];

@@ -156,14 +156,14 @@ onMounted(() => {
 
                   <td v-if="delivery.is_interview"
                       class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-right">
-                    {{ moment(delivery.scheduled_at).format('D MMM YYYY') }}
+                    {{ delivery.scheduled_at ? moment(delivery.scheduled_at).format('D MMM YYYY') : '-' }}
                   </td>
                   <td v-else-if="!delivery.automatic_start"
                       class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-right">
-                    {{ moment(delivery.scheduled_at).format('D MMM YYYY / H:mm') }}
+                    {{ delivery.scheduled_at ? moment(delivery.scheduled_at).format('D MMM YYYY / H:mm') : '-' }}
                   </td>
                   <td v-else class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-right text-gray-500">
-                    {{ moment(delivery.scheduled_at).format('D MMM YYYY / H:mm') }}
+                    {{ delivery.scheduled_at ? moment(delivery.scheduled_at).format('D MMM YYYY / H:mm') : '-' }}
                   </td>
 
                   <td v-if="delivery.is_interview" class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"></td>
