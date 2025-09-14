@@ -170,7 +170,7 @@ window.Echo.private(`scoring.${delivery.value.hash}`)
               </tr>
               <tr v-else-if="dataScoring.data.length === 0">
                 <td colspan="6">
-                  <div class="text-center w-full my-4">Empty.</div>
+                  <div class="text-center w-full my-4">No attempts yet. {{ takerCount }} taker(s) assigned but haven't started the exam.</div>
                 </td>
               </tr>
               </tbody>

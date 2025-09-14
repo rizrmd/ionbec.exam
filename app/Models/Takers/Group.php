@@ -37,7 +37,7 @@ class Group extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'description', 'closed_at', 'client_id'];
+    protected $fillable = ['name', 'description', 'code', 'last_taker_code', 'closed_at', 'client_id'];
 
     protected $hidden = ['id'];
     protected $appends = ['hash', 'closed_in'];

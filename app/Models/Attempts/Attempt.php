@@ -8,6 +8,7 @@ use App\Models\Exams\Item;
 use App\Models\Takers\Taker;
 use App\Models\Exams\Question;
 use App\Traits\BelongsToClient;
+use App\Traits\HasTakerCode;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Models\Deliveries\Delivery;
@@ -31,6 +32,7 @@ class Attempt extends Model
 {
     use HashableId;
     use BelongsToClient;
+    use HasTakerCode;
 
     /**
      * The table associated with the model.
@@ -121,12 +123,11 @@ class Attempt extends Model
         return new Attribute(
             get: function () {
                 $this->load('delivery.group');
-                $data = DB::table('group_taker')
-                    ->where('group_id', $this->delivery->group_id)
-                    ->where('taker_id', $this->attempted_by)
-                    ->first();
-
-                return $this->delivery->group->code.'-'.$data?->taker_code;
+                return self::getFormattedTakerCode(
+                    $this->attempted_by,
+                    $this->delivery->group_id,
+                    $this->delivery->group->code
+                );
             },
         );
     }

@@ -15,9 +15,12 @@ use App\Models\Deliveries\Delivery;
 use App\Http\Controllers\Controller;
 use App\Jobs\Group\AddTestTakerToGroup;
 use Veelasky\LaravelHashId\Rules\ExistsByHash;
+use Illuminate\Support\Facades\DB;
+use App\Traits\HasTakerCode;
 
 class GroupController extends Controller
 {
+    use HasTakerCode;
     /**
      * Instantiate a new controller instance.
      *
@@ -114,13 +117,26 @@ class GroupController extends Controller
             });
         });
 
+        $groupTakers = $data->with('groups', function ($q) use ($group) {
+            $q->where('id', $group->id);
+        })->paginate($request->input('perPage', 15))->withQueryString();
+
+        // Format taker codes properly for display
+        $groupTakers->getCollection()->transform(function ($taker) use ($group) {
+            $taker->formatted_taker_code = $this->getFormattedTakerCode(
+                $taker->id,
+                $group->id,
+                $group->code
+            );
+            
+            return $taker;
+        });
+
         return Inertia::render('BackOffice/Group/Taker', array_merge(
             $this->getBaseDataDetail($group),
             [
                 'takers' => $this->takerQuery()->whereNotIn('id', $takerIds)->where('is_verified', true)->get(),
-                'payload' => $data->with('groups', function ($q) use ($group) {
-                    $q->where('id', $group->id);
-                })->paginate($request->input('perPage', 15))->withQueryString(),
+                'payload' => $groupTakers,
             ]
         ));
     }
@@ -162,11 +178,24 @@ class GroupController extends Controller
             $attemptQuery->whereIn('delivery_id', $deliveries->map->id->toArray());
         });
 
+        $resultTakers = $data->paginate($request->input('perPage', 15))->withQueryString();
+
+        // Add formatted taker codes for display
+        $resultTakers->getCollection()->transform(function ($taker) use ($group) {
+            $taker->formatted_taker_code = $this->getFormattedTakerCode(
+                $taker->id,
+                $group->id,
+                $group->code
+            );
+            
+            return $taker;
+        });
+
         return Inertia::render('BackOffice/Group/Result', array_merge(
             $this->getBaseDataDetail($group),
             [
                 'deliveries' => $deliveries,
-                'payload' => $data->paginate($request->input('perPage', 15))->withQueryString(),
+                'payload' => $resultTakers,
             ]
         ));
     }
@@ -273,10 +302,23 @@ class GroupController extends Controller
 
         $deliveries = $this->deliveryQuery($group)->with('exam')->get();
 
+        $resultTakers = $data->get();
+
+        // Add formatted taker codes for display
+        $resultTakers->transform(function ($taker) use ($group) {
+            $taker->formatted_taker_code = $this->getFormattedTakerCode(
+                $taker->id,
+                $group->id,
+                $group->code
+            );
+            
+            return $taker;
+        });
+
         return Inertia::render('BackOffice/Group/ResultPDF', [
             'deliveries' => $deliveries,
             'group' => $group,
-            'payload' => $data->get(),
+            'payload' => $resultTakers,
         ]);
     }
 }

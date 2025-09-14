@@ -98,6 +98,7 @@ const getScore = (delivery, attempts) => {
               <thead class="bg-gray-50">
               <tr>
                 <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6" scope="col">NO</th>
+                <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900" scope="col">CODE</th>
                 <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900" scope="col">TAKER</th>
                 <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900" scope="col">SUMMARY</th>
                 <th class="px-3 py-3.5 text-center text-xs font-normal text-gray-900" scope="col" v-for="delivery in deliveries">
@@ -112,6 +113,7 @@ const getScore = (delivery, attempts) => {
                 <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                   {{ payload.from + index }}
                 </td>
+                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ taker.formatted_taker_code }}</td>
                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                   <span>{{ taker.name }}</span><br>
                   <span class="text-xs text-gray-400">{{ taker.email }}</span>
@@ -127,12 +129,12 @@ const getScore = (delivery, attempts) => {
                 </td>
               </tr>
               <tr v-if="filters.query !== '' && payload.data.length === 0">
-                <td :colspan="3 + deliveries.length">
+                <td :colspan="4 + deliveries.length">
                   <div class="text-center w-full my-4">Data Not Found.</div>
                 </td>
               </tr>
               <tr v-else-if="payload.data.length === 0">
-                <td :colspan="3 + deliveries.length">
+                <td :colspan="4 + deliveries.length">
                   <div class="text-center w-full my-4">Empty, please create Group.</div>
                 </td>
               </tr>

@@ -114,7 +114,7 @@ class ScoringController extends Controller
 
         // Load delivery data separately (minimal fields)
         $delivery->load([
-            'exam:id,name',
+            'exam:id,name,code',
             'group:id,name'
         ]);
 

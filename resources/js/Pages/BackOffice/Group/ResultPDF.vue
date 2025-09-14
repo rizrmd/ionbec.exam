@@ -51,11 +51,13 @@ const getScore = (code, attempts) => {
 
     <table>
       <tr>
+        <th>Code</th>
         <th>Name</th>
         <th v-for="delivery in deliveries">{{ delivery.name ?? '-' }} ({{ delivery.exam.name }})</th>
         <th>Summary</th>
       </tr>
       <tr v-for="taker in payload">
+        <td>{{ taker.formatted_taker_code }}</td>
         <td>{{ taker.name }}</td>
         <td v-for="delivery in deliveries">{{ getScore(delivery.exam.code, taker.attempts) }}</td>
         <td>{{ getSummary(deliveries, taker.attempts) }}</td>

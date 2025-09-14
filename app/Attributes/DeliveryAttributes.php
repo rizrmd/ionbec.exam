@@ -65,6 +65,6 @@ trait DeliveryAttributes
 
     public function getIsInterviewAttribute()
     {
-        return $this->exam->is_interview;
+        return $this->exam ? $this->exam->is_interview : false;
     }
 }

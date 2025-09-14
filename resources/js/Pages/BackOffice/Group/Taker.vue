@@ -163,7 +163,7 @@ const editAction = () => {
                   <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                     {{ payload.from + index }}
                   </td>
-                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ group.code + '-' + taker.groups[0]?.pivot.taker_code }}</td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ taker.formatted_taker_code }}</td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ taker.name }}</td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ taker.email }}</td>
                   <td class="relative whitespace-nowrap py-4 pl-3 pr-4 sm:pr-6 flex items-center justify-end gap-3">
