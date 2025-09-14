@@ -55,7 +55,7 @@ class DeliveryController extends Controller
     #[Get('back-office/delivery', name: 'back-office.delivery.index')]
     public function index(Request $request): Response
     {
-        $deliveries = Delivery::query();
+        $deliveries = Delivery::query()->with('exam');
         $deliveries->orderBy('scheduled_at', 'DESC');
 
         $deliveries->when($request->input('name') ?? false, function ($query, $queryString) {
