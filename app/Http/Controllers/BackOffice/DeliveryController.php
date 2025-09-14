@@ -461,7 +461,7 @@ class DeliveryController extends Controller
     private function getBaseDataDetail(Delivery $delivery, $getIdQuestions = false): array
     {
         // Load relationships separately due to ClientScope issues
-        $delivery->load('group.takers', 'attempts');
+        $delivery->load('attempts');
         
         // Load exam using our fixed relationship
         $exam = $delivery->exam;
@@ -476,8 +476,16 @@ class DeliveryController extends Controller
             }
         }
 
+        // Load group using our fixed relationship
+        $group = $delivery->group;
+        $takerCount = 0;
+        if ($group) {
+            $group->load('takers');
+            $takerCount = $group->takers->count();
+        }
+
         $baseDetail = [
-            'takerCount' => $delivery->group->takers->count(),
+            'takerCount' => $takerCount,
             'scoringCount' => $delivery->attempts->count(),
             'questionCount' => count($questions),
             'delivery' => $delivery,
