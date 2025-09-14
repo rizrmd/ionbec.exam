@@ -89,7 +89,7 @@ class ScoringController extends Controller
 
             // Get paginated attempts with minimal data
             $attempts = Attempt::query()
-                ->select('id', 'delivery_id', 'exam_id', 'taker_id', 'score', 'started_at', 'ended_at', 'hash')
+                ->select('id', 'delivery_id', 'exam_id', 'attempted_by', 'score', 'started_at', 'ended_at', 'hash')
                 ->where('delivery_id', $delivery->id)
                 ->where('exam_id', $delivery->exam_id);
             

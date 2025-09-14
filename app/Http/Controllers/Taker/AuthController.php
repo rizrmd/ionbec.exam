@@ -88,7 +88,14 @@ class AuthController extends Controller
     #[Get('/taker-login', name: 'taker.login')]
     public function login(): Response
     {
-        return Inertia::render('Taker/Login');
+        $client = request()->attributes->get('client');
+        
+        return Inertia::render('Taker/Login', [
+            'client' => $client ? [
+                'name' => $client->name,
+                'logo_url' => $client->logo_url,
+            ] : null,
+        ]);
     }
 
     #[Post('/taker-login', name: 'taker.sign-in')]
