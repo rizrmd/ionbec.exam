@@ -117,8 +117,15 @@ class DeliveryController extends Controller
     }
 
     #[Get('back-office/delivery/{delivery_hash}/scoring', name: 'back-office.delivery.scoring')]
-    public function showScoring(Request $request, Delivery $delivery): Response
+    public function showScoring(Request $request, string $delivery_hash): Response
     {
+        // Manually resolve delivery to have full control over relationship loading
+        $delivery = Delivery::byHash($delivery_hash);
+        
+        if (!$delivery) {
+            abort(404, 'Delivery not found');
+        }
+        
         $attempts = Attempt::query()
             ->where('delivery_id', $delivery->id)
             ->where('exam_id', $delivery->exam_id);
