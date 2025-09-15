@@ -112,11 +112,17 @@ class ScoringController extends Controller
             ];
         });
 
-        // Load delivery data separately (minimal fields)
-        $delivery->load([
-            'exam:id,name,code',
-            'group:id,name'
-        ]);
+        // Load delivery data separately (minimal fields) - fix for ClientScope
+        $exam = $delivery->exam;
+        $group = $delivery->group;
+        
+        // Manually set relationships for frontend serialization
+        if ($exam) {
+            $delivery->setRelation('exam', $exam);
+        }
+        if ($group) {
+            $delivery->setRelation('group', $group);
+        }
 
         return Inertia::render('BackOffice/Scoring/Detail', array_merge($data, [
             'delivery' => $delivery,

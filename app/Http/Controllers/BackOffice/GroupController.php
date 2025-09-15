@@ -172,7 +172,15 @@ class GroupController extends Controller
             });
         });
 
-        $deliveries = $this->deliveryQuery($group)->with('exam')->get();
+        $deliveries = $this->deliveryQuery($group)->get();
+        
+        // Fix relationships for ClientScope
+        foreach ($deliveries as $delivery) {
+            $exam = $delivery->exam;
+            if ($exam) {
+                $delivery->setRelation('exam', $exam);
+            }
+        }
 
         $data->with('attempts', function ($attemptQuery) use ($deliveries) {
             $attemptQuery->whereIn('delivery_id', $deliveries->map->id->toArray());
@@ -300,7 +308,15 @@ class GroupController extends Controller
 
         $data->with('attempts.exam');
 
-        $deliveries = $this->deliveryQuery($group)->with('exam')->get();
+        $deliveries = $this->deliveryQuery($group)->get();
+        
+        // Fix relationships for ClientScope
+        foreach ($deliveries as $delivery) {
+            $exam = $delivery->exam;
+            if ($exam) {
+                $delivery->setRelation('exam', $exam);
+            }
+        }
 
         $resultTakers = $data->get();
 

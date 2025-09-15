@@ -29,7 +29,21 @@ class DashboardController extends Controller
     #[Get('/back-office/dashboard', name: 'back-office.dashboard')]
     public function index(): Response
     {
-        $delivery = Delivery::query()->with(['exam', 'group.takers'])->whereDate('scheduled_at', '>', Carbon::now())->limit(5)->get();
+        $deliveries = Delivery::query()->whereDate('scheduled_at', '>', Carbon::now())->limit(5)->get();
+        
+        // Fix relationships for ClientScope - load and set relations manually
+        foreach ($deliveries as $delivery) {
+            $exam = $delivery->exam;
+            $group = $delivery->group;
+            
+            if ($exam) {
+                $delivery->setRelation('exam', $exam);
+            }
+            if ($group) {
+                $group->load('takers');
+                $delivery->setRelation('group', $group);
+            }
+        }
         $logs = ActivityLog::query()->with(['causer', 'subject'])->orderBy('created_at', 'DESC')->limit(5)->get();
 
         return Inertia::render('BackOffice/Dashboard', [
@@ -37,7 +51,7 @@ class DashboardController extends Controller
             'countItem' => Item::query()->count(),
             'countQuestion' => Question::query()->count(),
             'countTest' => Exam::query()->count(),
-            'upcomingDelivery' => $delivery,
+            'upcomingDelivery' => $deliveries,
             'logs' => $logs,
         ]);
     }

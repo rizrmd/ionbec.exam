@@ -68,7 +68,15 @@ class ResultController extends Controller
                 //                $query->orWhere('name', 'like', "%{$queryString}%");
             });
 
-        $deliveries = $this->deliveryQuery($group)->clone()->with('exam')->get();
+        $deliveries = $this->deliveryQuery($group)->clone()->get();
+        
+        // Fix relationships for ClientScope
+        foreach ($deliveries as $delivery) {
+            $exam = $delivery->exam;
+            if ($exam) {
+                $delivery->setRelation('exam', $exam);
+            }
+        }
 
         $data->with('attempts', function ($attemptQuery) use ($deliveries) {
             $attemptQuery->whereIn('delivery_id', $deliveries->map->id->toArray());
@@ -90,7 +98,15 @@ class ResultController extends Controller
 
         $data->with('attempts.exam');
 
-        $deliveries = $this->deliveryQuery($group)->with('exam')->get();
+        $deliveries = $this->deliveryQuery($group)->get();
+        
+        // Fix relationships for ClientScope
+        foreach ($deliveries as $delivery) {
+            $exam = $delivery->exam;
+            if ($exam) {
+                $delivery->setRelation('exam', $exam);
+            }
+        }
 
         return Inertia::render('BackOffice/Result/PDF', [
             'deliveries' => $deliveries,
