@@ -46,6 +46,12 @@ const filters = reactive({
   categories: [],
 })
 
+const showAttemptModal = reactive({
+  visible: false,
+  questionHash: null,
+  attempts: []
+})
+
 Object.keys(categoryType.value || {}).forEach(key => {
   filters.categories[key] = null
 });
@@ -104,6 +110,28 @@ const filterType = (type) => {
       ...excorcistFilter(),
     },
   })
+}
+
+const showAttemptDetails = async (questionHash) => {
+  try {
+    const response = await fetch(`/api/questions/${questionHash}/attempts`)
+    if (response.ok) {
+      const data = await response.json()
+      showAttemptModal.attempts = data.attempts
+      showAttemptModal.questionHash = questionHash
+      showAttemptModal.visible = true
+    } else {
+      console.error('Failed to fetch attempt details')
+    }
+  } catch (error) {
+    console.error('Error fetching attempt details:', error)
+  }
+}
+
+const closeAttemptModal = () => {
+  showAttemptModal.visible = false
+  showAttemptModal.questionHash = null
+  showAttemptModal.attempts = []
 }
 </script>
 
@@ -169,23 +197,26 @@ const filterType = (type) => {
           <div class="p-4 border-b hover:bg-gray-50" v-for="(question, index) in payload.data" :key="`question-${index}`">
             <div class="text-sm text-gray-500 mb-1 flex justify-between">
               <div class="flex flex-wrap gap-4">
-                <div>
+                <div v-if="question.item">
                   {{ typeOptions[question.item.type] }}
                 </div>
-                <div v-if="question.item.is_vignette">
+                <div v-if="question.item && question.item.is_vignette">
                   {{ question.item.is_vignette ? 'Vignette' : '' }}
                 </div>
-                <div class="text-black">
+                <div class="text-black" v-if="question.item">
                   {{ question.item.title }}
+                </div>
+                <div class="text-red-500" v-else>
+                  No item associated
                 </div>
               </div>
               <div>
-                <span v-if="question.correctness > 0" class="bg-green-50 text-green-600 rounded-md px-2 py-1">
+                <button v-if="question.correctness > 0" @click="showAttemptDetails(question.hash)" class="bg-green-50 text-green-600 rounded-md px-2 py-1 hover:bg-green-100 transition-colors cursor-pointer">
                   Correctness: {{ question.correctness }}%
-                </span>
-                <span v-else-if="question.is_attempted" class="bg-yellow-50 text-yellow-600 rounded-md px-2 py-1">
+                </button>
+                <button v-else-if="question.is_attempted" @click="showAttemptDetails(question.hash)" class="bg-yellow-50 text-yellow-600 rounded-md px-2 py-1 hover:bg-yellow-100 transition-colors cursor-pointer">
                   Correctness: {{ question.correctness }}%
-                </span>
+                </button>
                 <span v-else class="bg-red-50 text-red-600 rounded-md px-2 py-1">
                   No Data
                 </span>
@@ -204,15 +235,63 @@ const filterType = (type) => {
                 </div>
               </div>
               <div class="flex items-center justify-center">
-                <Link :href="route('back-office.question-set.detail', {item_hash: question.item.hash, name: 'back-office.question-pack.index', params: 'page,query', values: `${payload.current_page},${filters.query}`})"
+                <Link v-if="question.item" :href="route('back-office.question-set.detail', {item_hash: question.item.hash, name: 'back-office.question-pack.index', params: 'page,query', values: `${payload.current_page},${filters.query}`})"
                       class="text-blue-600 hover:text-blue-900">
                   <PencilAltIcon aria-hidden="true" class="-mx-1 h-5 w-5"/>
                 </Link>
+                <span v-else class="text-gray-400">
+                  <PencilAltIcon aria-hidden="true" class="-mx-1 h-5 w-5"/>
+                </span>
               </div>
             </div>
           </div>
         </div>
         <pagination :pagination-data="payload"/>
+      </div>
+
+      <!-- Attempt Details Modal -->
+      <div v-if="showAttemptModal.visible" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-medium text-gray-900">Attempt Details</h3>
+            <button @click="closeAttemptModal" class="text-gray-400 hover:text-gray-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="px-6 py-4">
+            <div v-if="showAttemptModal.attempts.length > 0" class="space-y-4">
+              <div class="grid grid-cols-4 gap-4 text-sm font-medium text-gray-500 border-b pb-2">
+                <div>Date</div>
+                <div>Answer</div>
+                <div>Correct</div>
+                <div>Score</div>
+              </div>
+              <div v-for="(attempt, index) in showAttemptModal.attempts" :key="index" class="grid grid-cols-4 gap-4 text-sm py-2 border-b border-gray-100">
+                <div class="text-gray-900">{{ attempt.created_at ? new Date(attempt.created_at).toLocaleDateString() : 'N/A' }}</div>
+                <div class="text-gray-600 truncate" :title="attempt.answer">{{ attempt.answer || 'N/A' }}</div>
+                <div>
+                  <span v-if="attempt.is_correct" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Correct
+                  </span>
+                  <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    Incorrect
+                  </span>
+                </div>
+                <div class="text-gray-900">{{ attempt.score }}</div>
+              </div>
+              <div class="mt-4 text-sm text-gray-500">
+                Total attempts: {{ showAttemptModal.attempts.length }} | 
+                Correct: {{ showAttemptModal.attempts.filter(a => a.is_correct).length }} |
+                Correctness: {{ Math.round((showAttemptModal.attempts.filter(a => a.is_correct).length / showAttemptModal.attempts.length) * 100) }}%
+              </div>
+            </div>
+            <div v-else class="text-center text-gray-500 py-8">
+              No attempt data available
+            </div>
+          </div>
+        </div>
       </div>
     </template>
   </dashboard-layout>

@@ -104,3 +104,7 @@ Route::fallback(function () {
         })->take(10),
     ], 404);
 });
+
+// API Routes
+Route::get('/api/questions/{questionHash}/attempts', [App\Http\Controllers\Api\QuestionAttemptController::class, 'getAttempts'])
+    ->name('api.questions.attempts');

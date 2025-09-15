@@ -17,6 +17,14 @@ class AllowedRoleMiddleware
      */
     public function handle(Request $request, \Closure $next, $rolesAllowed)
     {
+        // Check if user is authenticated first
+        if (!$request->user()) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+            return redirect()->guest(route('login'));
+        }
+
         $roles = array_map(function ($role) {
             return $role['slug'];
         }, $request->user()->load(['roles' => function ($query) {
@@ -25,6 +33,9 @@ class AllowedRoleMiddleware
         $allowed = explode('|', $rolesAllowed);
 
         if (0 === count(array_intersect($allowed, $roles))) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Forbidden.'], 403);
+            }
             return redirect()->back();
         }
 

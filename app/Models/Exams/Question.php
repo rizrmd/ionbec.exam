@@ -82,7 +82,6 @@ class Question extends Model
     public function item(): Relations\BelongsTo
     {
         return $this->belongsTo(Item::class, 'item_id')
-            ->where('items.client_id', $this->client_id)
             ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
@@ -130,7 +129,8 @@ class Question extends Model
 
     public function getCorrectnessAttribute(): float|int
     {
-        $query = AttemptQuestion::query()->where('question_id', $this->id);
+        $query = AttemptQuestion::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('question_id', $this->id);
         $total = $query->clone()->count();
         $correct = $query->where('is_correct', true)->count();
         $correctness = 0;
@@ -143,7 +143,8 @@ class Question extends Model
 
     public function getIsAttemptedAttribute(): bool
     {
-        return $this->attemptQuestions()->count() > 0;
+        return AttemptQuestion::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('question_id', $this->id)->count() > 0;
     }
 
     public function getDiseaseGroupAttribute()
