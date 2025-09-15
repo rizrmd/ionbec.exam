@@ -46,7 +46,7 @@ const filters = reactive({
   categories: [],
 })
 
-Object.keys(categoryType.value).forEach(key => {
+Object.keys(categoryType.value || {}).forEach(key => {
   filters.categories[key] = null
 });
 
