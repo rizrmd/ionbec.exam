@@ -507,6 +507,15 @@ class DeliveryController extends Controller
             $takerCount = $group->takers->count();
         }
 
+        // Ensure the delivery object has the relationships for frontend serialization
+        // We need to manually set the relationships since direct loading doesn't work
+        if ($exam) {
+            $delivery->setRelation('exam', $exam);
+        }
+        if ($group) {
+            $delivery->setRelation('group', $group);
+        }
+
         $baseDetail = [
             'takerCount' => $takerCount,
             'scoringCount' => $delivery->attempts->count(),
