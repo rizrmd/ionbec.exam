@@ -120,7 +120,10 @@ class DeliveryController extends Controller
     public function showScoring(Request $request, string $delivery_hash): Response
     {
         // Manually resolve delivery to have full control over relationship loading
-        $delivery = Delivery::byHash($delivery_hash);
+        // Bypass ClientScope for hash resolution
+        $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('hash', $delivery_hash)
+            ->first();
         
         if (!$delivery) {
             abort(404, 'Delivery not found');
