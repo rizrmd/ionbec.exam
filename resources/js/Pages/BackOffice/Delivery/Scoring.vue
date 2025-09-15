@@ -48,7 +48,7 @@ const search = () => {
 }
 
 const openScoringWindow = (delivery, attempt) => {
-  window.open(route('back-office.delivery.scoring-detail', {delivery_hash: delivery.hash, attempt_hash: attempt.hash}), "Scoring " + attempt.taker.taker_code)
+  window.open(route('back-office.delivery.scoring-detail', {delivery_hash: delivery.hash, attempt_hash: attempt.hash}), "Scoring " + (attempt.taker?.taker_code || attempt.hash))
 }
 
 const dataScoring = computed(() => payload.value)
@@ -116,7 +116,7 @@ window.Echo.private(`scoring.${delivery.value.hash}`)
                   <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                     {{ dataScoring.from + index }}
                   </td>
-                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ attempt.taker.name }}</td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ attempt.taker?.name || 'No Taker' }}</td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                     <div class="h-1.5 rounded-lg w-full bg-gray-200 overflow-hidden relative">
                       <div class="h-full bg-primary-600" :style="`width: ${attempt.progress}%`"></div>

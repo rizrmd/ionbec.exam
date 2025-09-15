@@ -26,42 +26,68 @@ class ScoringController extends Controller
     #[Get('back-office/scoring', name: 'back-office.scoring.index')]
     public function index(Request $request): Response
     {
-        // Cache the query for 5 minutes
-        $cacheKey = 'scoring_index_' . md5(serialize($request->all()));
-        
-        $data = Cache::remember($cacheKey, 300, function () use ($request) {
-            $deliveries = Delivery::query()
-                ->select('id', 'name', 'scheduled_at', 'exam_id', 'group_id', 'hash', 'duration', 'automatic_start', 'is_anytime', 'last_status')
-                ->with([
-                    'exam:id,name,is_interview',
-                    'group:id,name'
-                ])
-                ->orderBy('scheduled_at', 'DESC');
+        $deliveries = Delivery::query()
+            ->select('id', 'name', 'scheduled_at', 'exam_id', 'group_id', 'hash', 'duration', 'automatic_start', 'is_anytime', 'last_status')
+            ->orderBy('scheduled_at', 'DESC');
 
-            $deliveries->when($request->input('name') ?? false, function ($query, $queryString) {
-                $query->where('name', 'like', "%{$queryString}%");
-            });
-
-            if ($request->date) {
-                $dataRange = explode(' - ', $request->date);
-                if (2 === count($dataRange)) {
-                    $date = new Carbon($dataRange[0]);
-                    $dateSec = new Carbon($dataRange[1]);
-                    $deliveries->whereBetween('scheduled_at', [$date, $dateSec]);
-                }
-            }
-
-            return $deliveries->paginate($request->input('perPage', 15))->withQueryString();
+        $deliveries->when($request->input('name') ?? false, function ($query, $queryString) {
+            $query->where('name', 'like', "%{$queryString}%");
         });
 
-        // Cache tests and groups separately (longer cache time)
-        $tests = Cache::remember('all_exams', 3600, fn() => Exam::select('id', 'name', 'hash')->get());
-        $groups = Cache::remember('all_groups', 3600, fn() => Group::select('id', 'name', 'hash')->get());
+        if ($request->date) {
+            $dataRange = explode(' - ', $request->date);
+            if (2 === count($dataRange)) {
+                $date = new Carbon($dataRange[0]);
+                $dateSec = new Carbon($dataRange[1]);
+                $deliveries->whereBetween('scheduled_at', [$date, $dateSec]);
+            }
+        }
+
+        $paginatedDeliveries = $deliveries->paginate($request->input('perPage', 15))->withQueryString();
+        
+        // Manually load exam and group relationships to bypass ClientScope issues
+        $paginatedDeliveries->getCollection()->transform(function ($delivery) {
+            $exam = \App\Models\Exams\Exam::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->select('id', 'name', 'is_interview')
+                ->where('id', $delivery->exam_id)
+                ->first();
+            $delivery->setRelation('exam', $exam);
+            
+            $group = \App\Models\Takers\Group::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->select('id', 'name', 'hash')
+                ->where('id', $delivery->group_id)
+                ->first();
+            if ($group) {
+                $group->makeVisible(['id']);
+            }
+            $delivery->setRelation('group', $group);
+            
+            // Calculate takers_count
+            $takersCount = 0;
+            if ($group) {
+                $takersCount = DB::table('group_taker')
+                    ->where('group_id', $group->id)
+                    ->count();
+            }
+            $delivery->takers_count = $takersCount;
+            
+            // Calculate questions_count
+            $questionsCount = 0;
+            if ($exam) {
+                $questionsCount = DB::table('questions')
+                    ->join('exam_item', 'questions.item_id', '=', 'exam_item.item_id')
+                    ->where('exam_item.exam_id', $exam->id)
+                    ->count();
+            }
+            $delivery->questions_count = $questionsCount;
+            
+            return $delivery;
+        });
 
         return Inertia::render('BackOffice/Scoring/Index', [
-            'payload' => $data,
-            'tests' => $tests,
-            'groups' => $groups,
+            'payload' => $paginatedDeliveries,
+            'tests' => Exam::withoutGlobalScope(\App\Scopes\ClientScope::class)->select('id', 'name', 'hash')->get(),
+            'groups' => Group::withoutGlobalScope(\App\Scopes\ClientScope::class)->select('id', 'name', 'hash')->get(),
         ]);
     }
 
@@ -71,7 +97,7 @@ class ScoringController extends Controller
         // Use database query optimization instead of eager loading everything
         $cacheKey = 'scoring_detail_' . $delivery->id . '_' . md5(serialize($request->all()));
         
-        $data = Cache::remember($cacheKey, 60, function () use ($request, $delivery) {
+        $data = (function () use ($request, $delivery) {
             // Get counts using optimized queries
             $takerCount = DB::table('group_taker')
                 ->where('group_id', $delivery->group_id)
@@ -87,30 +113,126 @@ class ScoringController extends Controller
                 ->where('exam_item.exam_id', $delivery->exam_id)
                 ->count();
 
-            // Get paginated attempts with minimal data
-            $attempts = Attempt::query()
+            // Get all takers in the group
+            $groupTakerIds = DB::table('group_taker')
+                ->where('group_id', $delivery->group_id)
+                ->pluck('taker_id');
+
+            // Get existing attempts
+            $existingAttempts = Attempt::query()
                 ->select('id', 'delivery_id', 'exam_id', 'attempted_by', 'score', 'progress', 'started_at', 'ended_at', 'hash', 'finish_scoring')
                 ->where('delivery_id', $delivery->id)
-                ->where('exam_id', $delivery->exam_id);
+                ->where('exam_id', $delivery->exam_id)
+                ->with(['taker:id,name,email'])
+                ->get();
+
+            // Create a collection that includes all attempts (both from group members and others)
+            $allAttempts = collect();
             
-            $attempts->when($request->input('query') ?? false, function ($query, $queryString) {
-                $query->whereHas('taker', function ($q) use ($queryString) {
-                    $q->where('email', 'like', "%{$queryString}%");
+            // First, add all existing attempts (including those from non-group members)
+            foreach ($existingAttempts as $existingAttempt) {
+                // Check if this attempt's taker is in the group_taker table
+                $pivotData = DB::table('group_taker')
+                    ->where('group_id', $delivery->group_id)
+                    ->where('taker_id', $existingAttempt->attempted_by)
+                    ->first();
+                
+                if (!$pivotData) {
+                    // This is an orphaned attempt - convert to array and set custom taker_code
+                    $groupData = DB::table('groups')->where('id', $delivery->group_id)->first();
+                    $groupCode = $groupData ? $groupData->code : 'UNKNOWN';
+                    $customTakerCode = $groupCode . '-ORPHAN-' . str_pad($existingAttempt->attempted_by, 3, '0', STR_PAD_LEFT);
+                    
+                    // Convert to object and override taker_code
+                    $attemptArray = $existingAttempt->toArray();
+                    $attemptArray['taker_code'] = $customTakerCode;
+                    $allAttempts->push((object) $attemptArray);
+                } else {
+                    // Normal attempt - add as is
+                    $allAttempts->push($existingAttempt);
+                }
+            }
+            
+            // Then, add placeholders for group members who haven't attempted
+            foreach ($groupTakerIds as $takerId) {
+                $hasAttempt = $existingAttempts->where('attempted_by', $takerId)->count() > 0;
+                
+                if (!$hasAttempt) {
+                    // Create a placeholder attempt for takers who haven't started
+                    $taker = \App\Models\Takers\Taker::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                        ->select('id', 'name', 'email')
+                        ->find($takerId);
+                    
+                    if ($taker) {
+                        // Get the group code directly using DB query to avoid ClientScope issues
+                        $groupData = DB::table('groups')->where('id', $delivery->group_id)->first();
+                        $groupCode = $groupData ? $groupData->code : 'UNKNOWN';
+                        
+                        $takerCode = \App\Models\Attempts\Attempt::getFormattedTakerCode(
+                            $takerId,
+                            $delivery->group_id,
+                            $groupCode
+                        );
+                        
+                        // Create placeholder as array instead of Eloquent model to avoid hash issues
+                        $placeholder = (object) [
+                            'id' => null,
+                            'delivery_id' => $delivery->id,
+                            'exam_id' => $delivery->exam_id,
+                            'attempted_by' => $takerId,
+                            'score' => 0,
+                            'progress' => 0,
+                            'started_at' => null,
+                            'ended_at' => null,
+                            'created_at' => null,
+                            'hash' => null,
+                            'finish_scoring' => false,
+                            'taker' => $taker,
+                            'taker_code' => $takerCode, // Use proper formatted taker code
+                            'is_placeholder' => true // Flag to identify placeholders
+                        ];
+                        $allAttempts->push($placeholder);
+                    }
+                }
+            }
+
+            // Apply search filter if provided
+            if ($request->input('query')) {
+                $queryString = $request->input('query');
+                $allAttempts = $allAttempts->filter(function ($attempt) use ($queryString) {
+                    return $attempt->taker && (
+                        stripos($attempt->taker->email, $queryString) !== false ||
+                        stripos($attempt->taker->name, $queryString) !== false
+                    );
                 });
-                $query->orWherehas('delivery.group.takers', function ($q) use ($queryString) {
-                    $q->where('taker_code', 'like', "%{$queryString}%");
-                });
-            });
+            }
+
+            // Manual pagination
+            $perPage = $request->input('perPage', 15);
+            $currentPage = $request->input('page', 1);
+            $total = $allAttempts->count();
+            $offset = ($currentPage - 1) * $perPage;
+            $items = $allAttempts->slice($offset, $perPage)->values();
+
+            $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+                $items,
+                $total,
+                $perPage,
+                $currentPage,
+                [
+                    'path' => $request->url(),
+                    'pageName' => 'page',
+                ]
+            );
+            $paginated->withQueryString();
 
             return [
                 'takerCount' => $takerCount,
                 'scoringCount' => $scoringCount,
                 'questionCount' => $questionCount,
-                'attempts' => $attempts->with(['taker:id,name,email', 'delivery.group:id,name,code'])
-                    ->paginate($request->input('perPage', 15))
-                    ->withQueryString()
+                'attempts' => $paginated
             ];
-        });
+        })();
 
         // Load delivery data separately (minimal fields) - fix for ClientScope
         $exam = $delivery->exam;

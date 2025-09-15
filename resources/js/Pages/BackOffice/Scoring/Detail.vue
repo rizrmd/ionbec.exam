@@ -144,7 +144,10 @@ window.Echo.private(`scoring.${delivery.value.hash}`)
                   </div>
                   <span>{{ attempt.progress }}%</span>
                 </td>
-                <td v-if="!delivery.is_interview" class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ moment(attempt.created_at).format('DD MMM YYYY') }} at {{ moment(attempt.created_at).format('H:mm') }}</td>
+                <td v-if="!delivery.is_interview" class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                  <span v-if="attempt.created_at">{{ moment(attempt.created_at).format('DD MMM YYYY') }} at {{ moment(attempt.created_at).format('H:mm') }}</span>
+                  <span v-else class="text-gray-400">Not started</span>
+                </td>
                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                     <span v-if="attempt.finish_scoring" class="py-1.5 px-2 rounded-full text-green-800 bg-green-50 flex items-center gap-2 w-max">
                       <CheckIcon class="h-5 w-5 text-green-400" /> Finished
@@ -155,12 +158,17 @@ window.Echo.private(`scoring.${delivery.value.hash}`)
                 </td>
                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">{{ attempt.score }}</td>
                 <td class="flex gap-4 justify-end items-center py-4" style="max-width: 50px">
-                  <a :href="route('back-office.scoring.pdf', {delivery_hash: delivery.hash, attempt_hash: attempt.hash})" target="_blank" class="text-black hover:text-indigo-500 hover:scale-125">
-                    <DownloadIcon aria-hidden="true" class="-ml-1 h-5 w-5"/>
-                  </a>
-                  <a :href="route('back-office.scoring.exam', {delivery_hash: delivery.hash, attempt_hash: attempt.hash})" target="_blank" class="text-black hover:text-indigo-500 hover:scale-125">
-                    <PencilAltIcon aria-hidden="true" class="-ml-1 h-5 w-5"/>
-                  </a>
+                  <template v-if="attempt.hash && !attempt.is_placeholder">
+                    <a :href="route('back-office.scoring.pdf', {delivery_hash: delivery.hash, attempt_hash: attempt.hash})" target="_blank" class="text-black hover:text-indigo-500 hover:scale-125">
+                      <DownloadIcon aria-hidden="true" class="-ml-1 h-5 w-5"/>
+                    </a>
+                    <a :href="route('back-office.scoring.exam', {delivery_hash: delivery.hash, attempt_hash: attempt.hash})" target="_blank" class="text-black hover:text-indigo-500 hover:scale-125">
+                      <PencilAltIcon aria-hidden="true" class="-ml-1 h-5 w-5"/>
+                    </a>
+                  </template>
+                  <template v-else>
+                    <span class="text-gray-400 text-sm">Not started</span>
+                  </template>
                 </td>
               </tr>
               <tr v-if="filters.query !== '' && dataScoring.data.length === 0">

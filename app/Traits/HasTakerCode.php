@@ -22,6 +22,7 @@ trait HasTakerCode
             ->where('taker_id', $takerId)
             ->first();
 
+
         if (!$pivotData) {
             return 'No Code';
         }
@@ -51,7 +52,39 @@ trait HasTakerCode
         }
 
         // Format as group_code-taker_code
-        $groupCodePrefix = $groupCode ?? 'NULL';
+        if (!$groupCode) {
+            // If group code is null, generate and sync it to the database
+            $group = DB::table('groups')->where('id', $groupId)->first();
+            if ($group && $group->name) {
+                // Extract meaningful parts from group name to create a code
+                $nameParts = explode(' ', strtoupper($group->name));
+                $generatedCode = '';
+                foreach ($nameParts as $part) {
+                    if (strlen($part) >= 3) {
+                        $generatedCode .= substr($part, 0, 3);
+                        if (strlen($generatedCode) >= 6) break;
+                    }
+                }
+                $generatedCode = $generatedCode ?: 'GROUP' . $groupId;
+                
+                // Update the group code in the database
+                DB::table('groups')
+                    ->where('id', $groupId)
+                    ->update(['code' => $generatedCode]);
+                    
+                $groupCodePrefix = $generatedCode;
+            } else {
+                $groupCodePrefix = 'GROUP' . $groupId;
+                
+                // Update the group code in the database
+                DB::table('groups')
+                    ->where('id', $groupId)
+                    ->update(['code' => $groupCodePrefix]);
+            }
+        } else {
+            $groupCodePrefix = $groupCode;
+        }
+        
         return $groupCodePrefix . '-' . $takerCode;
     }
 }

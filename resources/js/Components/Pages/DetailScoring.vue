@@ -174,7 +174,7 @@ const finishScore = async () => {
       <div class="flex justify-between items-center sm:px-6 lg:px-0">
         <div>
           <span class="text-xs">Delivery Name</span>
-          <h1 class="text-2xl font-semibold text-gray-900">{{ attempt.delivery.name }}</h1>
+          <h1 class="text-2xl font-semibold text-gray-900">{{ attempt.delivery?.name || 'Unknown Delivery' }}</h1>
           <div class="flex gap-2">
             <span class="text-gray-500">{{ takerCode ?? '-' }}</span>
             <span v-if="attempt.taker !== undefined">{{ attempt.taker?.name }}</span>

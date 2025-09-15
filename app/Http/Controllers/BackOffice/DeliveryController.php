@@ -55,7 +55,7 @@ class DeliveryController extends Controller
     #[Get('back-office/delivery', name: 'back-office.delivery.index')]
     public function index(Request $request): Response
     {
-        $deliveries = Delivery::query()->with('exam');
+        $deliveries = Delivery::query();
         $deliveries->orderBy('scheduled_at', 'DESC');
 
         $deliveries->when($request->input('name') ?? false, function ($query, $queryString) {
@@ -71,8 +71,19 @@ class DeliveryController extends Controller
             }
         }
 
+        $paginatedDeliveries = $deliveries->paginate($request->input('perPage', 15))->withQueryString();
+        
+        // Manually load exam relationships to bypass ClientScope issues
+        $paginatedDeliveries->getCollection()->transform(function ($delivery) {
+            $exam = \App\Models\Exams\Exam::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->where('id', $delivery->exam_id)
+                ->first();
+            $delivery->setRelation('exam', $exam);
+            return $delivery;
+        });
+
         return Inertia::render('BackOffice/Delivery/Index', [
-            'payload' => $deliveries->paginate($request->input('perPage', 15))->withQueryString(),
+            'payload' => $paginatedDeliveries,
             'tests' => Exam::query()->latest()->get(),
             'groups' => Group::query()->whereDate('created_at', '>', Carbon::now()->subYear())->latest()->get(),
         ]);
@@ -119,8 +130,14 @@ class DeliveryController extends Controller
     #[Get('back-office/delivery/{delivery_hash}/scoring', name: 'back-office.delivery.scoring')]
     public function showScoring(Request $request, string $delivery_hash): Response
     {
-        // Manually resolve delivery to have full control over relationship loading
-        // Bypass ClientScope for hash resolution
+        // Extract actual hash if we received JSON serialized object
+        // This handles cases where route model binding returns serialized delivery instead of hash
+        if (is_string($delivery_hash) && str_starts_with($delivery_hash, '{')) {
+            $decoded = json_decode($delivery_hash, true);
+            $delivery_hash = $decoded['hash'] ?? $delivery_hash;
+        }
+        
+        // Find delivery by hash, bypassing ClientScope for hash resolution
         $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
             ->where('hash', $delivery_hash)
             ->first();
@@ -140,10 +157,21 @@ class DeliveryController extends Controller
             });
         });
 
+        $paginatedAttempts = $attempts->paginate($request->input('perPage', 15))->withQueryString();
+        
+        // Transform each attempt to manually load the taker relationship
+        $paginatedAttempts->getCollection()->transform(function ($attempt) {
+            $taker = \App\Models\Takers\Taker::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->where('id', $attempt->attempted_by)
+                ->first();
+            $attempt->setRelation('taker', $taker);
+            return $attempt;
+        });
+
         return Inertia::render('BackOffice/Delivery/Scoring', array_merge(
             $this->getBaseDataDetail($delivery),
             [
-                'payload' => $attempts->with(['taker'])->paginate($request->input('perPage', 15))->withQueryString(),
+                'payload' => $paginatedAttempts,
             ]
         ));
     }
@@ -195,8 +223,23 @@ class DeliveryController extends Controller
     }
 
     #[Get('back-office/delivery/{delivery_hash}/question', name: 'back-office.delivery.question')]
-    public function showQuestion(Request $request, Delivery $delivery): Response
+    public function showQuestion(Request $request, string $delivery_hash): Response
     {
+        // Extract actual hash if we received JSON serialized object
+        if (is_string($delivery_hash) && str_starts_with($delivery_hash, '{')) {
+            $decoded = json_decode($delivery_hash, true);
+            $delivery_hash = $decoded['hash'] ?? $delivery_hash;
+        }
+        
+        // Find delivery by hash, bypassing ClientScope for hash resolution
+        $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('hash', $delivery_hash)
+            ->first();
+        
+        if (!$delivery) {
+            abort(404, 'Delivery not found');
+        }
+        
         $baseDetail = $this->getBaseDataDetail($delivery, true);
         $question = Question::query()->whereIn('id', $baseDetail['questionId']);
 
@@ -204,11 +247,26 @@ class DeliveryController extends Controller
             $query->where('question', 'like', "%{$queryString}%");
         });
 
+        $paginatedQuestions = $question->paginate($request->input('perPage', 15))->withQueryString();
+        
+        // Manually load item and categories relationships to bypass ClientScope issues
+        $paginatedQuestions->getCollection()->transform(function ($questionItem) {
+            $item = \App\Models\Exams\Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->where('id', $questionItem->item_id)
+                ->first();
+            $questionItem->setRelation('item', $item);
+            
+            $categories = $questionItem->categories()->withoutGlobalScope(\App\Scopes\ClientScope::class)->get();
+            $questionItem->setRelation('categories', $categories);
+            
+            return $questionItem;
+        });
+
         return Inertia::render('BackOffice/Delivery/Question', array_merge(
             $baseDetail,
             [
                 'typeOptions' => ItemType::getOptions(),
-                'payload' => $question->with(['item', 'categories'])->paginate($request->input('perPage', 15))->withQueryString(),
+                'payload' => $paginatedQuestions,
             ]
         ));
     }
@@ -312,11 +370,39 @@ class DeliveryController extends Controller
     #[Get('back-office/delivery/{delivery_hash}/scoring/{attempt_hash}/detail', name: 'back-office.delivery.scoring-detail')]
     public function scoringShow(Request $request, Delivery $delivery, Attempt $attempt): Response
     {
-        $attempt->load(['delivery.group', 'taker']);
+        // Manually load delivery and group relationships to bypass ClientScope issues
+        $deliveryData = \App\Models\Deliveries\Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('id', $attempt->delivery_id)
+            ->first();
+        
+        if ($deliveryData) {
+            $group = \App\Models\Takers\Group::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->where('id', $deliveryData->group_id)
+                ->first();
+            if ($group) {
+                $deliveryData->setRelation('group', $group);
+            }
+            $attempt->setRelation('delivery', $deliveryData);
+        }
+        
+        // Manually load taker relationship
+        $taker = \App\Models\Takers\Taker::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('id', $attempt->attempted_by)
+            ->first();
+        if ($taker) {
+            $attempt->setRelation('taker', $taker);
+        }
+        
         $attemptQuests = AttemptQuestion::query()->with('question')->where('attempt_id', $attempt->id)->get();
-        $items = Item::query()->whereHas('exams', function ($q) use ($delivery) {
-            $q->where('id', $delivery->exam_id);
-        })->with(['questions.answers', 'attachments'])->get();
+        
+        // Use direct join to bypass ClientScope issues
+        $items = Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->join('exam_item', 'items.id', '=', 'exam_item.item_id')
+            ->where('exam_item.exam_id', $delivery->exam_id)
+            ->with(['questions.answers', 'attachments'])
+            ->select('items.*')
+            ->orderBy('exam_item.order')
+            ->get();
 
         return Inertia::render('BackOffice/Delivery/ScoringDetail', [
             'items' => $items,
@@ -351,6 +437,9 @@ class DeliveryController extends Controller
                 $attemptQuest->save();
             }
         }
+
+        // Check if all questions are now scored and automatically finish scoring
+        $this->checkAndFinishScoring($attempt);
 
         return response()->json([
             'attempt' => $attempt,
@@ -413,6 +502,9 @@ class DeliveryController extends Controller
 
         $this->dispatch(new CalculateScore($attempt));
 
+        // Check if all questions are now scored and automatically finish scoring
+        $this->checkAndFinishScoring($attempt);
+
         return response()->json([
             'attempt' => $attempt,
             'attempt_question' => $attemptQuest,
@@ -446,8 +538,23 @@ class DeliveryController extends Controller
     }
 
     #[Get('back-office/delivery/{delivery_hash}/goto', name: 'back-office.delivery.goto')]
-    public function goto(Request $request, Delivery $delivery): \Illuminate\Http\RedirectResponse
+    public function goto(Request $request, string $delivery_hash): \Illuminate\Http\RedirectResponse
     {
+        // Extract actual hash if we received JSON serialized object
+        if (is_string($delivery_hash) && str_starts_with($delivery_hash, '{')) {
+            $decoded = json_decode($delivery_hash, true);
+            $delivery_hash = $decoded['hash'] ?? $delivery_hash;
+        }
+        
+        // Find delivery by hash, bypassing ClientScope for hash resolution
+        $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('hash', $delivery_hash)
+            ->first();
+        
+        if (!$delivery) {
+            abort(404, 'Delivery not found');
+        }
+        
         Session::forget('exam');
         Session::put('exam', [
             'token' => null,
@@ -456,7 +563,61 @@ class DeliveryController extends Controller
             'admin' => auth()->user()->hash,
         ]);
 
-        return redirect('/exam');
+        return redirect("/back-office/delivery/{$delivery_hash}/preview");
+    }
+
+    #[Get('back-office/delivery/{delivery_hash}/preview', name: 'back-office.delivery.preview')]
+    public function preview(Request $request, string $delivery_hash): Response
+    {
+        // Extract actual hash if we received JSON serialized object
+        if (is_string($delivery_hash) && str_starts_with($delivery_hash, '{')) {
+            $decoded = json_decode($delivery_hash, true);
+            $delivery_hash = $decoded['hash'] ?? $delivery_hash;
+        }
+        
+        // Find delivery by hash, bypassing ClientScope for hash resolution
+        $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('hash', $delivery_hash)
+            ->first();
+        
+        if (!$delivery) {
+            abort(404, 'Delivery not found');
+        }
+        
+        // Load exam using the fixed relationship approach
+        $exam = \App\Models\Exams\Exam::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('id', $delivery->exam_id)
+            ->first();
+            
+        if (!$exam) {
+            return redirect()->route('back-office.delivery.index')->with('error', 'Exam not found');
+        }
+
+        // Load items through exam relationship to get proper ordering
+        $items = $exam->items()->with(['questions.answers', 'attachments'])->orderByPivot('order')->get();
+
+        // hiding is_correct_answer column for admin preview
+        foreach ($items as $item) {
+            $questions = $item->questions;
+            $questions->each(function ($question, $questionKey) use ($questions) {
+                if ($question->answers) {
+                    $questions[$questionKey]->answers->each(function ($answer, $answerKey) use ($questions, $questionKey) {
+                        unset($questions[$questionKey]->answers[$answerKey]->is_correct_answer);
+                    });
+                }
+            });
+        }
+
+        $data = [
+            'delivery' => $delivery,
+            'taker' => null, // Admin preview, no taker
+            'exam' => $exam,
+            'examItems' => $items,
+            'admin' => auth()->user(),
+            'isAdminPreview' => true,
+        ];
+
+        return Inertia::render('Exam/Main', $data);
     }
 
     #[Post('back-office/delivery/{delivery_hash}/takers/{taker_hash}/interview', name: 'back-office.delivery.attempt-interview')]
@@ -496,29 +657,49 @@ class DeliveryController extends Controller
         // Load relationships separately due to ClientScope issues
         $delivery->load('attempts');
         
-        // Load exam using our fixed relationship
-        $exam = $delivery->exam;
+        // Manually load exam relationship bypassing ClientScope
+        $exam = \App\Models\Exams\Exam::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('id', $delivery->exam_id)
+            ->first();
         $questions = [];
         
         if ($exam) {
-            $exam->load('items.questions');
-            foreach ($exam->items as $item) {
+            // Load items and questions without ClientScope using direct DB query
+            $items = \App\Models\Exams\Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->join('exam_item', 'items.id', '=', 'exam_item.item_id')
+                ->where('exam_item.exam_id', $delivery->exam_id)
+                ->with(['questions' => function ($q) {
+                    $q->withoutGlobalScope(\App\Scopes\ClientScope::class);
+                }])
+                ->select('items.*') // Select only items columns to avoid conflicts
+                ->get();
+            
+            $exam->setRelation('items', $items);
+            
+            foreach ($items as $item) {
                 foreach ($item->questions as $question) {
                     $questions[] = $question->id;
                 }
             }
         }
 
-        // Load group using our fixed relationship
-        $group = $delivery->group;
+        // Manually load group relationship bypassing ClientScope
+        $group = \App\Models\Takers\Group::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('id', $delivery->group_id)
+            ->first();
         $takerCount = 0;
         if ($group) {
-            $group->load('takers');
-            $takerCount = $group->takers->count();
+            // Load takers without ClientScope
+            $takers = \App\Models\Takers\Taker::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->whereHas('groups', function ($q) use ($group) {
+                    $q->where('group_id', $group->id);
+                })
+                ->get();
+            $group->setRelation('takers', $takers);
+            $takerCount = $takers->count();
         }
 
         // Ensure the delivery object has the relationships for frontend serialization
-        // We need to manually set the relationships since direct loading doesn't work
         if ($exam) {
             $delivery->setRelation('exam', $exam);
         }
@@ -531,8 +712,8 @@ class DeliveryController extends Controller
             'scoringCount' => $delivery->attempts->count(),
             'questionCount' => count($questions),
             'delivery' => $delivery,
-            'tests' => Exam::all(),
-            'groups' => Group::all(),
+            'tests' => Exam::withoutGlobalScope(\App\Scopes\ClientScope::class)->get(),
+            'groups' => Group::withoutGlobalScope(\App\Scopes\ClientScope::class)->get(),
         ];
 
         if ($getIdQuestions) {
@@ -545,5 +726,42 @@ class DeliveryController extends Controller
     public function getRandomToken(): string
     {
         return Str::random(5);
+    }
+
+    /**
+     * Check if all questions in the attempt are scored and automatically finish scoring
+     */
+    private function checkAndFinishScoring(Attempt $attempt): void
+    {
+        // Skip if already finished
+        if ($attempt->finish_scoring) {
+            return;
+        }
+
+        $delivery = $attempt->delivery;
+        if (!$delivery) {
+            return;
+        }
+
+        // Get total question count for this exam
+        $totalQuestions = \DB::table('questions')
+            ->join('exam_item', 'questions.item_id', '=', 'exam_item.item_id')
+            ->where('exam_item.exam_id', $delivery->exam_id)
+            ->count();
+
+        // Get scored question count for this attempt
+        $scoredQuestions = \DB::table('attempt_question')
+            ->join('questions', 'attempt_question.question_id', '=', 'questions.id')
+            ->join('exam_item', 'questions.item_id', '=', 'exam_item.item_id')
+            ->where('attempt_question.attempt_id', $attempt->id)
+            ->where('exam_item.exam_id', $delivery->exam_id)
+            ->whereNotNull('attempt_question.score')
+            ->count();
+
+        // If all questions are scored, automatically finish scoring
+        if ($totalQuestions > 0 && $scoredQuestions >= $totalQuestions) {
+            $attempt->finish_scoring = true;
+            $attempt->save();
+        }
     }
 }

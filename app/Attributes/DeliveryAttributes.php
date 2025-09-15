@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Exams\Exam;
 use App\Models\Takers\Group;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property string $status
@@ -48,10 +49,10 @@ trait DeliveryAttributes
             return 0;
         }
 
-        /** @var Group $group */
-        $group = $this->group()->first();
-
-        return $group ? $group->takers()->count() : 0;
+        // Use direct DB query to bypass ClientScope issues
+        return DB::table('group_taker')
+            ->where('group_id', $this->group_id)
+            ->count();
     }
 
     public function getQuestionsCountAttribute()

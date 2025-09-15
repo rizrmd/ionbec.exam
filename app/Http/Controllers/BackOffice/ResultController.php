@@ -82,12 +82,29 @@ class ResultController extends Controller
             $attemptQuery->whereIn('delivery_id', $deliveries->map->id->toArray());
         });
 
+        $paginatedData = $data->paginate($request->input('perPage', 15))->withQueryString();
+        
+        // Fix taker codes to use proper format for each delivery
+        $paginatedData->getCollection()->transform(function ($taker) use ($deliveries) {
+            // Load proper taker code for the first delivery (or main delivery)
+            $primaryDelivery = $deliveries->first();
+            if ($primaryDelivery) {
+                $groupCode = $primaryDelivery->group->code ?? 'UNKNOWN';
+                $taker->formatted_taker_code = \App\Models\Attempts\Attempt::getFormattedTakerCode(
+                    $taker->id,
+                    $primaryDelivery->group_id,
+                    $groupCode
+                );
+            }
+            return $taker;
+        });
+
         return Inertia::render('BackOffice/Result/Detail', [
             'deliveries' => $deliveries,
             'takerCount' => $this->takerQuery($group)->clone()->count(),
             'deliveryCount' => $this->deliveryQuery($group)->clone()->count(),
             'group' => $group,
-            'payload' => $data->paginate($request->input('perPage', 15))->withQueryString(),
+            'payload' => $paginatedData,
         ]);
     }
 

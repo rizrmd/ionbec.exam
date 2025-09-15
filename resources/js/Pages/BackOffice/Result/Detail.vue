@@ -58,8 +58,8 @@ const getScore = (delivery, attempts) => {
 }
 
 const getTakerCode = (hash) => {
-  const taker = group.value.takers.find((taker) => taker.hash === hash)
-  return taker !== undefined ? (group.value.code + '-' + taker.pivot.taker_code) : null;
+  const taker = payload.value.data.find((taker) => taker.hash === hash)
+  return taker !== undefined ? taker.formatted_taker_code : null;
 }
 </script>
 
@@ -67,7 +67,7 @@ const getTakerCode = (hash) => {
   <DashboardLayout title="Result">
     <template #header>
       <div class="flex justify-between sm:px-6 lg:px-0">
-        <h1 class="text-2xl font-semibold text-gray-900">Result</h1>
+        <h1 class="text-2xl font-semibold text-gray-900">Result {{ deliveries && deliveries.length > 0 ? deliveries[0].name : '' }}</h1>
         <div>
           <a
             :href="route('back-office.result.pdf', {group_hash: group.hash})"

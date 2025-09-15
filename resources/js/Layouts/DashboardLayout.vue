@@ -30,8 +30,9 @@
               <img :src="clientLogo" :alt="clientName" class="h-8 w-auto">
               <h2 class="ml-1">{{ clientName }}</h2>
             </div>
-            <div class="mt-5 flex-1 h-0 overflow-y-auto flex flex-col">
-              <nav class="px-2 space-y-1 flex-1">
+            <!-- Scrollable navigation section -->
+            <div class="mt-5 flex-1 overflow-y-auto">
+              <nav class="px-2 space-y-1">
                 <a v-for="item in sidebarNavigation" :key="item.name" :class="[item.current ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900', 'group flex items-center px-2 py-2 text-base font-medium rounded-md']"
                    :href="item.href">
                   <template v-if="sidebarPermission(item)">
@@ -42,41 +43,41 @@
                   </template>
                 </a>
               </nav>
-              
-              <!-- User menu at bottom of mobile sidebar -->
-              <div class="px-2 pb-4">
-                <div class="border-t border-gray-200 pt-4">
-                  <Menu as="div" class="relative">
-                    <MenuButton class="w-full flex items-center px-2 py-2 text-base font-medium text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <img alt=""
-                           class="h-8 w-8 rounded-full"
-                           :src="getImage($page.props.auth.user.name, $page.props.auth.user.avatar)"/>
-                      <div class="ml-3 flex-1 text-left">
-                        <p class="text-sm font-medium text-gray-700">{{ $page.props.auth.user.name }}</p>
-                        <p class="text-xs text-gray-500">{{ $page.props.auth.user.email }}</p>
-                      </div>
-                      <svg class="ml-2 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                      </svg>
-                    </MenuButton>
-                    <transition enter-active-class="transition ease-out duration-100"
-                                enter-from-class="transform opacity-0 scale-95"
-                                enter-to-class="transform opacity-100 scale-100"
-                                leave-active-class="transition ease-in duration-75"
-                                leave-from-class="transform opacity-100 scale-100"
-                                leave-to-class="transform opacity-0 scale-95">
-                      <MenuItems class="absolute bottom-full left-0 w-full mb-1 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <MenuItem v-for="item in userNavigation" :key="item.name" v-slot="{ active }">
-                          <Link :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700']" 
-                                :href="item.href"
-                                @click="e => item.onClick ? e.preventDefault() || item.onClick() : e">
-                            {{ item.name }}
-                          </Link>
-                        </MenuItem>
-                      </MenuItems>
-                    </transition>
-                  </Menu>
-                </div>
+            </div>
+            
+            <!-- Fixed user menu at bottom of mobile sidebar -->
+            <div class="flex-shrink-0 px-2 pb-4">
+              <div class="border-t border-gray-200 pt-4">
+                <Menu as="div" class="relative">
+                  <MenuButton class="w-full flex items-center px-2 py-2 text-base font-medium text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <img alt=""
+                         class="h-8 w-8 rounded-full"
+                         :src="getImage($page.props.auth.user.name, $page.props.auth.user.avatar)"/>
+                    <div class="ml-3 flex-1 text-left">
+                      <p class="text-sm font-medium text-gray-700">{{ $page.props.auth.user.name }}</p>
+                      <p class="text-xs text-gray-500">{{ $page.props.auth.user.email }}</p>
+                    </div>
+                    <svg class="ml-2 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                  </MenuButton>
+                  <transition enter-active-class="transition ease-out duration-100"
+                              enter-from-class="transform opacity-0 scale-95"
+                              enter-to-class="transform opacity-100 scale-100"
+                              leave-active-class="transition ease-in duration-75"
+                              leave-from-class="transform opacity-100 scale-100"
+                              leave-to-class="transform opacity-0 scale-95">
+                    <MenuItems class="absolute bottom-full left-0 w-full mb-1 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <MenuItem v-for="item in userNavigation" :key="item.name" v-slot="{ active }">
+                        <Link :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700']" 
+                              :href="item.href"
+                              @click="e => item.onClick ? e.preventDefault() || item.onClick() : e">
+                          {{ item.name }}
+                        </Link>
+                      </MenuItem>
+                    </MenuItems>
+                  </transition>
+                </Menu>
               </div>
             </div>
           </div>
@@ -95,8 +96,9 @@
           <img :alt="clientName" class="h-8 w-auto" :src="clientLogo">
           <h2 class="ml-1">{{ clientName }}</h2>
         </div>
-        <div class="mt-5 flex-grow flex flex-col">
-          <nav class="flex-1 px-2 pb-4 space-y-1">
+        <!-- Scrollable navigation section -->
+        <div class="mt-5 flex-1 overflow-y-auto">
+          <nav class="px-2 space-y-1">
             <div v-for="(item, index) in sidebarNavigation" :key="`sidebar-${index}`">
               <template v-if="sidebarPermission(item)">
                 <small v-if="item.hasOwnProperty('descriptionAbove')"
@@ -111,41 +113,41 @@
               </template>
             </div>
           </nav>
-          
-          <!-- User menu at bottom of sidebar -->
-          <div class="px-2 pb-4">
-            <div class="border-t border-gray-200 pt-4">
-              <Menu as="div" class="relative">
-                <MenuButton class="w-full flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                  <img alt=""
-                       class="h-8 w-8 rounded-full"
-                       :src="getImage($page.props.auth.user.name, $page.props.auth.user.avatar)"/>
-                  <div class="ml-3 flex-1 text-left">
-                    <p class="text-sm font-medium text-gray-700">{{ $page.props.auth.user.name }}</p>
-                    <p class="text-xs text-gray-500">{{ $page.props.auth.user.email }}</p>
-                  </div>
-                  <svg class="ml-2 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                </MenuButton>
-                <transition enter-active-class="transition ease-out duration-100"
-                            enter-from-class="transform opacity-0 scale-95"
-                            enter-to-class="transform opacity-100 scale-100"
-                            leave-active-class="transition ease-in duration-75"
-                            leave-from-class="transform opacity-100 scale-100"
-                            leave-to-class="transform opacity-0 scale-95">
-                  <MenuItems class="absolute bottom-full left-0 w-full mb-1 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                    <MenuItem v-for="item in userNavigation" :key="item.name" v-slot="{ active }">
-                      <Link :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700']" 
-                            :href="item.href"
-                            @click="e => item.onClick ? e.preventDefault() || item.onClick() : e">
-                        {{ item.name }}
-                      </Link>
-                    </MenuItem>
-                  </MenuItems>
-                </transition>
-              </Menu>
-            </div>
+        </div>
+        
+        <!-- Fixed user menu at bottom of sidebar -->
+        <div class="flex-shrink-0 px-2 pb-4">
+          <div class="border-t border-gray-200 pt-4">
+            <Menu as="div" class="relative">
+              <MenuButton class="w-full flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <img alt=""
+                     class="h-8 w-8 rounded-full"
+                     :src="getImage($page.props.auth.user.name, $page.props.auth.user.avatar)"/>
+                <div class="ml-3 flex-1 text-left">
+                  <p class="text-sm font-medium text-gray-700">{{ $page.props.auth.user.name }}</p>
+                  <p class="text-xs text-gray-500">{{ $page.props.auth.user.email }}</p>
+                </div>
+                <svg class="ml-2 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </MenuButton>
+              <transition enter-active-class="transition ease-out duration-100"
+                          enter-from-class="transform opacity-0 scale-95"
+                          enter-to-class="transform opacity-100 scale-100"
+                          leave-active-class="transition ease-in duration-75"
+                          leave-from-class="transform opacity-100 scale-100"
+                          leave-to-class="transform opacity-0 scale-95">
+                <MenuItems class="absolute bottom-full left-0 w-full mb-1 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                  <MenuItem v-for="item in userNavigation" :key="item.name" v-slot="{ active }">
+                    <Link :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700']" 
+                          :href="item.href"
+                          @click="e => item.onClick ? e.preventDefault() || item.onClick() : e">
+                      {{ item.name }}
+                    </Link>
+                  </MenuItem>
+                </MenuItems>
+              </transition>
+            </Menu>
           </div>
         </div>
       </div>

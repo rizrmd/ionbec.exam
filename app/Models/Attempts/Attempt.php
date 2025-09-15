@@ -133,8 +133,9 @@ class Attempt extends Model
                     return 'UNKNOWN-000';
                 }
                 
-                $group = $delivery->group;
-                $groupCode = $group ? $group->code : 'UNKNOWN';
+                // Use direct DB query to avoid ClientScope issues
+                $groupData = \DB::table('groups')->where('id', $delivery->group_id)->first();
+                $groupCode = $groupData ? $groupData->code : 'UNKNOWN';
                 
                 return self::getFormattedTakerCode(
                     $this->attempted_by,
