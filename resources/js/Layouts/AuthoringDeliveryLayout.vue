@@ -122,13 +122,13 @@ const openModalForm = () => {
   isModalFormOpen.value = true
   form.name = delivery.value.name
   form.display_name = delivery.value.display_name
-  form.exam = selOpTest.value.find((test) => test.value === delivery.value.exam.hash)
-  form.group = selOpGroup.value.find((test) => test.value === delivery.value.group.hash)
+  form.exam = delivery.value.exam ? selOpTest.value.find((test) => test.value === delivery.value.exam.hash) : null
+  form.group = delivery.value.group ? selOpGroup.value.find((test) => test.value === delivery.value.group.hash) : null
   form.scheduled_at = moment(delivery.value.scheduled_at).format('YYYY-M-D HH:mm')
   form.duration = delivery.value.duration
   form.automatic_start = delivery.value.automatic_start
-  form.exam_hash = delivery.value.exam.hash
-  form.group_hash = delivery.value.group.hash
+  form.exam_hash = delivery.value.exam ? delivery.value.exam.hash : null
+  form.group_hash = delivery.value.group ? delivery.value.group.hash : null
 }
 
 const closeModalForm = () => {
