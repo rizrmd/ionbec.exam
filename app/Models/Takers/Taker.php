@@ -93,7 +93,10 @@ class Taker extends Authenticatable
             ->where('group_id', $delivery->group_id)
             ->where('taker_id', $this->attributes['id'])
             ->first();
-        $this->taker_code = $delivery->group->code.'-'.$data?->taker_code;
+            
+        $group = $delivery->group;
+        $groupCode = $group ? $group->code : 'UNKNOWN';
+        $this->taker_code = $groupCode.'-'.$data?->taker_code;
     }
 
     public function loadAttemptHashOf(Delivery $delivery)

@@ -37,6 +37,8 @@ class LiveInterviewEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('live-interview.'.$this->attempt->delivery->hash);
+        $delivery = $this->attempt->delivery;
+        $deliveryHash = $delivery ? $delivery->hash : 'unknown';
+        return new PrivateChannel('live-interview.'.$deliveryHash);
     }
 }

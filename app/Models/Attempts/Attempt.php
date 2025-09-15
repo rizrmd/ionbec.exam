@@ -128,11 +128,18 @@ class Attempt extends Model
     {
         return new Attribute(
             get: function () {
-                $this->load('delivery.group');
+                $delivery = $this->delivery;
+                if (!$delivery) {
+                    return 'UNKNOWN-000';
+                }
+                
+                $group = $delivery->group;
+                $groupCode = $group ? $group->code : 'UNKNOWN';
+                
                 return self::getFormattedTakerCode(
                     $this->attempted_by,
-                    $this->delivery->group_id,
-                    $this->delivery->group->code
+                    $delivery->group_id,
+                    $groupCode
                 );
             },
         );
@@ -172,11 +179,17 @@ class Attempt extends Model
      */
     public function getExpiredAtAttribute(): Carbon
     {
-        if ($this->delivery->is_anytime) {
-            return $this->started_at->addMinutes($this->delivery->duration + $this->extra_minute);
+        $delivery = $this->delivery;
+        if (!$delivery) {
+            // Default to 2 hours if delivery not found
+            return $this->started_at->addHours(2);
+        }
+        
+        if ($delivery->is_anytime) {
+            return $this->started_at->addMinutes($delivery->duration + $this->extra_minute);
         }
 
-        return $this->delivery->ended_at->addMinutes($this->extra_minute);
+        return $delivery->ended_at->addMinutes($this->extra_minute);
     }
 
     /**

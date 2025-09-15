@@ -144,8 +144,16 @@ class DeliveryController extends Controller
         $delivery->load('group');
         $payload = Taker::query();
 
-        $payload->whereHas('groups', function ($query) use ($delivery) {
-            $query->where('group_id', $delivery->group->id);
+        $group = $delivery->group;
+        if (!$group) {
+            return Inertia::render('BackOffice/Delivery/Taker', array_merge(
+                $this->getBaseDataDetail($delivery),
+                ['payload' => collect()]
+            ));
+        }
+
+        $payload->whereHas('groups', function ($query) use ($group) {
+            $query->where('group_id', $group->id);
         })->with(['deliveries' => function ($query) use ($delivery) {
             $query->where('delivery_id', $delivery->id);
         }]);
@@ -229,10 +237,14 @@ class DeliveryController extends Controller
     public function generateToken(Request $request, Delivery $delivery): \Illuminate\Http\RedirectResponse
     {
         if (! $request->hash) {
-            $delivery->load('group.takers');
-
+            $group = $delivery->group;
+            if (!$group) {
+                return response()->json(['error' => 'Group not found'], 404);
+            }
+            
+            $group->load('takers');
             $takers = [];
-            foreach ($delivery->group->takers as $taker) {
+            foreach ($group->takers as $taker) {
                 $takers[$taker->id] = [
                     'token' => $this->getRandomToken(),
                     'is_login' => false,
@@ -348,7 +360,13 @@ class DeliveryController extends Controller
 
         $attempt = Attempt::byHash($request->attempt_hash);
         $question = Question::byHash($request->question_hash);
-        $is_interview = $attempt->delivery->is_interview;
+        
+        $delivery = $attempt->delivery;
+        if (!$delivery) {
+            return response()->json(['error' => 'Delivery not found'], 404);
+        }
+        
+        $is_interview = $delivery->is_interview;
 
         if ($is_interview) {
             $attemptQuest = AttemptQuestion::query()->updateOrCreate([
@@ -434,13 +452,18 @@ class DeliveryController extends Controller
     #[Post('back-office/delivery/{delivery_hash}/takers/{taker_hash}/interview', name: 'back-office.delivery.attempt-interview')]
     public function attemptInterview(Delivery $delivery, Taker $taker, bool $response = true): bool|JsonResponse
     {
+        $exam = $delivery->exam;
+        if (!$exam) {
+            return response()->json(['error' => 'Exam not found'], 404);
+        }
+        
         /** @var Attempt $attempt */
         $attempt = $taker->attempts()->updateOrCreate([
             'delivery_id' => $delivery->id,
-            'exam_id' => $delivery->exam->id,
+            'exam_id' => $exam->id,
         ], [
             'delivery_id' => $delivery->id,
-            'exam_id' => $delivery->exam->id,
+            'exam_id' => $exam->id,
             'ip_address' => \Illuminate\Support\Facades\Request::ip(),
             'started_at' => Carbon::now(),
         ]);

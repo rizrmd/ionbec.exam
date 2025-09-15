@@ -38,9 +38,11 @@ class MainController extends Controller
 
         // query taker and exam only when not in waiting-room.
         $taker = $dataSession['taker'] ? Taker::query()->where('id', $dataSession['taker']->id)->first() : null;
-        $exam = Exam::query()
-            ->where('id', $delivery->exam->id)
-            ->first();
+        
+        $exam = $delivery->exam;
+        if (!$exam) {
+            return redirect()->route('exam.finished')->with('error', 'Exam not found');
+        }
 
         $items = $exam->items()->with(['questions.answers', 'attachments'])->orderByPivot('order')->get();
 
@@ -98,14 +100,19 @@ class MainController extends Controller
         $questionsId = $questionQuery->pluck('id');
 
         $attempt = null;
-        if ($dataSession['taker']) {
-            $attempt = Attempt::query()
-                ->where('attempted_by', $dataSession['taker']->id)
-                ->where('exam_id', $dataSession['delivery']->exam->id)
-                ->with('questions', function ($query) use ($questionsId) {
-                    $query->whereIn('question_id', $questionsId);
-                })
-                ->latest()->first();
+        if ($dataSession['taker'] && $dataSession['delivery']) {
+            $delivery = $dataSession['delivery'];
+            $exam = $delivery->exam;
+            
+            if ($exam) {
+                $attempt = Attempt::query()
+                    ->where('attempted_by', $dataSession['taker']->id)
+                    ->where('exam_id', $exam->id)
+                    ->with('questions', function ($query) use ($questionsId) {
+                        $query->whereIn('question_id', $questionsId);
+                    })
+                    ->latest()->first();
+            }
         }
 
         //        $item->load('attachments');
