@@ -267,13 +267,16 @@ class ExamController extends Controller
 
     private function createMultipleChoiceItem($categoryId)
     {
-        $item = Item::create([
+        $nextItemId = DB::table('items')->max('id') + 1;
+        $item = new Item([
             'title' => 'Platform Feature: Multiple Choice',
             'content' => '<h3>Multiple Choice Question</h3><p>This demonstrates our multiple choice capabilities with automatic scoring.</p>',
             'type' => ItemType::MULTIPLE_CHOICE->value,
             'is_vignette' => false,
             'is_random' => false,
         ]);
+        $item->id = $nextItemId;
+        $item->save();
 
         $item->categories()->attach($categoryId);
 
@@ -305,13 +308,16 @@ class ExamController extends Controller
 
     private function createEssayItem($categoryId)
     {
-        $item = Item::create([
+        $nextItemId = DB::table('items')->max('id') + 1;
+        $item = new Item([
             'title' => 'Platform Feature: Essay Questions',
             'content' => '<h3>Essay Question</h3><p>This demonstrates our essay question capabilities.</p>',
             'type' => ItemType::ESSAY->value,
             'is_vignette' => false,
             'is_random' => false,
         ]);
+        $item->id = $nextItemId;
+        $item->save();
 
         $item->categories()->attach($categoryId);
 
@@ -328,13 +334,16 @@ class ExamController extends Controller
 
     private function createInterviewItem($categoryId)
     {
-        $item = Item::create([
+        $nextItemId = DB::table('items')->max('id') + 1;
+        $item = new Item([
             'title' => 'Platform Feature: Interview Assessment', 
             'content' => '<h3>Interview Question</h3><p>This demonstrates our interview assessment capabilities.</p>',
             'type' => ItemType::INTERVIEW->value,
             'is_vignette' => false,
             'is_random' => false,
         ]);
+        $item->id = $nextItemId;
+        $item->save();
 
         $item->categories()->attach($categoryId);
 
@@ -351,7 +360,8 @@ class ExamController extends Controller
 
     private function createRichContentItem($categoryId)
     {
-        $item = Item::create([
+        $nextItemId = DB::table('items')->max('id') + 1;
+        $item = new Item([
             'title' => 'Platform Feature: Rich Media Support',
             'content' => '<h3>🎨 Rich Media Question</h3>
                          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin: 15px 0;">
@@ -367,6 +377,8 @@ class ExamController extends Controller
             'is_vignette' => true,
             'is_random' => false,
         ]);
+        $item->id = $nextItemId;
+        $item->save();
 
         $item->categories()->attach($categoryId);
 
@@ -398,7 +410,8 @@ class ExamController extends Controller
 
     private function createScenarioItem($categoryId)
     {
-        $item = Item::create([
+        $nextItemId = DB::table('items')->max('id') + 1;
+        $item = new Item([
             'title' => 'Platform Feature: Complex Scenarios',
             'content' => '<h3>📋 Real-World Scenario</h3>
                          <div style="background: #f8f9ff; padding: 20px; border-left: 4px solid #667eea; margin: 15px 0;">
@@ -415,6 +428,8 @@ class ExamController extends Controller
             'is_vignette' => true,
             'is_random' => false,
         ]);
+        $item->id = $nextItemId;
+        $item->save();
 
         $item->categories()->attach($categoryId);
 
