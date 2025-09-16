@@ -202,6 +202,8 @@ class ExamController extends Controller
         $exam = Exam::firstOrCreate([
             'name' => 'DEMO - Platform Showcase',
             'client_id' => $client->id,
+        ], [
+            'code' => 'DEMO-' . strtoupper(substr(md5($client->id . 'demo'), 0, 6)),
         ]);
 
         // If exam was just created, populate it with demo questions
