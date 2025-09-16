@@ -76,7 +76,7 @@ class TestTakerController extends Controller
             'count' => $count,
             'countVerified' => $countVerified,
             'countNonVerified' => $countNonVerified,
-            'payload' => $takerQuery->with(['groups', 'registerData.group', 'registerData.delivery'])->paginate($request->input('perPage', 15))->withQueryString(),
+            'payload' => $takerQuery->with(['groups', 'registerData.group', 'registerData.delivery'])->oldest()->paginate($request->input('perPage', 15))->withQueryString(),
         ]);
     }
 
