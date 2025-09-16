@@ -23,7 +23,7 @@ class DemoExamSeeder extends Seeder
         $demoClient = Client::firstOrCreate([
             'name' => 'Demo Platform',
         ], [
-            'description' => 'Demo client for showcasing platform capabilities',
+            'slug' => 'demo-platform',
         ]);
 
         // Find or create demo category
