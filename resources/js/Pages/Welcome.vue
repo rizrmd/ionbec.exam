@@ -81,6 +81,7 @@ const getUserRoute = () => {
       <div class="flex flex-row">
         <input id="search-name"
                v-model="form.token"
+               @keydown.enter="loginExam()"
                class="focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-l-md"
                placeholder="Insert exam-token"
                type="text">

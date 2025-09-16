@@ -198,13 +198,19 @@ class ExamController extends Controller
 
     private function createDemoExamForClient($client)
     {
-        // Find or create DEMO exam for this client
-        $exam = Exam::firstOrCreate([
-            'name' => 'DEMO - Platform Showcase',
-            'client_id' => $client->id,
-        ], [
-            'code' => 'DEMO-' . strtoupper(substr(md5($client->id . 'demo'), 0, 6)),
-        ]);
+        // Try to find existing DEMO exam for this client first
+        $exam = Exam::where('name', 'DEMO - Platform Showcase')
+                   ->where('client_id', $client->id)
+                   ->first();
+
+        if (!$exam) {
+            // If no exam exists, create one
+            $exam = Exam::create([
+                'name' => 'DEMO - Platform Showcase',
+                'client_id' => $client->id,
+                'code' => 'DEMO-' . strtoupper(substr(md5($client->id . 'demo'), 0, 6)),
+            ]);
+        }
 
         // If exam was just created, populate it with demo questions
         if ($exam->wasRecentlyCreated || $exam->items()->count() === 0) {
