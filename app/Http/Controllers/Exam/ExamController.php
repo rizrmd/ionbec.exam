@@ -204,12 +204,15 @@ class ExamController extends Controller
                    ->first();
 
         if (!$exam) {
-            // If no exam exists, create one
-            $exam = Exam::create([
+            // If no exam exists, create one with explicit ID to avoid sequence issues
+            $nextId = DB::table('exams')->max('id') + 1;
+            $exam = new Exam([
                 'name' => 'DEMO - Platform Showcase',
                 'client_id' => $client->id,
                 'code' => 'DEMO-' . strtoupper(substr(md5($client->id . 'demo'), 0, 6)),
             ]);
+            $exam->id = $nextId;
+            $exam->save();
         }
 
         // If exam was just created, populate it with demo questions
@@ -226,11 +229,14 @@ class ExamController extends Controller
         $category = Category::where('client_id', $client->id)->first();
         
         if (!$category) {
-            // If no category exists, create one with unique naming
-            $category = Category::create([
+            // If no category exists, create one with explicit ID to avoid sequence issues
+            $nextCatId = DB::table('categories')->max('id') + 1;
+            $category = new Category([
                 'name' => 'DEMO Questions (' . now()->format('M d') . ')',
                 'client_id' => $client->id,
             ]);
+            $category->id = $nextCatId;
+            $category->save();
         }
 
         // Create 5 different question types
