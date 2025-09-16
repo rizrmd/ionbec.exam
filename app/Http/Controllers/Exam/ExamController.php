@@ -155,6 +155,11 @@ class ExamController extends Controller
             Delivery::where('name', 'LIKE', 'DEMO%')
                     ->where('exam_id', $exam->id)
                     ->delete();
+                    
+            // Clean up existing DEMO exam data to ensure fresh creation with proper client_id
+            // Delete the exam entirely and recreate it to ensure clean state
+            $exam->delete();
+            $exam = $this->createDemoExamForClient($client);
 
             // Create new delivery that starts immediately and lasts 5 minutes
             $delivery = Delivery::create([
@@ -243,19 +248,19 @@ class ExamController extends Controller
         $items = [];
 
         // 1. Multiple Choice Question
-        $items[] = $this->createMultipleChoiceItem($category->id);
+        $items[] = $this->createMultipleChoiceItem($category->id, $client);
         
         // 2. Essay Question  
-        $items[] = $this->createEssayItem($category->id);
+        $items[] = $this->createEssayItem($category->id, $client);
         
         // 3. Interview Question
-        $items[] = $this->createInterviewItem($category->id);
+        $items[] = $this->createInterviewItem($category->id, $client);
         
         // 4. Multiple Choice with Rich Content
-        $items[] = $this->createRichContentItem($category->id);
+        $items[] = $this->createRichContentItem($category->id, $client);
         
         // 5. Complex Scenario Essay
-        $items[] = $this->createScenarioItem($category->id);
+        $items[] = $this->createScenarioItem($category->id, $client);
 
         // Attach items to exam with order
         $itemData = [];
@@ -265,7 +270,7 @@ class ExamController extends Controller
         $exam->items()->sync($itemData);
     }
 
-    private function createMultipleChoiceItem($categoryId)
+    private function createMultipleChoiceItem($categoryId, $client)
     {
         $nextItemId = DB::table('items')->max('id') + 1;
         $item = new Item([
@@ -287,6 +292,7 @@ class ExamController extends Controller
             'score' => 20,
             'type' => ItemType::MULTIPLE_CHOICE->value,
             'is_random' => false,
+            'client_id' => $client->id,
         ]);
         $question->id = $nextQuestionId;
         $question->save();
@@ -312,7 +318,7 @@ class ExamController extends Controller
         return $item;
     }
 
-    private function createEssayItem($categoryId)
+    private function createEssayItem($categoryId, $client)
     {
         $nextItemId = DB::table('items')->max('id') + 1;
         $item = new Item([
@@ -334,6 +340,7 @@ class ExamController extends Controller
             'score' => 25,
             'type' => ItemType::ESSAY->value,
             'is_random' => false,
+            'client_id' => $client->id,
         ]);
         $question->id = $nextQuestionId;
         $question->save();
@@ -341,7 +348,7 @@ class ExamController extends Controller
         return $item;
     }
 
-    private function createInterviewItem($categoryId)
+    private function createInterviewItem($categoryId, $client)
     {
         $nextItemId = DB::table('items')->max('id') + 1;
         $item = new Item([
@@ -363,6 +370,7 @@ class ExamController extends Controller
             'score' => 30,
             'type' => ItemType::INTERVIEW->value,
             'is_random' => false,
+            'client_id' => $client->id,
         ]);
         $question->id = $nextQuestionId;
         $question->save();
@@ -370,7 +378,7 @@ class ExamController extends Controller
         return $item;
     }
 
-    private function createRichContentItem($categoryId)
+    private function createRichContentItem($categoryId, $client)
     {
         $nextItemId = DB::table('items')->max('id') + 1;
         $item = new Item([
@@ -401,6 +409,7 @@ class ExamController extends Controller
             'score' => 20,
             'type' => ItemType::MULTIPLE_CHOICE->value,
             'is_random' => false,
+            'client_id' => $client->id,
         ]);
         $question->id = $nextQuestionId;
         $question->save();
@@ -426,7 +435,7 @@ class ExamController extends Controller
         return $item;
     }
 
-    private function createScenarioItem($categoryId)
+    private function createScenarioItem($categoryId, $client)
     {
         $nextItemId = DB::table('items')->max('id') + 1;
         $item = new Item([
@@ -458,6 +467,7 @@ class ExamController extends Controller
             'score' => 35,
             'type' => ItemType::ESSAY->value,
             'is_random' => false,
+            'client_id' => $client->id,
         ]);
         $question->id = $nextQuestionId;
         $question->save();

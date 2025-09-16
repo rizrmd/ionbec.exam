@@ -69,8 +69,11 @@ const items = computed(() => {
 
 const answerVal = ref([]);
 const laters = ref([]);
+const submittingAnswer = ref(false);
 
 const submitAnswer = async (partial = false) => {
+  if (submittingAnswer.value) return;
+  submittingAnswer.value = true;
   if (Object.keys(answerVal.value).length >= 1) {
     let newAnswers = {
       ...answerVal.value
@@ -97,18 +100,24 @@ const submitAnswer = async (partial = false) => {
 
     if (Object.keys(newAnswers).length >= 1) {
       if (attempt.value) {
-        const {data: responseData} = await axios.post(route('exam.answer'), {
-          attempt_hash: attempt.value.hash,
-          answers_value: newAnswers
-        })
+        try {
+          const {data: responseData} = await axios.post(route('exam.answer'), {
+            attempt_hash: attempt.value.hash,
+            answers_value: newAnswers
+          })
 
-        if (responseData) {
-          notification.add('success', 'Success', 'Answer saved.')
+          if (responseData) {
+            notification.add('success', 'Success', 'Answer saved.')
+          }
+          if (!partial) answerVal.value = []
+        } catch (error) {
+          console.error('Error submitting answer:', error)
+          notification.add('error', 'Error', 'Failed to save answer.')
         }
-        if (!partial) answerVal.value = []
       }
     }
   }
+  submittingAnswer.value = false;
 }
 
 const answerIndex = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
