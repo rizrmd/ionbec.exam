@@ -280,13 +280,16 @@ class ExamController extends Controller
 
         $item->categories()->attach($categoryId);
 
-        $question = Question::create([
+        $nextQuestionId = DB::table('questions')->max('id') + 1;
+        $question = new Question([
             'item_id' => $item->id,
             'question' => 'Which features does our examination platform support?',
             'score' => 20,
             'type' => ItemType::MULTIPLE_CHOICE->value,
             'is_random' => false,
         ]);
+        $question->id = $nextQuestionId;
+        $question->save();
 
         $answers = [
             ['answer' => 'Multiple choice questions with automatic scoring', 'is_correct' => true],
@@ -296,11 +299,14 @@ class ExamController extends Controller
         ];
 
         foreach ($answers as $answerData) {
-            Answer::create([
+            $nextAnswerId = DB::table('answers')->max('id') + 1;
+            $answer = new Answer([
                 'question_id' => $question->id,
                 'answer' => $answerData['answer'],
                 'is_correct_answer' => $answerData['is_correct'],
             ]);
+            $answer->id = $nextAnswerId;
+            $answer->save();
         }
 
         return $item;
@@ -321,13 +327,16 @@ class ExamController extends Controller
 
         $item->categories()->attach($categoryId);
 
-        Question::create([
+        $nextQuestionId = DB::table('questions')->max('id') + 1;
+        $question = new Question([
             'item_id' => $item->id,
             'question' => 'Explain the advantages of using an online examination platform. Discuss at least 3 key benefits and how they improve the examination experience.',
             'score' => 25,
             'type' => ItemType::ESSAY->value,
             'is_random' => false,
         ]);
+        $question->id = $nextQuestionId;
+        $question->save();
 
         return $item;
     }
@@ -347,13 +356,16 @@ class ExamController extends Controller
 
         $item->categories()->attach($categoryId);
 
-        Question::create([
+        $nextQuestionId = DB::table('questions')->max('id') + 1;
+        $question = new Question([
             'item_id' => $item->id,
             'question' => 'Practical Assessment: How would you implement a secure authentication system for this examination platform? Consider security best practices and scalability.',
             'score' => 30,
             'type' => ItemType::INTERVIEW->value,
             'is_random' => false,
         ]);
+        $question->id = $nextQuestionId;
+        $question->save();
 
         return $item;
     }
@@ -382,13 +394,16 @@ class ExamController extends Controller
 
         $item->categories()->attach($categoryId);
 
-        $question = Question::create([
+        $nextQuestionId = DB::table('questions')->max('id') + 1;
+        $question = new Question([
             'item_id' => $item->id,
             'question' => 'Based on the rich content above, what can our platform handle?',
             'score' => 20,
             'type' => ItemType::MULTIPLE_CHOICE->value,
             'is_random' => false,
         ]);
+        $question->id = $nextQuestionId;
+        $question->save();
 
         $answers = [
             ['answer' => 'Rich HTML content with custom CSS styling', 'is_correct' => true],
@@ -398,11 +413,14 @@ class ExamController extends Controller
         ];
 
         foreach ($answers as $answerData) {
-            Answer::create([
+            $nextAnswerId = DB::table('answers')->max('id') + 1;
+            $answer = new Answer([
                 'question_id' => $question->id,
                 'answer' => $answerData['answer'],
                 'is_correct_answer' => $answerData['is_correct'],
             ]);
+            $answer->id = $nextAnswerId;
+            $answer->save();
         }
 
         return $item;
@@ -433,13 +451,16 @@ class ExamController extends Controller
 
         $item->categories()->attach($categoryId);
 
-        Question::create([
+        $nextQuestionId = DB::table('questions')->max('id') + 1;
+        $question = new Question([
             'item_id' => $item->id,
             'question' => 'Design a comprehensive solution for this university. Address: 1) Technical architecture for scale, 2) Security measures for integrity, 3) Integration strategy with existing systems, 4) User experience considerations. Provide specific recommendations.',
             'score' => 35,
             'type' => ItemType::ESSAY->value,
             'is_random' => false,
         ]);
+        $question->id = $nextQuestionId;
+        $question->save();
 
         return $item;
     }
