@@ -10,6 +10,72 @@ use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use tracing::{info, error};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use sqlx::Row;
+use harsh::Harsh;
+use std::sync::OnceLock;
+
+// Laravel hashid configuration
+const HASH_LENGTH: usize = 8;
+const HASH_ALPHABET: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+// Get Laravel app key from environment
+fn get_app_key() -> String {
+    std::env::var("APP_KEY")
+        .unwrap_or_else(|_| "BXmuQm+4JdpqL3GD+pTWlCBmE2+VjQjn2+yjLjqF43s=".to_string())
+}
+
+// Global Harsh instances for different model types
+static ITEM_HARSH: OnceLock<Harsh> = OnceLock::new();
+static QUESTION_HARSH: OnceLock<Harsh> = OnceLock::new();  
+static ANSWER_HARSH: OnceLock<Harsh> = OnceLock::new();
+
+// Helper function to generate hash from ID using the exact Laravel algorithm
+fn generate_hash_from_id(id: i32, model_type: &str) -> String {
+    if id == 0 {
+        return String::new();
+    }
+    
+    let harsh = match model_type {
+        "Item" => ITEM_HARSH.get_or_init(|| create_harsh_for_model("App\\Models\\Exams\\Item")),
+        "Question" => QUESTION_HARSH.get_or_init(|| create_harsh_for_model("App\\Models\\Exams\\Question")),
+        "Answer" => ANSWER_HARSH.get_or_init(|| create_harsh_for_model("App\\Models\\Exams\\Answer")),
+        _ => ITEM_HARSH.get_or_init(|| create_harsh_for_model("default")),
+    };
+    
+    harsh.encode(&[id as u64])
+}
+
+// Create Harsh instance using Laravel's algorithm
+fn create_harsh_for_model(class_name: &str) -> Harsh {
+    // Laravel algorithm: substr($key, -4) . substr(config('app.key', 'lara'), -4)
+    let key = if class_name.len() > 4 {
+        class_name.to_string()
+    } else {
+        format!("default{}", class_name)
+    };
+    
+    let key_suffix = if key.len() >= 4 {
+        &key[key.len()-4..]
+    } else {
+        &key
+    };
+    
+    let app_key = get_app_key();
+    let app_key_suffix = if app_key.len() >= 4 {
+        &app_key[app_key.len()-4..]
+    } else {
+        "lara"
+    };
+    
+    let salt = format!("{}{}", key_suffix, app_key_suffix);
+    
+    Harsh::builder()
+        .salt(salt.as_bytes())
+        .length(HASH_LENGTH)
+        .alphabet(HASH_ALPHABET)
+        .build()
+        .expect("Failed to build Harsh encoder")
+}
 
 mod scoring;
 mod csv_processor;
@@ -56,24 +122,35 @@ async fn main() {
 
     info!("Starting Ionbec Rust Service");
 
-    // Initialize database connection (optional)
-    let db_pool = if let Ok(database_url) = std::env::var("DATABASE_URL") {
+    // Initialize database connection using Laravel .env variables
+    let db_pool = if let (Ok(host), Ok(port), Ok(database), Ok(username), Ok(password)) = (
+        std::env::var("DB_HOST"),
+        std::env::var("DB_PORT"),
+        std::env::var("DB_DATABASE"),
+        std::env::var("DB_USERNAME"),
+        std::env::var("DB_PASSWORD"),
+    ) {
+        let database_url = format!(
+            "postgresql://{}:{}@{}:{}/{}",
+            username, password, host, port, database
+        );
+        
         match sqlx::postgres::PgPoolOptions::new()
             .max_connections(5)
             .connect(&database_url)
             .await
         {
             Ok(pool) => {
-                info!("Connected to PostgreSQL database");
+                info!("Connected to PostgreSQL database: {}:{}/{}", host, port, database);
                 Some(pool)
             }
             Err(e) => {
-                error!("Failed to connect to database: {}", e);
+                error!("Failed to connect to database {}: {}", database_url, e);
                 None
             }
         }
     } else {
-        info!("DATABASE_URL not set, running without database");
+        info!("Database environment variables not set, running without database");
         None
     };
 
@@ -109,10 +186,11 @@ async fn main() {
         .route("/api/validate", post(validate_exam))
         .route("/api/csv/process", post(csv_process_handler))
         .route("/api/csv/batch", post(csv_batch_process_handler))
+        .route("/api/exam/load", post(load_exam_data_handler))
         .layer(CorsLayer::permissive())
         .with_state(state);
 
-    let addr = "0.0.0.0:3000";
+    let addr = std::env::var("RUST_SERVICE_ADDR").unwrap_or_else(|_| "0.0.0.0:3001".to_string());
     info!("Rust service listening on {}", addr);
     
     let listener = tokio::net::TcpListener::bind(addr)
@@ -384,4 +462,267 @@ async fn csv_batch_process_handler(
         })?;
     
     Ok(Json(csv_processor::process_csv_batch_handler(State(pool.clone()), Json(payload)).await.0))
+}
+
+// Exam data loading structs and handler
+#[derive(Deserialize)]
+struct ExamDataRequest {
+    exam_id: i32,
+    delivery_id: i32,
+    taker_id: Option<i32>,
+}
+
+#[derive(Serialize)]
+struct ExamDataResponse {
+    success: bool,
+    items: Vec<ExamItem>,
+    remaining_seconds: Option<i32>,
+    message: Option<String>,
+}
+
+#[derive(Serialize)]
+struct ExamItem {
+    hash: String,
+    name: String,
+    content: Option<String>,
+    is_vignette: bool,
+    is_random: bool,
+    item_type: ExamItemType,
+    questions: Vec<ExamQuestion>,
+    questions_count: i32,
+    attachments: Vec<ExamAttachment>,
+}
+
+#[derive(Serialize)]
+struct ExamItemType {
+    id: i32,
+    name: String,
+    value: String,
+}
+
+#[derive(Serialize)]
+struct ExamQuestion {
+    hash: String,
+    question: String,
+    score: i32,
+    is_random: bool,
+    type_info: Option<QuestionType>,
+    answers: Vec<ExamAnswer>,
+}
+
+#[derive(Serialize)]
+struct QuestionType {
+    id: i32,
+    name: String,
+    value: String,
+}
+
+#[derive(Serialize)]
+struct ExamAnswer {
+    hash: String,
+    answer: String,
+    // is_correct_answer is intentionally omitted for security
+}
+
+#[derive(Serialize)]
+struct ExamAttachment {
+    id: String,
+    filename: String,
+    url: String,
+    description: Option<String>,
+}
+
+async fn load_exam_data_handler(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<ExamDataRequest>,
+) -> Result<Json<ExamDataResponse>, StatusCode> {
+    let start = std::time::Instant::now();
+    info!("Loading exam data for exam_id: {}, delivery_id: {}", payload.exam_id, payload.delivery_id);
+    
+    let pool = state.db_pool.as_ref()
+        .ok_or_else(|| {
+            error!("Database connection not available");
+            StatusCode::SERVICE_UNAVAILABLE
+        })?;
+    
+    match load_exam_data(pool, payload.exam_id, payload.delivery_id, payload.taker_id).await {
+        Ok(items) => {
+            let load_time = start.elapsed().as_millis();
+            info!("Loaded {} items in {}ms", items.len(), load_time);
+            
+            Ok(Json(ExamDataResponse {
+                success: true,
+                items,
+                remaining_seconds: None, // TODO: Calculate if needed
+                message: Some(format!("Loaded in {}ms", load_time)),
+            }))
+        }
+        Err(e) => {
+            error!("Failed to load exam data: {}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
+async fn load_exam_data(
+    pool: &sqlx::PgPool,
+    exam_id: i32,
+    _delivery_id: i32,
+    _taker_id: Option<i32>,
+) -> Result<Vec<ExamItem>, sqlx::Error> {
+    // Load all data in 4 optimized queries instead of N+1 queries
+    
+    // 1. Load all items for this exam
+    let items_query = r#"
+        SELECT 
+            i.id, i.hash, i.title, i.content, i.type, i.is_vignette, i.is_random,
+            ei.order as pivot_order
+        FROM items i
+        JOIN exam_item ei ON i.id = ei.item_id
+        WHERE ei.exam_id = $1
+        ORDER BY ei.order ASC
+    "#;
+    
+    let item_rows = sqlx::query(items_query)
+        .bind(exam_id)
+        .fetch_all(pool)
+        .await?;
+    
+    if item_rows.is_empty() {
+        return Ok(Vec::new());
+    }
+    
+    let item_ids: Vec<i32> = item_rows.iter().map(|row| row.get::<i32, _>("id")).collect();
+    
+    // 2. Load all questions for these items in one query
+    let questions_query = r#"
+        SELECT 
+            q.id, q.hash, q.question, q.score, q.type, q.is_random, q.item_id
+        FROM questions q
+        WHERE q.item_id = ANY($1)
+        ORDER BY q.item_id, q.id ASC
+    "#;
+    
+    let question_rows = sqlx::query(questions_query)
+        .bind(&item_ids)
+        .fetch_all(pool)
+        .await?;
+    
+    let question_ids: Vec<i32> = question_rows.iter().map(|row| row.get::<i32, _>("id")).collect();
+    
+    // 3 & 4. Load answers and attachments in parallel (they don't depend on each other)
+    let answers_query = r#"
+        SELECT id, hash, answer, question_id
+        FROM answers
+        WHERE question_id = ANY($1)
+        ORDER BY question_id, id ASC
+    "#;
+    
+    let attachments_query = r#"
+        SELECT a.id, a.title, a.path, a.description, att.attachable_id as item_id
+        FROM attachments a
+        JOIN attachables att ON a.id = att.attachment_id
+        WHERE att.attachable_id = ANY($1) AND att.attachable_type = 'App\\Models\\Exams\\Item'
+        ORDER BY att.attachable_id, a.id ASC
+    "#;
+    
+    // Execute answers and attachments queries in parallel
+    let (answer_rows, attachment_rows) = tokio::try_join!(
+        sqlx::query(answers_query).bind(&question_ids).fetch_all(pool),
+        sqlx::query(attachments_query).bind(&item_ids).fetch_all(pool)
+    )?;
+    
+    // Group data by their parent IDs
+    let mut answers_by_question: std::collections::HashMap<i32, Vec<ExamAnswer>> = std::collections::HashMap::new();
+    for answer_row in answer_rows {
+        let question_id: i32 = answer_row.get("question_id");
+        let answer_id: i32 = answer_row.get("id");
+        let answer = ExamAnswer {
+            hash: generate_hash_from_id(answer_id, "Answer"),
+            answer: answer_row.get("answer"),
+        };
+        answers_by_question.entry(question_id).or_default().push(answer);
+    }
+    
+    let mut questions_by_item: std::collections::HashMap<i32, Vec<ExamQuestion>> = std::collections::HashMap::new();
+    for question_row in question_rows {
+        let item_id: i32 = question_row.get("item_id");
+        let question_id: i32 = question_row.get("id");
+        
+        let type_info = if let Ok(type_str) = question_row.try_get::<String, _>("type") {
+            if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&type_str) {
+                Some(QuestionType {
+                    id: parsed["id"].as_i64().unwrap_or(0) as i32,
+                    name: parsed["name"].as_str().unwrap_or("multiple-choice").to_string(),
+                    value: parsed["value"].as_str().unwrap_or("multiple-choice").to_string(),
+                })
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        
+        let question = ExamQuestion {
+            hash: generate_hash_from_id(question_id, "Question"),
+            question: question_row.get("question"),
+            score: question_row.get("score"),
+            is_random: question_row.get("is_random"),
+            type_info,
+            answers: answers_by_question.remove(&question_id).unwrap_or_default(),
+        };
+        questions_by_item.entry(item_id).or_default().push(question);
+    }
+    
+    let mut attachments_by_item: std::collections::HashMap<i32, Vec<ExamAttachment>> = std::collections::HashMap::new();
+    for attachment_row in attachment_rows {
+        let item_id: i32 = attachment_row.get("item_id");
+        let attachment = ExamAttachment {
+            id: attachment_row.get("id"),
+            filename: attachment_row.get::<Option<String>, _>("title").unwrap_or_default(),
+            url: attachment_row.get::<Option<String>, _>("path").unwrap_or_default(),
+            description: attachment_row.get("description"),
+        };
+        attachments_by_item.entry(item_id).or_default().push(attachment);
+    }
+    
+    // Build final result
+    let mut items = Vec::new();
+    for item_row in item_rows {
+        let item_id: i32 = item_row.get("id");
+        let questions = questions_by_item.remove(&item_id).unwrap_or_default();
+        let attachments = attachments_by_item.remove(&item_id).unwrap_or_default();
+        let questions_count = questions.len() as i32;
+        
+        // Parse the type JSON from database
+        let item_type_str: String = item_row.get("type");
+        let item_type = if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&item_type_str) {
+            ExamItemType {
+                id: parsed["id"].as_i64().unwrap_or(0) as i32,
+                name: parsed["name"].as_str().unwrap_or("unknown").to_string(),
+                value: parsed["value"].as_str().unwrap_or("unknown").to_string(),
+            }
+        } else {
+            // Fallback if JSON parsing fails
+            ExamItemType {
+                id: 0,
+                name: "multiple-choice".to_string(),
+                value: "multiple-choice".to_string(),
+            }
+        };
+
+        items.push(ExamItem {
+            hash: generate_hash_from_id(item_id, "Item"),
+            name: item_row.get("title"),
+            content: item_row.get("content"),
+            is_vignette: item_row.get("is_vignette"),
+            is_random: item_row.get("is_random"),  
+            item_type,
+            questions,
+            questions_count,
+            attachments,
+        });
+    }
+    
+    Ok(items)
 }
