@@ -4,6 +4,7 @@ namespace App\Models\Takers;
 
 use App\Models\Attempts\Attempt;
 use App\Traits\BelongsToClient;
+use App\Traits\AutoPopulateHash;
 use Illuminate\Support\Facades\DB;
 use App\Models\Deliveries\Delivery;
 use Illuminate\Database\Eloquent\Relations;
@@ -26,6 +27,7 @@ class Taker extends Authenticatable
 {
     use HashableId;
     use BelongsToClient;
+    use AutoPopulateHash;
 
     /**
      * The table associated with the model.
@@ -53,7 +55,6 @@ class Taker extends Authenticatable
     {
         return $this->belongsToMany(Group::class, 'group_taker', 'taker_id', 'group_id')
             ->withPivot(['taker_code'])
-            ->where('groups.client_id', $this->client_id)
             ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
@@ -76,7 +77,6 @@ class Taker extends Authenticatable
     {
         return $this->belongsToMany(Delivery::class, 'delivery_taker', 'taker_id', 'delivery_id')
             ->withPivot(['token', 'is_login'])
-            ->where('deliveries.client_id', $this->client_id)
             ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 

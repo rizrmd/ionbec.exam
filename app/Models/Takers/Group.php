@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Carbon\Traits\Date;
 use App\Models\Deliveries\Delivery;
 use App\Traits\BelongsToClient;
+use App\Traits\AutoPopulateHash;
 use Illuminate\Database\Eloquent\Model;
 use Veelasky\LaravelHashId\Eloquent\HashableId;
 
@@ -24,6 +25,7 @@ class Group extends Model
 {
     use HashableId;
     use BelongsToClient;
+    use AutoPopulateHash;
 
     /**
      * The table associated with the model.
@@ -64,7 +66,6 @@ class Group extends Model
     {
         return $this->belongsToMany(Taker::class, 'group_taker', 'group_id', 'taker_id')
             ->withPivot(['taker_code'])
-            ->where('takers.client_id', $this->client_id)
             ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 
@@ -76,7 +77,6 @@ class Group extends Model
     public function deliveries()
     {
         return $this->hasMany(Delivery::class, 'group_id', 'id')
-            ->where('deliveries.client_id', $this->client_id)
             ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
 }

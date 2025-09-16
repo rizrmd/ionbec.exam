@@ -137,10 +137,12 @@ class DeliveryController extends Controller
             $delivery_hash = $decoded['hash'] ?? $delivery_hash;
         }
         
-        // Find delivery by hash, bypassing ClientScope for hash resolution
-        $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
-            ->where('hash', $delivery_hash)
-            ->first();
+        // Find delivery by hash using HashableId trait
+        try {
+            $delivery = Delivery::byHash($delivery_hash);
+        } catch (\Exception $e) {
+            $delivery = null;
+        }
         
         if (!$delivery) {
             abort(404, 'Delivery not found');
@@ -231,10 +233,12 @@ class DeliveryController extends Controller
             $delivery_hash = $decoded['hash'] ?? $delivery_hash;
         }
         
-        // Find delivery by hash, bypassing ClientScope for hash resolution
-        $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
-            ->where('hash', $delivery_hash)
-            ->first();
+        // Find delivery by hash using HashableId trait
+        try {
+            $delivery = Delivery::byHash($delivery_hash);
+        } catch (\Exception $e) {
+            $delivery = null;
+        }
         
         if (!$delivery) {
             abort(404, 'Delivery not found');
@@ -546,10 +550,12 @@ class DeliveryController extends Controller
             $delivery_hash = $decoded['hash'] ?? $delivery_hash;
         }
         
-        // Find delivery by hash, bypassing ClientScope for hash resolution
-        $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
-            ->where('hash', $delivery_hash)
-            ->first();
+        // Find delivery by hash using HashableId trait
+        try {
+            $delivery = Delivery::byHash($delivery_hash);
+        } catch (\Exception $e) {
+            $delivery = null;
+        }
         
         if (!$delivery) {
             abort(404, 'Delivery not found');
@@ -575,10 +581,12 @@ class DeliveryController extends Controller
             $delivery_hash = $decoded['hash'] ?? $delivery_hash;
         }
         
-        // Find delivery by hash, bypassing ClientScope for hash resolution
-        $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
-            ->where('hash', $delivery_hash)
-            ->first();
+        // Find delivery by hash using HashableId trait
+        try {
+            $delivery = Delivery::byHash($delivery_hash);
+        } catch (\Exception $e) {
+            $delivery = null;
+        }
         
         if (!$delivery) {
             abort(404, 'Delivery not found');

@@ -20,6 +20,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Session;
 use App\Models\Attempts\AttemptQuestion;
 use Veelasky\LaravelHashId\Rules\ExistsByHash;
+use App\Services\RustService;
 
 class MainController extends Controller
 {
@@ -27,7 +28,7 @@ class MainController extends Controller
     public function index(): \Illuminate\Http\RedirectResponse|\Inertia\Response
     {
         $dataSession = Session::get('exam');
-        $delivery = Delivery::query()->where('id', $dataSession['delivery']->id)->with('exam')->first();
+        $delivery = Delivery::query()->where('id', $dataSession['delivery']->id)->first();
 
         // Check also ScheduleController->login
         if (! $dataSession['admin'] && $delivery->automatic_start) {
@@ -44,16 +45,31 @@ class MainController extends Controller
             return redirect()->route('exam.finished')->with('error', 'Exam not found');
         }
 
-        $items = $exam->items()->with(['questions.answers', 'attachments'])->orderByPivot('order')->get();
+        // Try Rust service for fast data loading, fallback to PHP
+        $rustService = new RustService();
+        $examData = $rustService->loadExamData(
+            $exam->id, 
+            $delivery->id, 
+            $taker ? $taker->id : null
+        );
+        
+        if ($examData['success'] ?? false) {
+            // Use Rust-processed data
+            $items = collect($examData['items']);
+        } else {
+            // Fallback to PHP (your previous lazy loading approach)
+            $items = $exam->items()->with(['attachments'])->orderByPivot('order')->get();
+            foreach ($items as $item) {
+                $item->questions_count = $item->questions()->count();
+                $item->questions = collect();
+            }
+        }
 
-        // hiding is_correct_answer column
-        foreach ($items as $item) {
-            $questions = $item->questions;
-            $questions->each(function ($question, $questionKey) use ($questions) {
-                $questions[$questionKey]->answers->each(function ($answer, $answerKey) use ($questions, $questionKey) {
-                    unset($questions[$questionKey]->answers[$answerKey]->is_correct_answer);
-                });
-            });
+        // Calculate remaining time in seconds (timezone agnostic)
+        $remainingSeconds = 0;
+        if ($delivery->automatic_start) {
+            $endTime = $delivery->scheduled_at->copy()->addMinutes($delivery->duration);
+            $remainingSeconds = max(0, $endTime->diffInSeconds(Carbon::now()));
         }
 
         $data = [
@@ -61,6 +77,7 @@ class MainController extends Controller
             'taker' => $taker,
             'exam' => $exam,
             'examItems' => $items,
+            'remainingSeconds' => $remainingSeconds,
         ];
 
         if ($dataSession['admin']) {
@@ -86,6 +103,13 @@ class MainController extends Controller
 
             $data['attempt'] = $attempt;
             $data['attemptQuestions'] = AttemptQuestion::query()->with('question')->where('attempt_id', $attempt->id)->get();
+            
+            // For non-automatic start, calculate remaining time from attempt start
+            if (!$delivery->automatic_start && $remainingSeconds == 0) {
+                $endTime = $attempt->started_at->copy()->addMinutes($delivery->duration);
+                $remainingSeconds = max(0, $endTime->diffInSeconds(Carbon::now()));
+                $data['remainingSeconds'] = $remainingSeconds;
+            }
         }
 
         return Inertia::render('Exam/Main', $data);

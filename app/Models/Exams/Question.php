@@ -3,6 +3,7 @@
 namespace App\Models\Exams;
 
 use App\Traits\BelongsToClient;
+use App\Traits\AutoPopulateHash;
 use Illuminate\Support\Str;
 use App\Models\Attempts\Attempt;
 use App\Models\Categories\Category;
@@ -28,6 +29,7 @@ class Question extends Model
 {
     use HashableId;
     use BelongsToClient;
+    use AutoPopulateHash;
 
     /**
      * The table associated with the model.

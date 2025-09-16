@@ -8,6 +8,7 @@ use App\Models\Takers\Taker;
 use Dentro\Yalr\Attributes\Get;
 use App\Models\Deliveries\Delivery;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 class FinishedController extends Controller
@@ -35,6 +36,11 @@ class FinishedController extends Controller
 
         $taker->attempts()->where('delivery_id', $deliveryId)->update([
             'ended_at' => Carbon::now(),
+        ]);
+
+        // Reset login status when exam is finished
+        DB::table('delivery_taker')->where('token', $dataSession['token'])->update([
+            'is_login' => false,
         ]);
 
         Session::forget('exam');

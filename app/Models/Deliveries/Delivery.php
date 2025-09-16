@@ -10,6 +10,7 @@ use App\Scopes\DeliveryScope;
 use App\Models\Log\ActivityLog;
 use App\Models\Attempts\Attempt;
 use App\Traits\BelongsToClient;
+use App\Traits\AutoPopulateHash;
 use App\Attributes\DeliveryAttributes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations;
@@ -39,6 +40,7 @@ class Delivery extends Model
     use DeliveryAttributes;
     use DeliveryScope;
     use BelongsToClient;
+    use AutoPopulateHash;
 
     /**
      * The table associated with the model.

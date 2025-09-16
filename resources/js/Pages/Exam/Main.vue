@@ -36,9 +36,13 @@ const props = defineProps({
   admin: {
     type: Object,
   },
+  remainingSeconds: {
+    type: Number,
+    default: 0,
+  },
 })
 
-const {exam, examItems, attempt, delivery, attemptQuestions, admin} = toRefs(props);
+const {exam, examItems, attempt, delivery, attemptQuestions, admin, remainingSeconds} = toRefs(props);
 
 const loadingQuestion = ref(false);
 const vignetteData = ref(null);
@@ -188,25 +192,16 @@ const startTimer = (duration) => {
 }
 
 onMounted(() => {
-  let todayDatetime = moment(new Date()).tz(moment.tz.guess());
-  if (delivery.value.automatic_start) {
-    if (moment(delivery.value.scheduled_at).isAfter(new Date())) {
-      window.location.href = '/exam/waiting-room';
-      return
-    }
-    let endedAt = moment(delivery.value.scheduled_at+"+07:00").add(delivery.value.duration, 'minutes')
-    let duration = moment.duration(endedAt.diff(todayDatetime));
-    startTimer(Math.round(duration.asSeconds()))
+  // Use server-provided remaining seconds (timezone agnostic)
+  if (remainingSeconds.value > 0) {
+    startTimer(remainingSeconds.value)
   } else {
-    if (attempt.value) {
-      let endedAt = moment(attempt.value.created_at+"+07:00").add(delivery.value.duration, 'minutes')
-      let duration = moment.duration(endedAt.diff(todayDatetime));
-      startTimer(Math.round(duration.asSeconds()))
-    } else {
-      window.location.href = '/exam/waiting-room';
-      return
-    }
+    // No time remaining, redirect to finished
+    localStorage.removeItem('exam-state')
+    Inertia.visit(route('exam.finished'))
+    return
   }
+  
   const examState = JSON.parse(localStorage.getItem('exam-state'));
   skippedQuests.value = examState?.skipped ?? []
   laterQuests.value = examState?.later ?? []

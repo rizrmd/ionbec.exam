@@ -75,7 +75,7 @@ class GroupController extends Controller
 
     private function takerQuery($group = null): \Illuminate\Database\Eloquent\Builder
     {
-        $query = Taker::query();
+        $query = Taker::withoutGlobalScope(\App\Scopes\ClientScope::class);
         if ($group) {
             return $query->whereHas('groups', function ($query) use ($group) {
                 $query->where('id', $group->id);

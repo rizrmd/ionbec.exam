@@ -9,6 +9,7 @@ use App\Models\Takers\Taker;
 use App\Models\Exams\Question;
 use App\Traits\BelongsToClient;
 use App\Traits\HasTakerCode;
+use App\Traits\AutoPopulateHash;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Models\Deliveries\Delivery;
@@ -33,6 +34,7 @@ class Attempt extends Model
     use HashableId;
     use BelongsToClient;
     use HasTakerCode;
+    use AutoPopulateHash;
 
     /**
      * The table associated with the model.

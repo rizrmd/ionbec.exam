@@ -227,6 +227,40 @@ class RustService
     }
 
     /**
+     * Load exam data efficiently using Rust service
+     */
+    public function loadExamData(int $examId, int $deliveryId, ?int $takerId = null): array
+    {
+        try {
+            $response = Http::timeout(10)->post("{$this->baseUrl}/api/exam/load", [
+                'exam_id' => $examId,
+                'delivery_id' => $deliveryId,
+                'taker_id' => $takerId
+            ]);
+            
+            if ($response->successful()) {
+                return $response->json();
+            }
+            
+            return [
+                'success' => false,
+                'error' => 'Exam data loading failed',
+                'details' => $response->body()
+            ];
+        } catch (\Exception $e) {
+            Log::error('Rust service exam data loading failed', [
+                'exam_id' => $examId,
+                'delivery_id' => $deliveryId,
+                'error' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Process multiple CSV files in batch using Rust service
      */
     public function processCsvBatch(array $files, int $batchSize = 1000): array

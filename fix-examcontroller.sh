@@ -1,3 +1,4 @@
+ssh root@cf.avolut.com 'docker exec app-okksscs4w0s8oc0go0k4cg8k bash -c "cat > /var/www/app/Http/Controllers/Exam/ExamController.php" << '"'"'PHPEOF'"'"'
 <?php
 
 namespace App\Http\Controllers\Exam;
@@ -27,21 +28,6 @@ class ExamController extends Controller
             $delivery = Delivery::query()->where('id', $deliveryTaker->delivery_id)->first();
             $attempt = $taker->attempts()->where('delivery_id', $deliveryTaker->delivery_id)->first();
 
-            //            if (Delivery::STATUS_ON_PROGRESS !== $delivery->last_status) {
-            //                return redirect()->back()->withErrors(['exam' => 'Exam is not active.']);
-            //            }
-
-            // Check if exam is finished first (before login check)
-            if (! is_null($attempt) && ! is_null($attempt->ended_at)) {
-                Session::put('exam', [
-                    'token' => $request->token,
-                    'taker' => $taker,
-                    'delivery' => $delivery,
-                    'admin' => null,
-                ]);
-                return redirect()->route('exam.finished');
-            }
-
             if ($deliveryTaker->is_login) {
                 return redirect()->back()->withErrors(['exam' => 'Candidate is currently logged in']);
             }
@@ -52,6 +38,10 @@ class ExamController extends Controller
                 'delivery' => $delivery,
                 'admin' => null,
             ]);
+
+            if (! is_null($attempt) && ! is_null($attempt->ended_at)) {
+                return redirect()->route('exam.finished');
+            }
 
             if (Delivery::STATUS_SCHEDULED === $delivery->last_status) {
                 return redirect()->route('exam.waiting-room');
@@ -75,27 +65,10 @@ class ExamController extends Controller
             DB::table('delivery_taker')->where('token', $session['token'])->update([
                 'is_login' => false,
             ]);
-            \Log::info('Logout: Reset is_login for token: ' . $session['token']);
-        } else {
-            // If no session, reset tokens that are logged in but have finished attempts
-            // This is safe because finished exams shouldn't block re-entry
-            $client = $request->attributes->get('client');
-            if ($client) {
-                $resetCount = DB::table('delivery_taker')
-                    ->join('deliveries', 'delivery_taker.delivery_id', '=', 'deliveries.id')
-                    ->join('attempts', 'attempts.delivery_id', '=', 'deliveries.id')
-                    ->where('deliveries.client_id', $client->id)
-                    ->where('delivery_taker.is_login', true)
-                    ->whereNotNull('attempts.ended_at')
-                    ->update(['delivery_taker.is_login' => false]);
-                \Log::info('Logout: Reset ' . $resetCount . ' finished exam tokens for client: ' . $client->id);
-            } else {
-                \Log::warning('Logout: No exam session found and no client context');
-            }
         }
         Session::forget('exam');
-        
-        // For client domains, redirect to home page instead of named route
+
         return redirect('/');
     }
 }
+PHPEOF'"

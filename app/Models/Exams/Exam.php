@@ -3,6 +3,7 @@
 namespace App\Models\Exams;
 
 use App\Traits\BelongsToClient;
+use App\Traits\AutoPopulateHash;
 use Illuminate\Support\Collection;
 use App\Models\Deliveries\Delivery;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,7 @@ class Exam extends Model
 {
     use HashableId;
     use BelongsToClient;
+    use AutoPopulateHash;
 
     /**
      * The table associated with the model.
