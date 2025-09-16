@@ -216,11 +216,16 @@ class ExamController extends Controller
 
     private function populateDemoExam($exam, $client)
     {
-        // Create demo category
-        $category = Category::firstOrCreate([
-            'name' => 'Demo Questions',
-            'client_id' => $client->id,
-        ]);
+        // Try to find existing category first, or use a default one for this client
+        $category = Category::where('client_id', $client->id)->first();
+        
+        if (!$category) {
+            // If no category exists, create one with unique naming
+            $category = Category::create([
+                'name' => 'DEMO Questions (' . now()->format('M d') . ')',
+                'client_id' => $client->id,
+            ]);
+        }
 
         // Create 5 different question types
         $items = [];
