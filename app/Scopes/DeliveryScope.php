@@ -37,6 +37,16 @@ trait DeliveryScope
         }
 
         if ($now->gt($schedule)) {
+            // Check if there are any active attempts (attempts without ended_at)
+            // This handles cases where exam was scheduled to start but duration calculation is off
+            $hasActiveAttempts = $delivery->attempts()
+                ->whereNull('ended_at')
+                ->exists();
+            
+            if ($hasActiveAttempts) {
+                return Delivery::STATUS_ON_PROGRESS;
+            }
+
             // takers not ready, but overdue from schedule.
             if (! $delivery->takers_ready) {
                 return Delivery::STATUS_OVERDUE;

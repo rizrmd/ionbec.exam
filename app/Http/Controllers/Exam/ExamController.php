@@ -2,265 +2,207 @@
 
 namespace App\Http\Controllers\Exam;
 
-use App\Models\Takers\Taker;
+use Carbon\Carbon;
+use Inertia\Inertia;
 use Illuminate\Http\Request;
-use Dentro\Yalr\Attributes\Get;
-use Dentro\Yalr\Attributes\Post;
-use Illuminate\Support\Facades\DB;
-use App\Models\Deliveries\Delivery;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Session;
-use App\Models\Client;
-use App\Models\Categories\Category;
 use App\Models\Exams\Exam;
+use App\Models\Exams\Item;
 use App\Models\Exams\Question;
 use App\Models\Exams\Answer;
-use App\Models\Exams\Item;
+use App\Models\Exams\Category;
+use App\Models\Takers\Taker;
 use App\Models\Takers\Group;
-use App\Models\Attempts\Attempt;
+use App\Models\Deliveries\Delivery;
+use App\Http\Controllers\Controller;
 use App\Knowledge\Exam\Item\ItemType;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
+use Dentro\Yalr\Attributes\Get;
+use Dentro\Yalr\Attributes\Post;
 
 class ExamController extends Controller
 {
     #[Post('/exam', name: 'exam.login')]
-    public function index(Request $request): \Illuminate\Http\RedirectResponse
+    public function login(Request $request): \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
     {
-        $request->validate([
-            'token' => 'required',
-        ]);
-
+        $token = $request->input('token');
+        
         // Handle DEMO token specially
-        if (strtoupper(trim($request->token)) === 'DEMO') {
+        if ($token === 'DEMO') {
             return $this->handleDemoToken($request);
         }
-
-        $deliveryTaker = DB::table('delivery_taker')->where('token', $request->token)->first();
-
-        if ($deliveryTaker) {
-            $taker = Taker::query()->where('id', $deliveryTaker->taker_id)->first();
-            $delivery = Delivery::query()->where('id', $deliveryTaker->delivery_id)->first();
-            $attempt = $taker->attempts()->where('delivery_id', $deliveryTaker->delivery_id)->first();
-
-            //            if (Delivery::STATUS_ON_PROGRESS !== $delivery->last_status) {
-            //                return redirect()->back()->withErrors(['exam' => 'Exam is not active.']);
-            //            }
-
-            // Check if exam is finished first (before login check)
-            if (! is_null($attempt) && ! is_null($attempt->ended_at)) {
-                Session::put('exam', [
-                    'token' => $request->token,
-                    'taker' => $taker,
-                    'delivery' => $delivery,
-                    'admin' => null,
-                ]);
-                return redirect()->route('exam.finished');
-            }
-
-            if ($deliveryTaker->is_login) {
-                return redirect()->back()->withErrors(['exam' => 'Candidate is currently logged in']);
-            }
-
-            Session::put('exam', [
-                'token' => $request->token,
-                'taker' => $taker,
-                'delivery' => $delivery,
-                'admin' => null,
-            ]);
-
-            if (Delivery::STATUS_SCHEDULED === $delivery->last_status) {
-                return redirect()->route('exam.waiting-room');
-            }
-
-            DB::table('delivery_taker')->where('token', $request->token)->update([
-                'is_login' => true,
-            ]);
-
-            return redirect()->route('exam.main');
-        }
-
-        return redirect()->back()->withErrors(['token' => 'Token not found.']);
-    }
-
-    #[Get('/exam/logout', name: 'exam.logout')]
-    public function logout(Request $request): \Illuminate\Http\RedirectResponse
-    {
-        $session = Session::get('exam');
-        if (null != $session && array_key_exists('token', $session)) {
-            DB::table('delivery_taker')->where('token', $session['token'])->update([
-                'is_login' => false,
-            ]);
-            \Log::info('Logout: Reset is_login for token: ' . $session['token']);
-        } else {
-            // If no session, reset tokens that are logged in but have finished attempts
-            // This is safe because finished exams shouldn't block re-entry
-            $client = $request->attributes->get('client');
-            if ($client) {
-                $resetCount = DB::table('delivery_taker')
-                    ->join('deliveries', 'delivery_taker.delivery_id', '=', 'deliveries.id')
-                    ->join('attempts', 'attempts.delivery_id', '=', 'deliveries.id')
-                    ->where('deliveries.client_id', $client->id)
-                    ->where('delivery_taker.is_login', true)
-                    ->whereNotNull('attempts.ended_at')
-                    ->update(['delivery_taker.is_login' => false]);
-                \Log::info('Logout: Reset ' . $resetCount . ' finished exam tokens for client: ' . $client->id);
-            } else {
-                \Log::warning('Logout: No exam session found and no client context');
-            }
-        }
-        Session::forget('exam');
         
-        // For client domains, redirect to home page instead of named route
-        return redirect('/');
+        // Rest of login logic...
+        $deliveryQuery = Delivery::query()
+            ->whereHas('takers', function ($q) use ($token) {
+                $q->where('token', $token);
+            })
+            ->with(['takers' => function ($q) use ($token) {
+                $q->where('token', $token);
+            }]);
+        
+        $delivery = $deliveryQuery->first();
+        
+        if (! $delivery) {
+            return redirect()->back()->with('error', 'Invalid token');
+        }
+        
+        $taker = $delivery->takers->first();
+        
+        Session::forget('exam');
+        Session::put('exam', [
+            'token' => $token,
+            'taker' => $taker,
+            'delivery' => $delivery,
+            'admin' => null,
+        ]);
+        
+        return redirect('/exam');
     }
 
-    private function handleDemoToken(Request $request): \Illuminate\Http\RedirectResponse
+    private function handleDemoToken(Request $request)
     {
+        \Log::info('DEMO token received');
+        
+        $client = \App\Models\Client::find(1);
+        if (!$client) {
+            \Log::error('DEMO: No client with ID 1 found');
+            return redirect()->back()->with('error', 'Demo not available - no client');
+        }
+        
+        \Log::info('DEMO: Client found', ['client_id' => $client->id]);
+
+        // Use the same unique token generation as before
+        $baseToken = 'DEMO_' . now()->format('Ymd_His');
+        $uniqueToken = $baseToken . '_' . uniqid();
+        
+        DB::beginTransaction();
+        
         try {
-            DB::beginTransaction();
-            
-            // Get current client from request context
-            $client = $request->attributes->get('client');
-            if (!$client) {
-                return redirect()->back()->withErrors(['token' => 'DEMO must be accessed from a client domain.']);
+            // Check/Create taker
+            $taker = Taker::firstOrCreate(
+                ['email' => 'demo@example.com'],
+                [
+                    'name' => 'Demo User',  // Changed from full_name to name
+                    'password' => bcrypt('demo123'),
+                    'phone' => '1234567890',
+                    'is_active' => true,
+                    'client_id' => $client->id,
+                ]
+            );
+
+            // Check/Create group
+            $group = Group::firstOrCreate(
+                ['name' => 'Demo Group', 'client_id' => $client->id],
+                ['description' => 'Demo testing group']
+            );
+
+            // Attach taker to group if not already attached
+            if (!$group->takers()->where('takers.id', $taker->id)->exists()) {
+                $group->takers()->attach($taker->id);
             }
 
-            // Create or get DEMO exam for this client
-            $exam = $this->createDemoExamForClient($client);
+            // Check/Create exam
+            $exam = Exam::firstOrCreate(
+                ['name' => 'DEMO Comprehensive Medical Assessment', 'client_id' => $client->id],
+                ['description' => 'Interactive demonstration of our advanced medical examination platform features']
+            );
             
-            // Create or get demo group for this client
-            $group = Group::firstOrCreate([
-                'name' => 'DEMO Users',
-                'client_id' => $client->id,
-            ]);
+            // Create rich demo content
+            $this->createRichDemoContent($exam, $client);
 
-            // Create or get demo taker for this client
-            $taker = Taker::firstOrCreate([
-                'name' => 'DEMO User',
-                'email' => 'demo@' . ($client->slug ?? 'demo') . '.test',
-                'client_id' => $client->id,
-            ], [
-                'password' => bcrypt('demo123'),
-            ]);
+            // Check/Create delivery
+            $delivery = Delivery::firstOrCreate(
+                [
+                    'name' => 'Demo Medical Assessment Session',
+                    'exam_id' => $exam->id,
+                    'group_id' => $group->id,
+                    'client_id' => $client->id,
+                ],
+                [
+                    'is_anytime' => true,
+                    'scheduled_at' => now()->subMinutes(10),
+                    'ended_at' => now()->addHours(24),
+                    'duration' => 120,
+                    'automatic_start' => false,
+                ]
+            );
 
-            // Ensure taker is in the group
-            $group->takers()->syncWithoutDetaching([$taker->id => ['taker_code' => 'DEMO001']]);
-
-            // Clean up any previous demo attempts for this taker
-            Attempt::where('attempted_by', $taker->id)
-                   ->where('exam_id', $exam->id)
-                   ->delete();
-            
-            // Delete any existing demo deliveries to ensure clean start
-            Delivery::where('name', 'LIKE', 'DEMO%')
-                    ->where('exam_id', $exam->id)
-                    ->delete();
-                    
-            // Clean up existing DEMO exam data to ensure fresh creation with proper client_id
-            // Delete the exam entirely and recreate it to ensure clean state
-            $exam->delete();
-            $exam = $this->createDemoExamForClient($client);
-
-            // Create new delivery that starts immediately and lasts 5 minutes
-            $delivery = Delivery::create([
-                'name' => 'DEMO - Live Session (' . now()->format('H:i:s') . ')',
-                'exam_id' => $exam->id,
-                'group_id' => $group->id,
-                'duration' => 5, // 5 minutes
-                'automatic_start' => false, // Manual start for immediate access
-                'scheduled_at' => now(),
-                'last_status' => 'published',
-                'client_id' => $client->id,
-            ]);
-
-            // Generate unique token for this session
-            $token = 'DEMO-' . strtoupper(substr(md5(microtime() . rand()), 0, 8));
-            
             // Attach taker to delivery with unique token
             $delivery->takers()->attach($taker->id, [
-                'token' => $token,
+                'token' => $uniqueToken,
                 'is_login' => false,
             ]);
             
             DB::commit();
             
-            // Set session data for exam access
+            // Reload delivery to get updated status after taker attachment
+            $delivery = $delivery->fresh();
+            
+            // Set session
+            Session::forget('exam');
             Session::put('exam', [
-                'token' => $token,
+                'token' => $uniqueToken,
                 'taker' => $taker,
                 'delivery' => $delivery,
                 'admin' => null,
             ]);
             
-            // Redirect to main exam page
-            return redirect()->route('exam.main');
+            // Force session save
+            Session::save();
+            
+            \Log::info('DEMO: Session set, redirecting to /exam', [
+                'taker_id' => $taker->id,
+                'delivery_id' => $delivery->id,
+                'delivery_status' => $delivery->status,
+                'session_id' => Session::getId(),
+                'session_data' => Session::has('exam') ? 'exists' : 'missing'
+            ]);
+            
+            return redirect('/exam');
             
         } catch (\Exception $e) {
             DB::rollback();
-            return redirect()->back()->withErrors(['token' => 'Failed to initialize DEMO exam: ' . $e->getMessage()]);
+            \Log::error('Demo creation failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to create demo: ' . $e->getMessage());
         }
     }
 
-    private function createDemoExamForClient($client)
+    private function createRichDemoContent($exam, $client)
     {
-        // Try to find existing DEMO exam for this client first
-        $exam = Exam::where('name', 'DEMO - Platform Showcase')
-                   ->where('client_id', $client->id)
-                   ->first();
-
-        if (!$exam) {
-            // If no exam exists, create one with explicit ID to avoid sequence issues
-            $nextId = DB::table('exams')->max('id') + 1;
-            $exam = new Exam([
-                'name' => 'DEMO - Platform Showcase',
-                'client_id' => $client->id,
-                'code' => 'DEMO-' . strtoupper(substr(md5($client->id . 'demo'), 0, 6)),
-            ]);
-            $exam->id = $nextId;
-            $exam->save();
+        // Check if content already exists
+        if ($exam->items()->count() > 0) {
+            return;
         }
 
-        // If exam was just created, populate it with demo questions
-        if ($exam->wasRecentlyCreated || $exam->items()->count() === 0) {
-            $this->populateDemoExam($exam, $client);
-        }
-
-        return $exam;
-    }
-
-    private function populateDemoExam($exam, $client)
-    {
-        // Try to find existing category first, or use a default one for this client
-        $category = Category::where('client_id', $client->id)->first();
-        
-        if (!$category) {
-            // If no category exists, create one with explicit ID to avoid sequence issues
-            $nextCatId = DB::table('categories')->max('id') + 1;
-            $category = new Category([
-                'name' => 'DEMO Questions (' . now()->format('M d') . ')',
-                'client_id' => $client->id,
-            ]);
+        // Create Medical Assessment category
+        $nextCatId = DB::table('categories')->max('id') + 1;
+        $category = Category::firstOrCreate(
+            ['name' => 'Medical Knowledge Assessment', 'client_id' => $client->id],
+            ['description' => 'Comprehensive medical knowledge evaluation']
+        );
+        if (!$category->id) {
             $category->id = $nextCatId;
             $category->save();
         }
 
-        // Create 5 different question types
+        // Create 5 rich medical questions
         $items = [];
 
-        // 1. Multiple Choice Question
-        $items[] = $this->createMultipleChoiceItem($category->id, $client);
+        // 1. Clinical Case - Multiple Choice
+        $items[] = $this->createClinicalCaseMCQ($category->id, $client);
         
-        // 2. Essay Question  
-        $items[] = $this->createEssayItem($category->id, $client);
+        // 2. Diagnostic Imaging Essay
+        $items[] = $this->createDiagnosticEssay($category->id, $client);
         
-        // 3. Interview Question
-        $items[] = $this->createInterviewItem($category->id, $client);
+        // 3. Emergency Medicine Scenario
+        $items[] = $this->createEmergencyScenario($category->id, $client);
         
-        // 4. Multiple Choice with Rich Content
-        $items[] = $this->createRichContentItem($category->id, $client);
+        // 4. Pharmacology Complex MCQ
+        $items[] = $this->createPharmacologyMCQ($category->id, $client);
         
-        // 5. Complex Scenario Essay
-        $items[] = $this->createScenarioItem($category->id, $client);
+        // 5. Patient Management Essay
+        $items[] = $this->createPatientManagementEssay($category->id, $client);
 
         // Attach items to exam with order
         $itemData = [];
@@ -270,14 +212,43 @@ class ExamController extends Controller
         $exam->items()->sync($itemData);
     }
 
-    private function createMultipleChoiceItem($categoryId, $client)
+    private function createClinicalCaseMCQ($categoryId, $client)
     {
         $nextItemId = DB::table('items')->max('id') + 1;
         $item = new Item([
-            'title' => 'Platform Feature: Multiple Choice',
-            'content' => '<h3>Multiple Choice Question</h3><p>This demonstrates our multiple choice capabilities with automatic scoring.</p>',
+            'title' => 'Clinical Case: Cardiovascular Assessment',
+            'content' => '<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="color: #2c3e50;">Clinical Vignette</h3>
+                <p style="line-height: 1.8; color: #34495e;">A 58-year-old male patient presents to the emergency department with acute onset chest pain that began 2 hours ago while climbing stairs. The pain is described as "crushing" and radiates to his left arm and jaw.</p>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Vital Signs:</h4>
+                <ul style="color: #34495e;">
+                    <li>Blood Pressure: 165/95 mmHg</li>
+                    <li>Heart Rate: 110 bpm, irregular</li>
+                    <li>Respiratory Rate: 22 breaths/min</li>
+                    <li>Temperature: 37.2°C (99°F)</li>
+                    <li>SpO2: 94% on room air</li>
+                </ul>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Past Medical History:</h4>
+                <ul style="color: #34495e;">
+                    <li>Type 2 Diabetes Mellitus (10 years)</li>
+                    <li>Hypertension (15 years)</li>
+                    <li>Dyslipidemia</li>
+                    <li>30 pack-year smoking history</li>
+                </ul>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Current Medications:</h4>
+                <ul style="color: #34495e;">
+                    <li>Metformin 1000mg BID</li>
+                    <li>Lisinopril 20mg daily</li>
+                    <li>Atorvastatin 40mg daily</li>
+                </ul>
+                
+                <p style="line-height: 1.8; color: #34495e; margin-top: 15px;">ECG shows ST-segment elevation in leads II, III, and aVF. Troponin I is elevated at 2.5 ng/mL (normal < 0.04 ng/mL).</p>
+            </div>',
             'type' => ItemType::MULTIPLE_CHOICE->value,
-            'is_vignette' => false,
+            'is_vignette' => true,
             'is_random' => false,
         ]);
         $item->id = $nextItemId;
@@ -288,7 +259,7 @@ class ExamController extends Controller
         $nextQuestionId = DB::table('questions')->max('id') + 1;
         $question = new Question([
             'item_id' => $item->id,
-            'question' => 'Which features does our examination platform support?',
+            'question' => 'Based on the clinical presentation, ECG findings, and laboratory results, what is the MOST appropriate immediate management for this patient?',
             'score' => 20,
             'type' => ItemType::MULTIPLE_CHOICE->value,
             'is_random' => false,
@@ -298,10 +269,11 @@ class ExamController extends Controller
         $question->save();
 
         $answers = [
-            ['answer' => 'Multiple choice questions with automatic scoring', 'is_correct' => true],
-            ['answer' => 'Essay questions with rich text support', 'is_correct' => true], 
-            ['answer' => 'Timer-based examinations with auto-submission', 'is_correct' => true],
-            ['answer' => 'Only basic text-based questions', 'is_correct' => false],
+            ['answer' => 'Immediate percutaneous coronary intervention (PCI) with dual antiplatelet therapy, heparin, and beta-blocker', 'is_correct' => true],
+            ['answer' => 'Thrombolytic therapy with tissue plasminogen activator (tPA) and admission to cardiac care unit', 'is_correct' => false],
+            ['answer' => 'Conservative management with aspirin, clopidogrel, and cardiac monitoring for 24 hours', 'is_correct' => false],
+            ['answer' => 'Urgent cardiac catheterization without antiplatelet therapy due to bleeding risk', 'is_correct' => false],
+            ['answer' => 'Immediate coronary artery bypass grafting (CABG) surgery', 'is_correct' => false],
         ];
 
         foreach ($answers as $answerData) {
@@ -318,12 +290,33 @@ class ExamController extends Controller
         return $item;
     }
 
-    private function createEssayItem($categoryId, $client)
+    private function createDiagnosticEssay($categoryId, $client)
     {
         $nextItemId = DB::table('items')->max('id') + 1;
         $item = new Item([
-            'title' => 'Platform Feature: Essay Questions',
-            'content' => '<h3>Essay Question</h3><p>This demonstrates our essay question capabilities.</p>',
+            'title' => 'Diagnostic Imaging Interpretation',
+            'content' => '<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+                <h3 style="color: #2c3e50;">Radiology Case Study</h3>
+                <p style="line-height: 1.8; color: #34495e;">A 42-year-old female presents with progressive dyspnea over 3 months, dry cough, and unintentional weight loss of 8 kg.</p>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Chest X-Ray Findings:</h4>
+                <ul style="color: #34495e;">
+                    <li>Bilateral hilar lymphadenopathy</li>
+                    <li>Reticulonodular infiltrates in upper lobes</li>
+                    <li>No pleural effusion</li>
+                </ul>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Laboratory Results:</h4>
+                <ul style="color: #34495e;">
+                    <li>Serum calcium: 11.2 mg/dL (elevated)</li>
+                    <li>ACE level: 85 U/L (elevated)</li>
+                    <li>ESR: 45 mm/hr</li>
+                </ul>
+                
+                <div style="background-color: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin-top: 20px;">
+                    <p style="color: #856404; margin: 0;"><strong>Note:</strong> High-resolution CT scan shows perilymphatic nodules with upper lobe predominance and mediastinal lymphadenopathy.</p>
+                </div>
+            </div>',
             'type' => ItemType::ESSAY->value,
             'is_vignette' => false,
             'is_random' => false,
@@ -336,7 +329,17 @@ class ExamController extends Controller
         $nextQuestionId = DB::table('questions')->max('id') + 1;
         $question = new Question([
             'item_id' => $item->id,
-            'question' => 'Explain the advantages of using an online examination platform. Discuss at least 3 key benefits and how they improve the examination experience.',
+            'question' => 'Based on the clinical presentation, imaging findings, and laboratory results:
+
+1. What is your most likely diagnosis? Provide your differential diagnosis (list at least 3 conditions).
+
+2. Describe the pathophysiology of the most likely condition.
+
+3. What additional diagnostic tests would you recommend to confirm the diagnosis?
+
+4. Outline your initial treatment plan, including both pharmacological and non-pharmacological interventions.
+
+5. What are the potential complications if this condition is left untreated?',
             'score' => 25,
             'type' => ItemType::ESSAY->value,
             'is_random' => false,
@@ -348,51 +351,38 @@ class ExamController extends Controller
         return $item;
     }
 
-    private function createInterviewItem($categoryId, $client)
+    private function createEmergencyScenario($categoryId, $client)
     {
         $nextItemId = DB::table('items')->max('id') + 1;
         $item = new Item([
-            'title' => 'Platform Feature: Interview Assessment', 
-            'content' => '<h3>Interview Question</h3><p>This demonstrates our interview assessment capabilities.</p>',
-            'type' => ItemType::INTERVIEW->value,
-            'is_vignette' => false,
-            'is_random' => false,
-        ]);
-        $item->id = $nextItemId;
-        $item->save();
-
-        $item->categories()->attach($categoryId);
-
-        $nextQuestionId = DB::table('questions')->max('id') + 1;
-        $question = new Question([
-            'item_id' => $item->id,
-            'question' => 'Practical Assessment: How would you implement a secure authentication system for this examination platform? Consider security best practices and scalability.',
-            'score' => 30,
-            'type' => ItemType::INTERVIEW->value,
-            'is_random' => false,
-            'client_id' => $client->id,
-        ]);
-        $question->id = $nextQuestionId;
-        $question->save();
-
-        return $item;
-    }
-
-    private function createRichContentItem($categoryId, $client)
-    {
-        $nextItemId = DB::table('items')->max('id') + 1;
-        $item = new Item([
-            'title' => 'Platform Feature: Rich Media Support',
-            'content' => '<h3>🎨 Rich Media Question</h3>
-                         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin: 15px 0;">
-                             <h4>🚀 Platform Capabilities:</h4>
-                             <ul style="color: #f0f0f0;">
-                                 <li>✅ HTML content with custom styling</li>
-                                 <li>✅ Gradient backgrounds and rich formatting</li>
-                                 <li>✅ Interactive visual elements</li>
-                                 <li>✅ Responsive design support</li>
-                             </ul>
-                         </div>',
+            'title' => 'Emergency Medicine: Trauma Management',
+            'content' => '<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+                <h3 style="color: #dc3545;">🚨 EMERGENCY SCENARIO</h3>
+                <div style="background-color: #f8d7da; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <p style="color: #721c24; font-weight: bold;">TIME: 14:32 - Motor Vehicle Accident</p>
+                </div>
+                
+                <p style="line-height: 1.8; color: #34495e;">A 24-year-old male motorcyclist is brought to the trauma bay after a high-speed collision. He was not wearing a helmet.</p>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Primary Survey Findings:</h4>
+                <ul style="color: #34495e;">
+                    <li><strong>A (Airway):</strong> Patent, speaking in short sentences</li>
+                    <li><strong>B (Breathing):</strong> Decreased breath sounds on right side, RR 28/min</li>
+                    <li><strong>C (Circulation):</strong> BP 85/50 mmHg, HR 125 bpm, cool extremities</li>
+                    <li><strong>D (Disability):</strong> GCS 13 (E3, V4, M6), pupils equal and reactive</li>
+                    <li><strong>E (Exposure):</strong> Large contusion over right chest, deformity of right femur</li>
+                </ul>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">FAST Exam:</h4>
+                <p style="color: #34495e;">Positive for free fluid in hepatorenal recess and pelvis</p>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Chest X-Ray:</h4>
+                <ul style="color: #34495e;">
+                    <li>Right-sided pneumothorax (30%)</li>
+                    <li>Multiple rib fractures (ribs 4-8 on right)</li>
+                    <li>No mediastinal widening</li>
+                </ul>
+            </div>',
             'type' => ItemType::MULTIPLE_CHOICE->value,
             'is_vignette' => true,
             'is_random' => false,
@@ -405,7 +395,7 @@ class ExamController extends Controller
         $nextQuestionId = DB::table('questions')->max('id') + 1;
         $question = new Question([
             'item_id' => $item->id,
-            'question' => 'Based on the rich content above, what can our platform handle?',
+            'question' => 'What is the CORRECT sequence of immediate interventions for this patient?',
             'score' => 20,
             'type' => ItemType::MULTIPLE_CHOICE->value,
             'is_random' => false,
@@ -415,10 +405,10 @@ class ExamController extends Controller
         $question->save();
 
         $answers = [
-            ['answer' => 'Rich HTML content with custom CSS styling', 'is_correct' => true],
-            ['answer' => 'Only plain text without formatting', 'is_correct' => false],
-            ['answer' => 'Basic formatting with no visual elements', 'is_correct' => false],
-            ['answer' => 'External tools required for rich content', 'is_correct' => false],
+            ['answer' => '1. Right chest tube insertion, 2. Two large-bore IV access with crystalloid resuscitation, 3. Type and cross-match blood, 4. Activate massive transfusion protocol, 5. Emergency laparotomy', 'is_correct' => true],
+            ['answer' => '1. Immediate CT scan of head/chest/abdomen, 2. Neurosurgical consultation, 3. Chest tube if needed, 4. IV fluid resuscitation', 'is_correct' => false],
+            ['answer' => '1. Endotracheal intubation, 2. Central line placement, 3. CT imaging, 4. Orthopedic consultation for femur fracture', 'is_correct' => false],
+            ['answer' => '1. Emergency laparotomy, 2. Chest tube insertion during surgery, 3. Blood transfusion, 4. Femur stabilization', 'is_correct' => false],
         ];
 
         foreach ($answers as $answerData) {
@@ -435,23 +425,83 @@ class ExamController extends Controller
         return $item;
     }
 
-    private function createScenarioItem($categoryId, $client)
+    private function createPharmacologyMCQ($categoryId, $client)
     {
         $nextItemId = DB::table('items')->max('id') + 1;
         $item = new Item([
-            'title' => 'Platform Feature: Complex Scenarios',
-            'content' => '<h3>📋 Real-World Scenario</h3>
-                         <div style="background: #f8f9ff; padding: 20px; border-left: 4px solid #667eea; margin: 15px 0;">
-                             <h4>🏫 Case Study: Educational Institution</h4>
-                             <p>A university with 25,000 students wants to implement online examinations with these requirements:</p>
-                             <ul>
-                                 <li><strong>Scale:</strong> 5,000 concurrent users</li>
-                                 <li><strong>Security:</strong> Anti-cheating measures</li>
-                                 <li><strong>Flexibility:</strong> Multiple question formats</li>
-                                 <li><strong>Integration:</strong> LMS connectivity</li>
-                             </ul>
-                         </div>',
-            'type' => ItemType::ESSAY->value,
+            'title' => 'Clinical Pharmacology: Drug Interactions',
+            'content' => '<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+                <h3 style="color: #2c3e50;">Medication Review Case</h3>
+                
+                <p style="line-height: 1.8; color: #34495e;">A 72-year-old woman with multiple comorbidities presents for medication review. She reports frequent dizziness and has had two falls in the past month.</p>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Current Medical Conditions:</h4>
+                <ul style="color: #34495e;">
+                    <li>Atrial fibrillation</li>
+                    <li>Heart failure with reduced ejection fraction (EF 35%)</li>
+                    <li>Type 2 diabetes mellitus</li>
+                    <li>Chronic kidney disease (Stage 3, eGFR 45)</li>
+                    <li>Depression</li>
+                    <li>Osteoarthritis</li>
+                </ul>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Current Medications:</h4>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <thead>
+                        <tr style="background-color: #e9ecef;">
+                            <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Medication</th>
+                            <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Dose</th>
+                            <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Frequency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Warfarin</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">5 mg</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Daily</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Digoxin</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">0.25 mg</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Daily</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Metoprolol</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">50 mg</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">BID</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Furosemide</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">40 mg</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Daily</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Metformin</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">1000 mg</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">BID</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Sertraline</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">100 mg</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Daily</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Ibuprofen</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">400 mg</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">TID PRN</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Recent Laboratory Values:</h4>
+                <ul style="color: #34495e;">
+                    <li>Serum potassium: 3.2 mEq/L (Low)</li>
+                    <li>INR: 3.8 (Target 2-3)</li>
+                    <li>Digoxin level: 2.1 ng/mL (Therapeutic: 0.5-2.0)</li>
+                    <li>Creatinine: 1.8 mg/dL</li>
+                </ul>
+            </div>',
+            'type' => ItemType::MULTIPLE_CHOICE->value,
             'is_vignette' => true,
             'is_random' => false,
         ]);
@@ -463,8 +513,122 @@ class ExamController extends Controller
         $nextQuestionId = DB::table('questions')->max('id') + 1;
         $question = new Question([
             'item_id' => $item->id,
-            'question' => 'Design a comprehensive solution for this university. Address: 1) Technical architecture for scale, 2) Security measures for integrity, 3) Integration strategy with existing systems, 4) User experience considerations. Provide specific recommendations.',
-            'score' => 35,
+            'question' => 'Which combination of factors is MOST likely contributing to this patient\'s dizziness and falls?',
+            'score' => 20,
+            'type' => ItemType::MULTIPLE_CHOICE->value,
+            'is_random' => false,
+            'client_id' => $client->id,
+        ]);
+        $question->id = $nextQuestionId;
+        $question->save();
+
+        $answers = [
+            ['answer' => 'Digoxin toxicity potentiated by hypokalemia and renal impairment, elevated INR from warfarin-NSAID interaction, and orthostatic hypotension from diuretic and beta-blocker combination', 'is_correct' => true],
+            ['answer' => 'Metformin-induced lactic acidosis, sertraline-induced hyponatremia, and warfarin overdose', 'is_correct' => false],
+            ['answer' => 'Heart failure exacerbation, uncontrolled atrial fibrillation, and diabetic neuropathy', 'is_correct' => false],
+            ['answer' => 'Depression-related psychomotor retardation, osteoarthritis limiting mobility, and age-related vestibular dysfunction', 'is_correct' => false],
+        ];
+
+        foreach ($answers as $answerData) {
+            $nextAnswerId = DB::table('answers')->max('id') + 1;
+            $answer = new Answer([
+                'question_id' => $question->id,
+                'answer' => $answerData['answer'],
+                'is_correct_answer' => $answerData['is_correct'],
+            ]);
+            $answer->id = $nextAnswerId;
+            $answer->save();
+        }
+
+        return $item;
+    }
+
+    private function createPatientManagementEssay($categoryId, $client)
+    {
+        $nextItemId = DB::table('items')->max('id') + 1;
+        $item = new Item([
+            'title' => 'Comprehensive Patient Management Plan',
+            'content' => '<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+                <h3 style="color: #2c3e50;">Complex Patient Management Scenario</h3>
+                
+                <p style="line-height: 1.8; color: #34495e;">You are the attending physician for a 45-year-old male patient admitted with diabetic ketoacidosis (DKA). This is his third admission in 6 months.</p>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Admission Presentation:</h4>
+                <ul style="color: #34495e;">
+                    <li>Blood glucose: 485 mg/dL</li>
+                    <li>pH: 7.18, HCO3: 12 mEq/L</li>
+                    <li>Ketones: 3+ in urine</li>
+                    <li>Anion gap: 24</li>
+                    <li>Potassium: 5.2 mEq/L</li>
+                </ul>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Past Medical History:</h4>
+                <ul style="color: #34495e;">
+                    <li>Type 1 Diabetes Mellitus (diagnosed age 12)</li>
+                    <li>Diabetic retinopathy</li>
+                    <li>Peripheral neuropathy</li>
+                    <li>Depression</li>
+                    <li>Substance use disorder (alcohol, in recovery)</li>
+                </ul>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Social History:</h4>
+                <ul style="color: #34495e;">
+                    <li>Recently lost job due to frequent absences</li>
+                    <li>Going through divorce proceedings</li>
+                    <li>Lives alone</li>
+                    <li>Limited family support</li>
+                    <li>No health insurance currently</li>
+                </ul>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Current Insulin Regimen (when compliant):</h4>
+                <ul style="color: #34495e;">
+                    <li>Insulin glargine 24 units at bedtime</li>
+                    <li>Insulin lispro sliding scale with meals</li>
+                </ul>
+                
+                <div style="background-color: #d1ecf1; padding: 15px; border-left: 4px solid #17a2b8; margin-top: 20px;">
+                    <p style="color: #0c5460; margin: 0;"><strong>Nursing Notes:</strong> Patient admits to not checking blood sugars regularly and missing insulin doses due to cost. Has been rationing insulin supplies.</p>
+                </div>
+            </div>',
+            'type' => ItemType::ESSAY->value,
+            'is_vignette' => false,
+            'is_random' => false,
+        ]);
+        $item->id = $nextItemId;
+        $item->save();
+
+        $item->categories()->attach($categoryId);
+
+        $nextQuestionId = DB::table('questions')->max('id') + 1;
+        $question = new Question([
+            'item_id' => $item->id,
+            'question' => 'Develop a comprehensive management plan for this patient that addresses:
+
+1. **Acute Management** (10 points)
+   - Outline your step-by-step approach to treating the current DKA episode
+   - Include specific fluid, electrolyte, and insulin management protocols
+   - Describe monitoring parameters and frequency
+
+2. **Transition Planning** (5 points)
+   - Explain how you will transition from IV to subcutaneous insulin
+   - Provide criteria for safe transition
+
+3. **Discharge Planning** (10 points)
+   - Design a realistic discharge plan considering the patient\'s social and financial constraints
+   - Include specific resources and support systems
+   - Address medication access and affordability
+
+4. **Long-term Management Strategy** (10 points)
+   - Develop strategies to prevent readmissions
+   - Address psychosocial factors affecting compliance
+   - Propose a multidisciplinary team approach
+
+5. **Patient Education** (5 points)
+   - List key educational points for the patient
+   - Describe how you would ensure understanding and retention
+
+Please provide evidence-based recommendations with rationale for your choices.',
+            'score' => 40,
             'type' => ItemType::ESSAY->value,
             'is_random' => false,
             'client_id' => $client->id,
@@ -473,5 +637,13 @@ class ExamController extends Controller
         $question->save();
 
         return $item;
+    }
+
+    #[Get('/exam/logout', name: 'exam.logout')]
+    public function logout(): \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+    {
+        Session::forget('exam');
+        
+        return redirect('/')->with('success', 'Logged out successfully');
     }
 }

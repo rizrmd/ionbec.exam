@@ -17,9 +17,21 @@ class ExamMiddleware
      */
     public function handle(Request $request, \Closure $next)
     {
-        if (! Session::get('exam')) {
-            return redirect()->route('root');
+        $examSession = Session::get('exam');
+        
+        if (! $examSession) {
+            \Log::info('ExamMiddleware: No exam session found', [
+                'session_id' => Session::getId(),
+                'url' => $request->url(),
+                'method' => $request->method()
+            ]);
+            return redirect('/');
         }
+        
+        \Log::info('ExamMiddleware: Exam session found', [
+            'has_taker' => isset($examSession['taker']),
+            'has_delivery' => isset($examSession['delivery'])
+        ]);
 
         return $next($request);
     }
