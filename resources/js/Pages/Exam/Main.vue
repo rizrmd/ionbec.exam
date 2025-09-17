@@ -297,7 +297,7 @@ const markAsLater = (e, hash) => {
           <div class="pt-5">
             <div class="flex gap-2 items-center mb-2">
               <div class="font-bold text-lg">
-                {{ questionData.index + 1 }}.{{ questionIndex + 1 }}
+                Question {{ questionData.index + 1 }}.{{ questionIndex + 1 }}
               </div>
               <div class="flex-1"></div>
               <div class="sm:col-span-2 flex items-center gap-2">
@@ -308,7 +308,7 @@ const markAsLater = (e, hash) => {
               </div>
             </div>
             <Card>
-              <div v-html="question.question"></div>
+              <div class="whitespace-pre-wrap mb-4" v-html="question.question"></div>
               <div v-if="!loadingQuestion">
                 <div class="flex flex-col gap-2 mt-6 w-auto" v-if="question.type !== null && question.type?.name === 'multiple-choice'">
                   <button v-for="(answer, ansIndex) in question.answers" :key="ansIndex" @click="selectAnswer(answer.hash, question.hash)" :class="['flex text-left px-3 py-2 bg-gray-100 rounded-md', answerVal[question.hash] === answer.hash ? 'bg-green-600 text-white' : 'hover:bg-green-200 hover:text-green-600']">

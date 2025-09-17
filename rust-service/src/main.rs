@@ -508,8 +508,7 @@ struct ExamQuestion {
     score: i32,
     is_random: bool,
     #[serde(rename = "type")]
-    question_type: String,
-    type_info: Option<QuestionType>,
+    question_type: Option<QuestionType>,
     answers: Vec<ExamAnswer>,
 }
 
@@ -652,22 +651,28 @@ async fn load_exam_data(
         let item_id: i32 = question_row.get("item_id");
         let question_id: i32 = question_row.get("id");
         
-        let (type_info, question_type) = if let Ok(type_str) = question_row.try_get::<String, _>("type") {
+        let question_type = if let Ok(type_str) = question_row.try_get::<String, _>("type") {
+            // First try to parse as JSON (for legacy format)
             if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&type_str) {
-                let type_value = parsed["value"].as_str().unwrap_or("multiple-choice").to_string();
-                (
-                    Some(QuestionType {
-                        id: parsed["id"].as_i64().unwrap_or(0) as i32,
-                        name: parsed["name"].as_str().unwrap_or("multiple-choice").to_string(),
-                        value: type_value.clone(),
-                    }),
-                    type_value
-                )
+                Some(QuestionType {
+                    id: parsed["id"].as_i64().unwrap_or(0) as i32,
+                    name: parsed["name"].as_str().unwrap_or("multiple-choice").to_string(),
+                    value: parsed["value"].as_str().unwrap_or("multiple-choice").to_string(),
+                })
             } else {
-                (None, "multiple-choice".to_string())
+                // Handle simple string format (new format)
+                Some(QuestionType {
+                    id: 0,
+                    name: type_str.clone(),
+                    value: type_str,
+                })
             }
         } else {
-            (None, "multiple-choice".to_string())
+            Some(QuestionType {
+                id: 0,
+                name: "multiple-choice".to_string(),
+                value: "multiple-choice".to_string(),
+            })
         };
         
         let question = ExamQuestion {
@@ -677,7 +682,6 @@ async fn load_exam_data(
             score: question_row.get("score"),
             is_random: question_row.get("is_random"),
             question_type,
-            type_info,
             answers: answers_by_question.remove(&question_id).unwrap_or_default(),
         };
         questions_by_item.entry(item_id).or_default().push(question);
@@ -712,11 +716,11 @@ async fn load_exam_data(
                 value: parsed["value"].as_str().unwrap_or("unknown").to_string(),
             }
         } else {
-            // Fallback if JSON parsing fails
+            // Handle simple string format (new format)
             ExamItemType {
                 id: 0,
-                name: "multiple-choice".to_string(),
-                value: "multiple-choice".to_string(),
+                name: item_type_str.clone(),
+                value: item_type_str,
             }
         };
 

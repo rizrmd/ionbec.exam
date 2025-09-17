@@ -213,23 +213,24 @@ class ExamController extends Controller
             $category->save();
         }
 
-        // Create 5 rich medical questions
+        // Use existing sample items showcasing all visible item types
         $items = [];
 
-        // 1. Clinical Case - Multiple Choice
-        $items[] = $this->createClinicalCaseMCQ($category->id, $client);
+        // Get sample items from database to demonstrate all visible types
+        $multipleChoiceItem = Item::find(142); // BE12018-24 - Multiple Choice
+        $essayItem = Item::find(191);         // BE12018-H1 - Essay
+        $interviewItem = Item::find(1650);    // Interview - Objective Structural Short Case
+
+        if ($multipleChoiceItem) $items[] = $multipleChoiceItem;
+        if ($essayItem) $items[] = $essayItem; 
+        if ($interviewItem) $items[] = $interviewItem;
+
+        // Add one more multiple choice and essay for variety
+        $additionalMCQ = Item::where('type', 'multiple-choice')->where('id', '!=', 142)->first();
+        $additionalEssay = Item::where('type', 'essay')->where('id', '!=', 191)->first();
         
-        // 2. Diagnostic Imaging Essay
-        $items[] = $this->createDiagnosticEssay($category->id, $client);
-        
-        // 3. Emergency Medicine Scenario
-        $items[] = $this->createEmergencyScenario($category->id, $client);
-        
-        // 4. Pharmacology Complex MCQ
-        $items[] = $this->createPharmacologyMCQ($category->id, $client);
-        
-        // 5. Patient Management Essay
-        $items[] = $this->createPatientManagementEssay($category->id, $client);
+        if ($additionalMCQ) $items[] = $additionalMCQ;
+        if ($additionalEssay) $items[] = $additionalEssay;
 
         // Attach items to exam with order
         $itemData = [];
@@ -369,6 +370,68 @@ class ExamController extends Controller
 5. What are the potential complications if this condition is left untreated?',
             'score' => 25,
             'type' => ItemType::ESSAY->value,
+            'is_random' => false,
+            'client_id' => $client->id,
+        ]);
+        $question->id = $nextQuestionId;
+        $question->save();
+
+        return $item;
+    }
+
+    private function createPatientInterview($categoryId, $client)
+    {
+        $nextItemId = DB::table('items')->max('id') + 1;
+        $item = new Item([
+            'title' => 'Patient Communication & Interview Skills',
+            'content' => '<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+                <h3 style="color: #2c3e50;">🎭 Interactive Patient Interview</h3>
+                <div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <p style="color: #1565c0; font-weight: bold;">Scenario: You are interviewing a 35-year-old patient who presents with chronic pain</p>
+                </div>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">Patient Background:</h4>
+                <ul style="color: #34495e;">
+                    <li>Sarah, 35-year-old marketing executive</li>
+                    <li>Complains of lower back pain for 6 months</li>
+                    <li>Pain affects work and daily activities</li>
+                    <li>Previous treatments: OTC pain medication, some physiotherapy</li>
+                    <li>Appears anxious and frustrated about ongoing symptoms</li>
+                </ul>
+                
+                <div style="background-color: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin-top: 20px;">
+                    <p style="color: #856404; margin: 0;"><strong>Assessment Focus:</strong> Communication skills, empathy, clinical reasoning, and patient-centered care approach.</p>
+                </div>
+            </div>',
+            'type' => ItemType::INTERVIEW->value,
+            'is_vignette' => false,
+            'is_random' => false,
+        ]);
+        $item->id = $nextItemId;
+        $item->save();
+
+        $item->categories()->attach($categoryId);
+
+        $nextQuestionId = DB::table('questions')->max('id') + 1;
+        $question = new Question([
+            'item_id' => $item->id,
+            'question' => 'Conduct a focused interview with this patient. Demonstrate your approach to:
+
+1. **Opening and Building Rapport**: How would you begin the consultation to make the patient feel comfortable?
+
+2. **Pain History Exploration**: What specific questions would you ask to understand the nature, timing, and impact of her pain?
+
+3. **Psychosocial Assessment**: How would you explore the emotional and social impact of her condition?
+
+4. **Addressing Patient Concerns**: The patient expresses frustration about previous treatments not working. How would you respond empathetically?
+
+5. **Information Gathering**: What additional history (occupational, lifestyle, previous treatments) would you explore?
+
+6. **Closing the Interview**: How would you summarize findings and explain next steps to maintain patient engagement?
+
+**Note**: Focus on communication techniques, active listening, and demonstrating empathy throughout your responses.',
+            'score' => 30,
+            'type' => ItemType::INTERVIEW->value,
             'is_random' => false,
             'client_id' => $client->id,
         ]);
