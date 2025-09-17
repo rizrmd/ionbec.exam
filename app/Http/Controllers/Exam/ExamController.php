@@ -9,7 +9,7 @@ use App\Models\Exams\Exam;
 use App\Models\Exams\Item;
 use App\Models\Exams\Question;
 use App\Models\Exams\Answer;
-use App\Models\Exams\Category;
+use App\Models\Categories\Category;
 use App\Models\Takers\Taker;
 use App\Models\Takers\Group;
 use App\Models\Deliveries\Delivery;
@@ -80,16 +80,18 @@ class ExamController extends Controller
         
         try {
             // Check/Create taker
-            $taker = Taker::firstOrCreate(
-                ['email' => 'demo@example.com'],
-                [
-                    'name' => 'Demo User',  // Changed from full_name to name
-                    'password' => bcrypt('demo123'),
-                    'phone' => '1234567890',
-                    'is_active' => true,
-                    'client_id' => $client->id,
-                ]
-            );
+            $taker = Taker::where('email', 'demo@example.com')
+                ->where('client_id', $client->id)
+                ->first();
+                
+            if (!$taker) {
+                $taker = new Taker();
+                $taker->email = 'demo@example.com';
+                $taker->client_id = $client->id;
+                $taker->name = 'Demo User';
+                $taker->password = bcrypt('demo123');
+                $taker->save();
+            }
 
             // Check/Create group
             $group = Group::firstOrCreate(
