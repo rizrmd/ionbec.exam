@@ -79,19 +79,22 @@ class ExamController extends Controller
         DB::beginTransaction();
         
         try {
-            // Check/Create taker
-            $taker = Taker::where('email', 'demo@example.com')
-                ->where('client_id', $client->id)
-                ->first();
-                
-            if (!$taker) {
-                $taker = new Taker();
-                $taker->email = 'demo@example.com';
-                $taker->client_id = $client->id;
-                $taker->name = 'Demo User';
-                $taker->password = bcrypt('demo123');
-                $taker->save();
-            }
+            // Check/Create taker using firstOrCreate to avoid race conditions
+            $taker = Taker::firstOrCreate(
+                [
+                    'email' => 'demo@example.com',
+                    'client_id' => $client->id,
+                ],
+                [
+                    'name' => 'Demo User',
+                    'password' => bcrypt('demo123'),
+                ]
+            );
+            
+            \Log::info('DEMO: Taker ready', [
+                'taker_id' => $taker->id,
+                'was_recently_created' => $taker->wasRecentlyCreated
+            ]);
 
             // Check/Create group
             $group = Group::firstOrCreate(

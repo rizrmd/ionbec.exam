@@ -23,9 +23,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       
       # Redis Configuration (External)
-      REDIS_HOST: u8s0cgsks4gcwo84ccskwok4
+      REDIS_HOST: 107.155.75.50
       REDIS_PASSWORD: ${REDIS_PASSWORD:-43bgTxX07rGOxcDeD2Z67qc57qSAH39KEUJXCHap7W613KVNZPnLaOBdBG2Z0Yq6}
-      REDIS_PORT: 6379
+      REDIS_PORT: 9675
       
       # Cache/Session Configuration
       CACHE_DRIVER: ${CACHE_DRIVER:-redis}
@@ -156,7 +156,7 @@ services:
       RUST_SERVICE_ADDR: "0.0.0.0:3000"
       APP_KEY: ${APP_KEY}
       DATABASE_URL: postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_DATABASE}
-      REDIS_URL: redis://default:${REDIS_PASSWORD:-43bgTxX07rGOxcDeD2Z67qc57qSAH39KEUJXCHap7W613KVNZPnLaOBdBG2Z0Yq6}@u8s0cgsks4gcwo84ccskwok4:6379
+      REDIS_URL: redis://default:${REDIS_PASSWORD:-43bgTxX07rGOxcDeD2Z67qc57qSAH39KEUJXCHap7W613KVNZPnLaOBdBG2Z0Yq6}@107.155.75.50:9675
     networks:
       - app_network
     volumes:
