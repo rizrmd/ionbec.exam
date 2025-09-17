@@ -181,13 +181,15 @@ class ExamController extends Controller
         }
 
         // Create Medical Assessment category
-        $nextCatId = DB::table('categories')->max('id') + 1;
-        $category = Category::firstOrCreate(
-            ['name' => 'Medical Knowledge Assessment', 'client_id' => $client->id],
-            ['description' => 'Comprehensive medical knowledge evaluation']
-        );
-        if (!$category->id) {
-            $category->id = $nextCatId;
+        $category = Category::where('name', 'Medical Knowledge Assessment')
+            ->where('client_id', $client->id)
+            ->first();
+            
+        if (!$category) {
+            $category = new Category();
+            $category->name = 'Medical Knowledge Assessment';
+            $category->client_id = $client->id;
+            $category->description = 'Comprehensive medical knowledge evaluation';
             $category->save();
         }
 
