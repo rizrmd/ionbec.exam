@@ -105,7 +105,10 @@ class ExamController extends Controller
             // Check/Create exam
             $exam = Exam::firstOrCreate(
                 ['name' => 'DEMO Comprehensive Medical Assessment', 'client_id' => $client->id],
-                ['description' => 'Interactive demonstration of our advanced medical examination platform features']
+                [
+                    'code' => 'DEMO_EXAM_' . time(),
+                    'description' => 'Interactive demonstration of our advanced medical examination platform features'
+                ]
             );
             
             // Create rich demo content
