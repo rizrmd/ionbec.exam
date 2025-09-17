@@ -29,14 +29,33 @@ class FinishedController extends Controller
         }
 
         $deliveryId = $dataSession['delivery']->id;
-        $takerId = $dataSession['taker']->id;
+        
+        // Handle DEMO sessions where taker might be null or object
+        $takerId = null;
+        if ($dataSession['taker'] && isset($dataSession['taker']->id)) {
+            $takerId = $dataSession['taker']->id;
+        }
 
-        $delivery = Delivery::query()->where('id', $deliveryId)->first();
-        $taker = Taker::query()->where('id', $takerId)->first();
-
-        $taker->attempts()->where('delivery_id', $deliveryId)->update([
-            'ended_at' => Carbon::now(),
-        ]);
+        // Handle DEMO delivery objects
+        if (isset($dataSession['delivery']) && is_object($dataSession['delivery']) && !($dataSession['delivery'] instanceof \Illuminate\Database\Eloquent\Model)) {
+            // DEMO case: delivery is a stdClass object from session, use it directly
+            $delivery = $dataSession['delivery'];
+        } else {
+            // Normal case: reload delivery from database
+            $delivery = Delivery::query()->where('id', $deliveryId)->first();
+        }
+        
+        $taker = null;
+        if ($takerId) {
+            $taker = Taker::query()->where('id', $takerId)->first();
+            
+            // Only update attempts if taker exists
+            if ($taker) {
+                $taker->attempts()->where('delivery_id', $deliveryId)->update([
+                    'ended_at' => Carbon::now(),
+                ]);
+            }
+        }
 
         // Reset login status when exam is finished
         DB::table('delivery_taker')->where('token', $dataSession['token'])->update([

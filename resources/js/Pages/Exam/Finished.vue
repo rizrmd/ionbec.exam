@@ -31,11 +31,11 @@ const clientLogo = computed(() => client.value?.logo_url || '/images/logo.png')
       </div>
 
       <div class="mt-10">
-        Thank you, <span class="font-bold">{{ taker.name }}</span>
+        Thank you, <span class="font-bold">{{ taker?.name || 'Demo User' }}</span>
       </div>
 
       <div class="mt-5 text-gray-500">
-        For completing <span class="text-black">{{ delivery.name }}</span>
+        For completing <span class="text-black">{{ delivery?.name || 'Demo Exam' }}</span>
       </div>
 
       <div class="mt-10">
