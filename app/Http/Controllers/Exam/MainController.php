@@ -28,7 +28,16 @@ class MainController extends Controller
     public function index(): \Illuminate\Http\RedirectResponse|\Inertia\Response
     {
         $dataSession = Session::get('exam');
-        $delivery = Delivery::query()->where('id', $dataSession['delivery']->id)->first();
+        
+        // Handle DEMO sessions - use session object directly instead of reloading from DB
+        if (isset($dataSession['delivery']) && is_object($dataSession['delivery']) && !($dataSession['delivery'] instanceof \Illuminate\Database\Eloquent\Model)) {
+            // DEMO case: delivery is a stdClass object from session, use it directly
+            $delivery = $dataSession['delivery'];
+            \Log::info('DEMO: Using delivery object from session', ['delivery_id' => $delivery->id]);
+        } else {
+            // Normal case: reload delivery from database
+            $delivery = Delivery::query()->where('id', $dataSession['delivery']->id)->first();
+        }
 
         // Check also ScheduleController->login
         if (! $dataSession['admin'] && $delivery->automatic_start) {
@@ -40,7 +49,19 @@ class MainController extends Controller
         // query taker and exam only when not in waiting-room.
         $taker = $dataSession['taker'] ? Taker::query()->where('id', $dataSession['taker']->id)->first() : null;
         
-        $exam = $delivery->exam;
+        // Handle DEMO delivery objects that may not have proper relationships
+        if (is_object($delivery->exam)) {
+            // DEMO case: exam is an object, convert to format expected by rest of code
+            $exam = (object)[
+                'id' => $delivery->exam->id,
+                'name' => $delivery->exam->name ?? 'DEMO Exam',
+                'code' => $delivery->exam->code ?? 'DEMO'
+            ];
+        } else {
+            // Normal case: delivery is an Eloquent model with relationships
+            $exam = $delivery->exam;
+        }
+        
         if (!$exam) {
             return redirect()->route('exam.finished')->with('error', 'Exam not found');
         }
@@ -126,7 +147,19 @@ class MainController extends Controller
         $attempt = null;
         if ($dataSession['taker'] && $dataSession['delivery']) {
             $delivery = $dataSession['delivery'];
-            $exam = $delivery->exam;
+            
+            // Handle DEMO delivery objects
+            if (is_object($delivery->exam)) {
+                // DEMO case: exam is an object, convert to format expected by rest of code
+                $exam = (object)[
+                    'id' => $delivery->exam->id,
+                    'name' => $delivery->exam->name ?? 'DEMO Exam',
+                    'code' => $delivery->exam->code ?? 'DEMO'
+                ];
+            } else {
+                // Normal case: delivery is an Eloquent model with relationships
+                $exam = $delivery->exam;
+            }
             
             if ($exam) {
                 $attempt = Attempt::query()
