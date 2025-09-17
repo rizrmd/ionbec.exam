@@ -219,7 +219,7 @@ class ExamController extends Controller
         // Get sample items from database to demonstrate all visible types
         $multipleChoiceItem = Item::find(142); // BE12018-24 - Multiple Choice
         $essayItem = Item::find(191);         // BE12018-H1 - Essay
-        $interviewItem = Item::find(1650);    // Interview - Objective Structural Short Case
+        $interviewItem = Item::find(1768);    // Interview item with actual questions
 
         if ($multipleChoiceItem) $items[] = $multipleChoiceItem;
         if ($essayItem) $items[] = $essayItem; 

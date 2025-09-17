@@ -243,6 +243,7 @@ const finishExam = async () => {
 
 const modalImage = ref(false);
 const modalImageContent = ref(null);
+const showScenarioModal = ref(false);
 const zoomImage = (url, alt) => {
   modalImage.value = true;
   modalImageContent.value = {url, alt};
@@ -299,6 +300,13 @@ const markAsLater = (e, hash) => {
               <div class="font-bold text-lg">
                 Question {{ questionData.index + 1 }}.{{ questionIndex + 1 }}
               </div>
+              <button 
+                v-if="vignetteData != null" 
+                @click="showScenarioModal = true"
+                class="ml-2 px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+              >
+                📋 View Scenario
+              </button>
               <div class="flex-1"></div>
               <div class="sm:col-span-2 flex items-center gap-2">
                 <input :id="'mark-as-later-checkbox'+question.hash" type="checkbox" class="form-checkbox rounded text-red-500 focus:ring-red-500" v-model="laters[question.hash]" @change="markAsLater($event, question.hash)">
@@ -386,6 +394,30 @@ const markAsLater = (e, hash) => {
       <XIcon class="w-5 h-5"/>
     </button>
     <img :src="modalImageContent?.url" :alt="modalImageContent?.alt" class="w-full" v-if="modalImageContent !== null"/>
+  </Modal>
+
+  <Modal
+    :closeable="true"
+    max-width="4xl"
+    :show="showScenarioModal"
+    @close="() => showScenarioModal = false"
+  >
+    <template #header>
+      <h3 class="text-lg font-medium text-gray-900">Scenario</h3>
+    </template>
+    <div class="p-6">
+      <div v-html="vignetteData" class="whitespace-pre-wrap"></div>
+    </div>
+    <template #footer>
+      <div class="flex justify-end">
+        <button
+          @click="showScenarioModal = false"
+          class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+        >
+          Close
+        </button>
+      </div>
+    </template>
   </Modal>
 </template>
 
