@@ -46,9 +46,25 @@ class MainController extends Controller
         
         // Get delivery ID handling both Eloquent and stdClass objects
         $deliveryId = null;
-        if (is_object($dataSession['delivery'])) {
-            if (property_exists($dataSession['delivery'], 'id')) {
-                $deliveryId = $dataSession['delivery']->id;
+        $delivery = $dataSession['delivery'];
+        
+        \Log::info('MainController: Delivery object debug', [
+            'delivery_type' => gettype($delivery),
+            'delivery_class' => is_object($delivery) ? get_class($delivery) : null,
+            'delivery_properties' => is_object($delivery) ? array_keys(get_object_vars($delivery)) : null,
+            'has_id_property' => is_object($delivery) ? property_exists($delivery, 'id') : false,
+            'delivery_attributes' => method_exists($delivery, 'getAttributes') ? array_keys($delivery->getAttributes()) : null
+        ]);
+        
+        if (is_object($delivery)) {
+            if (property_exists($delivery, 'id')) {
+                $deliveryId = $delivery->id;
+            } elseif (method_exists($delivery, 'getAttributes')) {
+                // Try to get from Eloquent attributes
+                $attributes = $delivery->getAttributes();
+                if (isset($attributes['id'])) {
+                    $deliveryId = $attributes['id'];
+                }
             }
         }
         
@@ -89,8 +105,17 @@ class MainController extends Controller
         // query taker and exam only when not in waiting-room.
         $takerId = null;
         if (isset($dataSession['taker']) && $dataSession['taker']) {
-            if (is_object($dataSession['taker']) && property_exists($dataSession['taker'], 'id')) {
-                $takerId = $dataSession['taker']->id;
+            $taker = $dataSession['taker'];
+            if (is_object($taker)) {
+                if (property_exists($taker, 'id')) {
+                    $takerId = $taker->id;
+                } elseif (method_exists($taker, 'getAttributes')) {
+                    // Try to get from Eloquent attributes
+                    $attributes = $taker->getAttributes();
+                    if (isset($attributes['id'])) {
+                        $takerId = $attributes['id'];
+                    }
+                }
             }
         }
         
@@ -155,6 +180,19 @@ class MainController extends Controller
             // Use Rust-processed data with complete questions for DEMO
             $items = collect($examData['items']);
             \Log::info('DEMO: Using complete Rust data with questions', ['items_count' => $items->count()]);
+            
+            // Debug first question to check structure
+            if ($items->count() > 0) {
+                $firstItem = $items->first();
+                $firstQuestion = $firstItem['questions'][0] ?? null;
+                \Log::info('DEMO: First question debug', [
+                    'question_type' => $firstQuestion['type'] ?? 'unknown',
+                    'has_answers' => isset($firstQuestion['answers']) ? count($firstQuestion['answers']) : 0,
+                    'question_id' => $firstQuestion['id'] ?? 'unknown',
+                    'question_keys' => $firstQuestion ? array_keys($firstQuestion) : [],
+                    'full_question' => $firstQuestion
+                ]);
+            }
         } else if ($examData['success'] ?? false) {
             // Use Rust-processed data for normal exams (lazy loading)
             $items = collect($examData['items']);

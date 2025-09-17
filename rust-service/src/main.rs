@@ -502,10 +502,13 @@ struct ExamItemType {
 
 #[derive(Serialize)]
 struct ExamQuestion {
+    id: i32,
     hash: String,
     question: String,
     score: i32,
     is_random: bool,
+    #[serde(rename = "type")]
+    question_type: String,
     type_info: Option<QuestionType>,
     answers: Vec<ExamAnswer>,
 }
@@ -649,25 +652,31 @@ async fn load_exam_data(
         let item_id: i32 = question_row.get("item_id");
         let question_id: i32 = question_row.get("id");
         
-        let type_info = if let Ok(type_str) = question_row.try_get::<String, _>("type") {
+        let (type_info, question_type) = if let Ok(type_str) = question_row.try_get::<String, _>("type") {
             if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&type_str) {
-                Some(QuestionType {
-                    id: parsed["id"].as_i64().unwrap_or(0) as i32,
-                    name: parsed["name"].as_str().unwrap_or("multiple-choice").to_string(),
-                    value: parsed["value"].as_str().unwrap_or("multiple-choice").to_string(),
-                })
+                let type_value = parsed["value"].as_str().unwrap_or("multiple-choice").to_string();
+                (
+                    Some(QuestionType {
+                        id: parsed["id"].as_i64().unwrap_or(0) as i32,
+                        name: parsed["name"].as_str().unwrap_or("multiple-choice").to_string(),
+                        value: type_value.clone(),
+                    }),
+                    type_value
+                )
             } else {
-                None
+                (None, "multiple-choice".to_string())
             }
         } else {
-            None
+            (None, "multiple-choice".to_string())
         };
         
         let question = ExamQuestion {
+            id: question_id,
             hash: generate_hash_from_id(question_id, "Question"),
             question: question_row.get("question"),
             score: question_row.get("score"),
             is_random: question_row.get("is_random"),
+            question_type,
             type_info,
             answers: answers_by_question.remove(&question_id).unwrap_or_default(),
         };

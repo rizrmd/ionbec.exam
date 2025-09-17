@@ -64,37 +64,53 @@ class ExamController extends Controller
     {
         \Log::info('DEMO token received');
         
-        $client = \App\Models\Client::find(1);
-        if (!$client) {
-            \Log::error('DEMO: No client with ID 1 found');
-            return redirect()->back()->with('error', 'Demo not available - no client');
+        // Get the current client from the tenant context
+        $client = null;
+        
+        // Try to get client from app container (set by IdentifyTenant middleware)
+        if (app()->has('current_client')) {
+            $client = app('current_client');
+        }
+        // Try to get client from request attributes 
+        elseif ($request->attributes->has('client')) {
+            $client = $request->attributes->get('client');
+        }
+        // Try to get client from session
+        elseif (session()->has('client_id')) {
+            $client = \App\Models\Client::find(session('client_id'));
         }
         
-        \Log::info('DEMO: Client found', ['client_id' => $client->id]);
+        if (!$client) {
+            \Log::error('DEMO: No tenant client found');
+            return redirect()->back()->with('error', 'Demo not available - no client context');
+        }
+        
+        \Log::info('DEMO: Client found from tenant', ['client_id' => $client->id]);
 
         // Use the same unique token generation as before
         $baseToken = 'DEMO_' . now()->format('Ymd_His');
         $uniqueToken = $baseToken . '_' . uniqid();
         
+        // Manually find or skip creation - the taker already exists
+        $taker = Taker::where('email', 'demo@example.com')
+            ->where('client_id', $client->id)
+            ->first();
+            
+        if (!$taker) {
+            \Log::error('DEMO: Taker does not exist in database', [
+                'client_id' => $client->id
+            ]);
+            return redirect()->back()->with('error', 'Demo taker not found. Please contact support.');
+        }
+        
+        \Log::info('DEMO: Taker found', [
+            'taker_id' => $taker->id,
+            'taker_email' => $taker->email
+        ]);
+        
         DB::beginTransaction();
         
         try {
-            // Check/Create taker using firstOrCreate to avoid race conditions
-            $taker = Taker::firstOrCreate(
-                [
-                    'email' => 'demo@example.com',
-                    'client_id' => $client->id,
-                ],
-                [
-                    'name' => 'Demo User',
-                    'password' => bcrypt('demo123'),
-                ]
-            );
-            
-            \Log::info('DEMO: Taker ready', [
-                'taker_id' => $taker->id,
-                'was_recently_created' => $taker->wasRecentlyCreated
-            ]);
 
             // Check/Create group
             $group = Group::firstOrCreate(
@@ -167,6 +183,7 @@ class ExamController extends Controller
                 'session_data' => Session::has('exam') ? 'exists' : 'missing'
             ]);
             
+            // Redirect to /exam on the same domain (demo.medxamion.com)
             return redirect('/exam');
             
         } catch (\Exception $e) {
