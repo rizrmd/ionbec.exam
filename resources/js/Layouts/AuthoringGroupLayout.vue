@@ -32,6 +32,26 @@ const {group} = toRefs(props);
 
 const generateRouteName = (name) => "back-office.group." + name;
 
+const isCurrentRoute = (name) => {
+  // Get current route name from URL instead of calling route() without parameters
+  const currentPath = window.location.pathname;
+  const expectedRouteName = generateRouteName(name);
+  
+  // Find matching route by comparing URI patterns
+  if (window.Ziggy && window.Ziggy.routes) {
+    for (const [routeName, routeData] of Object.entries(window.Ziggy.routes)) {
+      if (routeName === expectedRouteName) {
+        const routeUri = routeData.uri.split('{')[0]; // Remove parameter parts
+        if (currentPath.includes(routeUri) || routeUri.includes(currentPath)) {
+          return true;
+        }
+      }
+    }
+  }
+  
+  return false;
+};
+
 const form = useForm({
   name: null,
   description: null,
@@ -122,9 +142,9 @@ onMounted(() => {
       <div class="flex flex-row items-center">
         <div class="basis-6/12">
           <nav class="flex space-x-4" aria-label="Tabs">
-            <Link :href="route(generateRouteName('taker'), {group_hash: group.hash})" :class="['py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap', (route().current() === generateRouteName('taker')) ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">Candidates</Link>
-            <Link :href="route(generateRouteName('delivery'), {group_hash: group.hash})" :class="['py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap', (route().current() === generateRouteName('delivery')) ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">Deliveries</Link>
-            <Link :href="route(generateRouteName('result'), {group_hash: group.hash})" :class="['py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap', (route().current() === generateRouteName('result')) ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">Results</Link>
+            <Link :href="route(generateRouteName('taker'), {group_hash: group.hash})" :class="['py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap', isCurrentRoute('taker') ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">Candidates</Link>
+            <Link :href="route(generateRouteName('delivery'), {group_hash: group.hash})" :class="['py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap', isCurrentRoute('delivery') ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">Deliveries</Link>
+            <Link :href="route(generateRouteName('result'), {group_hash: group.hash})" :class="['py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap', isCurrentRoute('result') ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">Results</Link>
           </nav>
         </div>
         <div class="basis-6/12">

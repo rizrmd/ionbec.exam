@@ -26,6 +26,25 @@ const switchToTeam = (team) => {
 const logout = () => {
   Inertia.post(route('logout'));
 };
+
+const isCurrentRoute = (routeName) => {
+  // Get current route name from URL instead of calling route() without parameters
+  const currentPath = window.location.pathname;
+  
+  // Find matching route by comparing URI patterns
+  if (window.Ziggy && window.Ziggy.routes) {
+    for (const [name, routeData] of Object.entries(window.Ziggy.routes)) {
+      if (name === routeName) {
+        const routeUri = routeData.uri.split('{')[0]; // Remove parameter parts
+        if (currentPath.includes(routeUri) || routeUri.includes(currentPath)) {
+          return true;
+        }
+      }
+    }
+  }
+  
+  return false;
+};
 </script>
 
 <template>
@@ -49,7 +68,7 @@ const logout = () => {
 
               <!-- Navigation Links -->
               <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                <JetNavLink :active="route().current('dashboard')" :href="route('dashboard')">
+                <JetNavLink :active="isCurrentRoute('dashboard')" :href="route('dashboard')">
                   Dashboard
                 </JetNavLink>
               </div>
@@ -220,7 +239,7 @@ const logout = () => {
         <!-- Responsive Navigation Menu -->
         <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden">
           <div class="pt-2 pb-3 space-y-1">
-            <JetResponsiveNavLink :active="route().current('dashboard')" :href="route('dashboard')">
+            <JetResponsiveNavLink :active="isCurrentRoute('dashboard')" :href="route('dashboard')">
               Dashboard
             </JetResponsiveNavLink>
           </div>
@@ -244,11 +263,11 @@ const logout = () => {
             </div>
 
             <div class="mt-3 space-y-1">
-              <JetResponsiveNavLink :active="route().current('profile.show')" :href="route('profile.show')">
+              <JetResponsiveNavLink :active="isCurrentRoute('profile.show')" :href="route('profile.show')">
                 Profile
               </JetResponsiveNavLink>
 
-              <JetResponsiveNavLink v-if="$page.props.jetstream.hasApiFeatures" :active="route().current('api-tokens.index')"
+              <JetResponsiveNavLink v-if="$page.props.jetstream.hasApiFeatures" :active="isCurrentRoute('api-tokens.index')"
                                     :href="route('api-tokens.index')">
                 API Tokens
               </JetResponsiveNavLink>
@@ -269,12 +288,12 @@ const logout = () => {
                 </div>
 
                 <!-- Team Settings -->
-                <JetResponsiveNavLink :active="route().current('teams.show')"
+                <JetResponsiveNavLink :active="isCurrentRoute('teams.show')"
                                       :href="route('teams.show', $page.props.user.current_team)">
                   Team Settings
                 </JetResponsiveNavLink>
 
-                <JetResponsiveNavLink v-if="$page.props.jetstream.canCreateTeams" :active="route().current('teams.create')"
+                <JetResponsiveNavLink v-if="$page.props.jetstream.canCreateTeams" :active="isCurrentRoute('teams.create')"
                                       :href="route('teams.create')">
                   Create New Team
                 </JetResponsiveNavLink>

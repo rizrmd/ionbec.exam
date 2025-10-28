@@ -154,7 +154,21 @@ export default defineStore('navigation', () => {
   const sidebarNavigation = reactive([...getDefaultSidebarNavigation()])
 
   const refreshCurrentActivePage = () => {
-    const currentRouteName = route().current();
+    // Get current route name from URL instead of calling route() without parameters
+    const currentPath = window.location.pathname;
+    let currentRouteName = null;
+    
+    // Find matching route by comparing URI patterns
+    if (window.Ziggy && window.Ziggy.routes) {
+      for (const [routeName, routeData] of Object.entries(window.Ziggy.routes)) {
+        const routeUri = routeData.uri.split('{')[0]; // Remove parameter parts
+        if (currentPath.includes(routeUri) || routeUri.includes(currentPath)) {
+          currentRouteName = routeName;
+          break;
+        }
+      }
+    }
+    
     if (!currentRouteName) {
       return;
     }
