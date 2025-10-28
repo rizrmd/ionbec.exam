@@ -1,6 +1,11 @@
 # Build stage
 FROM rust:latest as builder
 
+# Install GCC and other build essentials
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copy everything and build

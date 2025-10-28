@@ -165,11 +165,11 @@ const props = defineProps({
 })
 
 const form = useForm({
-  name: props.user.name || '',
-  email: props.user.email || '',
+  name: props.user?.name || '',
+  email: props.user?.email || '',
   password: '',
   password_confirmation: '',
-  role_ids: props.userRoleIds || (props.user.roles ? props.user.roles.map(r => r.id) : []),
+  role_ids: props.userRoleIds || (props.user?.roles ? props.user.roles.map(r => r.id) : []),
 })
 
 const handleSubmit = () => {

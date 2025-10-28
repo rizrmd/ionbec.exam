@@ -23,7 +23,9 @@ class TraefikDomainService
             
             $config = $this->generateTraefikConfig($activeClients);
             $this->writeConfig($config);
-            $this->reloadTraefik();
+            
+            // Note: Traefik automatically watches for file changes with --providers.file.watch=true
+            // so no manual reload is needed - changes take effect within seconds
             
             Log::info('Traefik mdxm.yaml updated successfully', [
                 'clients_count' => $activeClients->count(),
@@ -128,32 +130,6 @@ class TraefikDomainService
         if (!rename($tempFile, self::CONFIG_PATH)) {
             unlink($tempFile);
             throw new \RuntimeException("Failed to rename temp config file");
-        }
-    }
-    
-    private function reloadTraefik(): void
-    {
-        try {
-            // Find the Traefik container (coolify-proxy)
-            $traefikContainer = 'coolify-proxy';
-            
-            // Send SIGHUP to reload configuration
-            $command = "docker exec {$traefikContainer} kill -HUP 1";
-            $output = [];
-            $returnCode = 0;
-            exec($command, $output, $returnCode);
-            
-            if ($returnCode === 0) {
-                Log::info('Traefik reloaded successfully');
-            } else {
-                Log::warning('Failed to reload Traefik', [
-                    'command' => $command,
-                    'return_code' => $returnCode,
-                    'output' => $output
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::warning('Failed to reload Traefik', ['error' => $e->getMessage()]);
         }
     }
     

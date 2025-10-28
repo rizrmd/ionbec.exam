@@ -17,6 +17,11 @@ use Dentro\Yalr\Attributes\Delete;
 
 class UserManagementController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('allowed:administrator');
+    }
+
     #[Get('/back-office/users', name: 'back-office.users.index')]
     public function index(Request $request)
     {
@@ -45,7 +50,7 @@ class UserManagementController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return Inertia::render('BackOffice/UserManagement/Index', [
+        return inertia('BackOffice/UserManagement/Index', [
             'users' => $users,
             'filters' => $request->only(['search', 'client_id']),
             'currentClient' => $currentClient,
@@ -69,10 +74,16 @@ class UserManagementController extends Controller
         $currentClient = Client::findOrFail($clientId);
         
         // Get available roles (exclude root role for regular user management)
+        // Include global roles (client_id IS NULL) and client-specific roles
         $roles = Role::where('slug', '!=', Role::ROOT)
+            ->where(function ($query) use ($clientId) {
+                $query->whereNull('client_id')
+                      ->orWhere('client_id', $clientId);
+            })
+            ->withoutGlobalScopes()
             ->get();
 
-        return Inertia::render('BackOffice/UserManagement/Create', [
+        return inertia('BackOffice/UserManagement/Create', [
             'roles' => $roles,
             'currentClient' => $currentClient,
         ]);
@@ -139,7 +150,13 @@ class UserManagementController extends Controller
         $currentClient = Client::findOrFail($clientId);
         
         // Get available roles (exclude root role for regular user management)
+        // Include global roles (client_id IS NULL) and client-specific roles
         $roles = Role::where('slug', '!=', Role::ROOT)
+            ->where(function ($query) use ($clientId) {
+                $query->whereNull('client_id')
+                      ->orWhere('client_id', $clientId);
+            })
+            ->withoutGlobalScopes()
             ->get();
 
         // Load user with their roles without client scope
@@ -147,7 +164,10 @@ class UserManagementController extends Controller
             $query->withoutGlobalScopes();
         }]);
 
-        return Inertia::render('BackOffice/UserManagement/Edit', [
+        // Make sure user is properly serialized
+        $user->append(['hash']);
+
+        return inertia('BackOffice/UserManagement/Edit', [
             'user' => $user,
             'roles' => $roles,
             'currentClient' => $currentClient,
