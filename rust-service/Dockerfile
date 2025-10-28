@@ -5,7 +5,9 @@ FROM rust:latest as builder
 RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/* \
-    && gcc --version
+    && gcc --version \
+    && ln -s /usr/bin/gcc /usr/bin/x86_64-unknown-linux-gnu-gcc \
+    && ln -s /usr/bin/g++ /usr/bin/x86_64-unknown-linux-gnu-g++
 
 WORKDIR /app
 
