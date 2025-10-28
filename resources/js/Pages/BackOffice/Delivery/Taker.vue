@@ -92,7 +92,7 @@ const attemptInterview = (delivery_hash, taker_hash) => {
           <span v-if="delivery.is_interview">Attempt All</span>
           <span v-else>Fresh All Tokens</span>
         </button>
-        <Link v-if="delivery.group.hash !== undefined"
+        <Link v-if="delivery.group && delivery.group.hash !== undefined"
               :href="route('back-office.group.taker', {group_hash: delivery.group.hash, name: 'back-office.delivery.taker', params: 'delivery_hash', values: delivery.hash})"
               class="flex justify-center items-center px-2.5 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
           Show Assigned Group

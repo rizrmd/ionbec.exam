@@ -56,7 +56,7 @@ class TestController extends Controller
         $request->validate([
             'code' => 'required|unique:exams|string|max:255',
             'name' => 'required|string|max:255',
-            'description' => 'string|max:255',
+            'description' => 'nullable|string|max:255',
         ]);
 
         $exam = new Exam();
@@ -133,7 +133,7 @@ class TestController extends Controller
     {
         $baseValidate = [
             'name' => 'required|string|max:255',
-            'description' => 'string|max:255',
+            'description' => 'nullable|string|max:255',
         ];
         if ($exam->code !== $request->code) {
             $baseValidate['code'] = 'required|unique:exams|string|max:255';

@@ -192,7 +192,7 @@ const generateTokenToScheduleOrStart = () => {
           </div>
           <div>
             <h1 class="text-xl font-semibold text-gray-900">{{ delivery.name }}</h1>
-            <h2 class="text-base text-gray-700">{{ delivery.exam.name ?? '' }} - {{ delivery.exam.code ?? '' }}</h2>
+            <h2 class="text-base text-gray-700">{{ delivery.exam?.name ?? '' }} - {{ delivery.exam?.code ?? '' }}</h2>
           </div>
         </div>
         <div class="flex items-center gap-3">
