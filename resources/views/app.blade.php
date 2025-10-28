@@ -23,7 +23,17 @@
   <link rel="stylesheet" href="{{ mix('css/app.css') }}">
 
   <!-- Scripts -->
-  @routes
+  <script type="text/javascript">
+    @php
+      // Use the @routes directive which automatically handles the current domain
+      $ziggy = new \Tightenco\Ziggy\Ziggy();
+      $ziggyArray = $ziggy->toArray();
+      // Override the URL to be the current domain for proper route generation
+      $ziggyArray['url'] = request()->getSchemeAndHttpHost();
+      $ziggyArray['port'] = null;
+    @endphp
+    const Ziggy = {!! json_encode($ziggyArray) !!};
+  </script>
   <script src="{{ mix('js/app.js') }}" defer></script>
 </head>
 <body class="font-sans antialiased h-full bg-gray-50">

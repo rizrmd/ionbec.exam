@@ -40,6 +40,14 @@ const getUserRoute = () => {
     return route('back-office.scoring.index');
   }
 }
+
+const getRegisterRoute = () => {
+  return route('taker.register')
+}
+
+const getLoginRoute = () => {
+  return route('taker.login')
+}
 </script>
 
 <template>
@@ -57,10 +65,10 @@ const getUserRoute = () => {
         </Link>
       </div>
       <div class="flex gap-2" v-else>
-        <Link :href="route('taker.register')" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        <Link :href="getRegisterRoute()" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
           Register
         </Link>
-        <Link :href="route('taker.login')" class="py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+        <Link :href="getLoginRoute()" class="py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
           Login
         </Link>
       </div>

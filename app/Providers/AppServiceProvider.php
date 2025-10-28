@@ -48,5 +48,19 @@ class AppServiceProvider extends ServiceProvider
         // Use relative URLs (no domain) for better portability
         \URL::forceRootUrl('');
         config(['app.url' => '']);
+        
+        // Force Ziggy to use relative URLs
+        if (class_exists(\Ziggy\BladeRouteGenerator::class)) {
+            config(['ziggy.url' => '']);
+        }
+        
+        // Override the @routes directive to generate relative URLs
+        \Blade::directive('routes', function () {
+            return '<?php 
+                $ziggy = new \Tightenco\Ziggy\Ziggy();
+                $ziggy->url = "";
+                echo json_encode($ziggy);
+            ?>';
+        });
     }
 }
