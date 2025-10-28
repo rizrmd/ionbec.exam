@@ -366,6 +366,49 @@ class DeliveryController extends Controller
         return $this->actionSuccess(message: 'Successfully generate Candidate token.');
     }
 
+    #[Get('back-office/delivery/{delivery_hash}/taker-pdf', name: 'back-office.delivery.taker-pdf')]
+    public function takerPdf(Request $request, Delivery $delivery): Response
+    {
+        // Load group without ClientScope
+        $group = \App\Models\Takers\Group::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('id', $delivery->group_id)
+            ->first();
+
+        if (!$group) {
+            abort(404, 'Group not found for this delivery');
+        }
+
+        // Load all takers with their tokens
+        $takers = Taker::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->whereHas('groups', function ($query) use ($group) {
+                $query->withoutGlobalScope(\App\Scopes\ClientScope::class)
+                    ->where('group_id', $group->id);
+            })
+            ->with(['deliveries' => function ($query) use ($delivery) {
+                $query->withoutGlobalScope(\App\Scopes\ClientScope::class)
+                    ->where('delivery_id', $delivery->id);
+            }])
+            ->orderBy('name', 'ASC')
+            ->get();
+
+        // Transform takers to include taker_code and token
+        $takers->transform(function (Taker $taker) use ($delivery) {
+            $taker->loadTakerCodeOf($delivery);
+
+            // Get token from pivot table
+            $deliveryPivot = $taker->deliveries->first();
+            $taker->token = $deliveryPivot ? $deliveryPivot->pivot->token : null;
+
+            return $taker;
+        });
+
+        return Inertia::render('BackOffice/Delivery/TakerPDF', [
+            'delivery' => $delivery,
+            'group' => $group,
+            'takers' => $takers,
+        ]);
+    }
+
     #[Get('back-office/delivery/{delivery_hash}/scoring/{attempt_hash}/pdf', name: 'back-office.delivery.scoring-pdf')]
     public function scoringPdf(Request $request, Delivery $delivery, Attempt $attempt): Response
     {
