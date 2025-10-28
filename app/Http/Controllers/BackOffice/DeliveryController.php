@@ -367,7 +367,7 @@ class DeliveryController extends Controller
     }
 
     #[Get('back-office/delivery/{delivery_hash}/taker-pdf', name: 'back-office.delivery.taker-pdf')]
-    public function takerPdf(Request $request, Delivery $delivery): Response
+    public function takerPdf(Request $request, Delivery $delivery)
     {
         // Load group without ClientScope
         $group = \App\Models\Takers\Group::withoutGlobalScope(\App\Scopes\ClientScope::class)
@@ -402,6 +402,7 @@ class DeliveryController extends Controller
             return $taker;
         });
 
+        // Return Inertia view for browser-based PDF generation
         return Inertia::render('BackOffice/Delivery/TakerPDF', [
             'delivery' => $delivery,
             'group' => $group,

@@ -80,6 +80,11 @@ const attemptInterview = (delivery_hash, taker_hash) => {
     window.location.reload()
   })
 }
+
+const downloadPdf = () => {
+  // Open PDF page in new window - browser print dialog will open automatically
+  window.open(route('back-office.delivery.taker-pdf', {delivery_hash: delivery.value.hash}), '_blank')
+}
 </script>
 
 <template>
@@ -87,11 +92,10 @@ const attemptInterview = (delivery_hash, taker_hash) => {
                            :question-count="questionCount" :tests="tests" :groups="groups">
     <template #widget>
       <div class="flex gap-2 justify-end">
-        <a :href="route('back-office.delivery.taker-pdf', {delivery_hash: delivery.hash})"
-           target="_blank"
-           class="inline-flex items-center px-2.5 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        <button @click="downloadPdf()"
+                class="inline-flex items-center px-2.5 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
           Download PDF
-        </a>
+        </button>
         <button @click="generateAllToken()"
                 class="px-2.5 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
           <span v-if="delivery.is_interview">Attempt All</span>
