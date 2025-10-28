@@ -181,10 +181,16 @@ class DeliveryController extends Controller
     #[Get('back-office/delivery/{delivery_hash}/taker', name: 'back-office.delivery.taker')]
     public function showTaker(Request $request, Delivery $delivery): Response
     {
-        $delivery->load('group');
-        $payload = Taker::query();
+        // Load group without ClientScope to ensure it loads even across different clients
+        $group = \App\Models\Takers\Group::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('id', $delivery->group_id)
+            ->first();
 
-        $group = $delivery->group;
+        // Set the relationship for Inertia serialization
+        if ($group) {
+            $delivery->setRelation('group', $group);
+        }
+
         if (!$group) {
             // Return empty paginated response to match expected format
             $emptyPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
@@ -201,10 +207,14 @@ class DeliveryController extends Controller
             ));
         }
 
-        $payload->whereHas('groups', function ($query) use ($group) {
-            $query->where('group_id', $group->id);
-        })->with(['deliveries' => function ($query) use ($delivery) {
-            $query->where('delivery_id', $delivery->id);
+        // Query takers without ClientScope to ensure cross-client visibility
+        $payload = Taker::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->whereHas('groups', function ($query) use ($group) {
+                $query->withoutGlobalScope(\App\Scopes\ClientScope::class)
+                    ->where('group_id', $group->id);
+            })->with(['deliveries' => function ($query) use ($delivery) {
+            $query->withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->where('delivery_id', $delivery->id);
         }]);
 
         $payload->when($request->input('query') ?? false, function ($query, $queryString) {
