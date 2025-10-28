@@ -186,9 +186,18 @@ class DeliveryController extends Controller
 
         $group = $delivery->group;
         if (!$group) {
+            // Return empty paginated response to match expected format
+            $emptyPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                [], // empty items
+                0,  // total items
+                $request->input('perPage', 15), // items per page
+                1,  // current page
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+
             return Inertia::render('BackOffice/Delivery/Taker', array_merge(
                 $this->getBaseDataDetail($delivery),
-                ['payload' => collect()]
+                ['payload' => $emptyPaginator]
             ));
         }
 
