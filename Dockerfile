@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_mysql pdo_pgsql pgsql mbstring exif pcntl bcmath gd \
     && pecl install redis \
     && docker-php-ext-enable redis \
+    && echo "extension=redis.so" > /usr/local/etc/php/conf.d/docker-php-ext-redis.ini \
     && php -m | grep redis \
     && rm -rf /var/lib/apt/lists/*
 
