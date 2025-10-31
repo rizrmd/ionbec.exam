@@ -205,6 +205,13 @@ const getQuestions = async (index) => {
             laterQuests.value.splice(laterIndex, 1);
           }
         })
+
+        // Update localStorage after all changes
+        localStorage.setItem('exam-state', JSON.stringify({
+          skipped: skippedQuests.value,
+          later: laterQuests.value,
+          done: doneQuests.value,
+        }))
       } else {
         loadingQuestion.value = false;
         pageNumber.value = Math.ceil((index + 1) / 20)
@@ -214,12 +221,6 @@ const getQuestions = async (index) => {
       loadingQuestion.value = false;
       console.log(err)
     })
-
-  localStorage.setItem('exam-state', JSON.stringify({
-    skipped: skippedQuests.value,
-    later: laterQuests.value,
-    done: doneQuests.value,
-  }))
 }
 const checkSkippedQuest = (hash) => skippedQuests.value.indexOf(hash) !== -1;
 const checkDoneQuest = (hash) => doneQuests.value.indexOf(hash) !== -1;
@@ -261,20 +262,38 @@ onMounted(() => {
     Inertia.visit(route('exam.finished'))
     return
   }
-  
-  const examState = JSON.parse(localStorage.getItem('exam-state'));
-  skippedQuests.value = examState?.skipped ?? []
-  laterQuests.value = examState?.later ?? []
-  doneQuests.value = examState?.done ?? []
-  getQuestions(0)
-})
 
-items.value.forEach((item) => {
-  item.questions.forEach((question) => {
-    if (attemptQuestions.value && attemptQuestions.value.find((data) => data.question.hash === question.hash)) {
-      doneQuests.value.push(question.hash)
-    }
+  // First, populate doneQuests from attemptQuestions (server data)
+  items.value.forEach((item) => {
+    item.questions.forEach((question) => {
+      if (attemptQuestions.value && attemptQuestions.value.find((data) => data.question.hash === question.hash)) {
+        if (!doneQuests.value.includes(question.hash)) {
+          doneQuests.value.push(question.hash)
+        }
+      }
+    })
   })
+
+  // Then load and merge with localStorage
+  const examState = JSON.parse(localStorage.getItem('exam-state'));
+  if (examState) {
+    // Merge skipped from localStorage
+    skippedQuests.value = examState.skipped ?? []
+
+    // Merge later from localStorage
+    laterQuests.value = examState.later ?? []
+
+    // Merge done from localStorage with server data
+    if (examState.done) {
+      examState.done.forEach((hash) => {
+        if (!doneQuests.value.includes(hash)) {
+          doneQuests.value.push(hash)
+        }
+      })
+    }
+  }
+
+  getQuestions(0)
 })
 
 const modalFinish = ref(false)
