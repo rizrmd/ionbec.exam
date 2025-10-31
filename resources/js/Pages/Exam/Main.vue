@@ -95,8 +95,32 @@ const submitAnswer = async (partial = false) => {
     }
 
     Object.keys(newAnswers).forEach(key => {
+      // Add to done quests if not already there
       if (!checkDoneQuest(key)) doneQuests.value.push(key)
+
+      // Remove from skipped quests if answered
+      const skippedIndex = skippedQuests.value.indexOf(key);
+      if (skippedIndex !== -1) {
+        skippedQuests.value.splice(skippedIndex, 1);
+      }
+
+      // Remove from later quests if answered
+      const laterIndex = laterQuests.value.indexOf(key);
+      if (laterIndex !== -1) {
+        laterQuests.value.splice(laterIndex, 1);
+        // Also uncheck the checkbox
+        if (laters.value[key]) {
+          laters.value[key] = false;
+        }
+      }
     })
+
+    // Update localStorage
+    localStorage.setItem('exam-state', JSON.stringify({
+      skipped: skippedQuests.value,
+      later: laterQuests.value,
+      done: doneQuests.value,
+    }))
 
     if (Object.keys(newAnswers).length >= 1) {
       if (attempt.value) {
@@ -143,8 +167,16 @@ const getQuestions = async (index) => {
     attachments: item.attachments,
   }
 
+  // Only add to skipped if not already done or skipped
   item.questions.forEach((question) => {
-    if (!checkSkippedQuest(question.hash)) skippedQuests.value.push(question.hash)
+    if (!checkSkippedQuest(question.hash) && !checkDoneQuest(question.hash)) {
+      skippedQuests.value.push(question.hash)
+    }
+  })
+
+  // Sync laters checkbox state with laterQuests
+  item.questions.forEach((question) => {
+    laters.value[question.hash] = laterQuests.value.indexOf(question.hash) !== -1;
   })
 
   loadingQuestion.value = true;
@@ -260,6 +292,13 @@ const markAsLater = (e, hash) => {
       laterQuests.value.splice(index, 1);
     }
   }
+
+  // Update localStorage
+  localStorage.setItem('exam-state', JSON.stringify({
+    skipped: skippedQuests.value,
+    later: laterQuests.value,
+    done: doneQuests.value,
+  }))
 }
 </script>
 

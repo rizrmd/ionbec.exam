@@ -80,10 +80,11 @@ const countSkipped = computed(() => {
 const btnColor = (currentItem, item, question) => {
   if (currentItem !== null && currentItem.item_hash === item.hash) {
     return 'bg-blue-600 text-white'
+  } else if (checkDoneQuest(question.hash)) {
+    // Done status takes priority over everything else
+    return 'bg-green-600 text-white'
   } else if (later.value.indexOf(question.hash) !== -1) {
     return 'bg-red-600 text-white'
-  } else if (checkDoneQuest(question.hash)) {
-    return 'bg-green-600 text-white'
   } else if (checkSkippedQuest(question.hash)) {
     return 'bg-yellow-400 text-white'
   } else {
