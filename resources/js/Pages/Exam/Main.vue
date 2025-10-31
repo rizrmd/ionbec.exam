@@ -185,7 +185,26 @@ const getQuestions = async (index) => {
       if (res.data) {
         loadingQuestion.value = false;
         const attemptAnswer = res.data.questions;
-        attemptAnswer.forEach((question) => answerVal.value[question.hash] = (item.item_type.value === 'multiple-choice') ? question.pivot.answer_hash : question.pivot.answer);
+        attemptAnswer.forEach((question) => {
+          answerVal.value[question.hash] = (item.item_type.value === 'multiple-choice') ? question.pivot.answer_hash : question.pivot.answer
+
+          // Add to doneQuests if not already there and has answer
+          if (!checkDoneQuest(question.hash)) {
+            doneQuests.value.push(question.hash)
+          }
+
+          // Remove from skipped if answered
+          const skippedIndex = skippedQuests.value.indexOf(question.hash);
+          if (skippedIndex !== -1) {
+            skippedQuests.value.splice(skippedIndex, 1);
+          }
+
+          // Remove from later if answered
+          const laterIndex = laterQuests.value.indexOf(question.hash);
+          if (laterIndex !== -1) {
+            laterQuests.value.splice(laterIndex, 1);
+          }
+        })
       } else {
         loadingQuestion.value = false;
         pageNumber.value = Math.ceil((index + 1) / 20)
