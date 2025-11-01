@@ -72,9 +72,12 @@ class FortifyServiceProvider extends ServiceProvider
                     'client_id' => $client->id
                 ]);
                 
-                // Find user with matching username AND client_id
+                // Find user with matching username OR email AND client_id
                 $user = \App\Models\Accounts\User::withoutGlobalScopes()
-                    ->where('username', $username)
+                    ->where(function($query) use ($username) {
+                        $query->where('username', $username)
+                              ->orWhere('email', $username);
+                    })
                     ->where('client_id', $client->id)
                     ->first();
             } else {
@@ -82,7 +85,10 @@ class FortifyServiceProvider extends ServiceProvider
                 
                 // For non-client domains, find user without client_id (global admin)
                 $user = \App\Models\Accounts\User::withoutGlobalScopes()
-                    ->where('username', $username)
+                    ->where(function($query) use ($username) {
+                        $query->where('username', $username)
+                              ->orWhere('email', $username);
+                    })
                     ->whereNull('client_id')
                     ->first();
             }

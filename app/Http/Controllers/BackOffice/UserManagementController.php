@@ -201,14 +201,16 @@ class UserManagementController extends Controller
             'role_ids.*' => ['exists:roles,id'],
         ]);
 
-        $user->update([
+        $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
-        ]);
+        ];
 
         if (!empty($validated['password'])) {
-            $user->update(['password' => Hash::make($validated['password'])]);
+            $updateData['password'] = Hash::make($validated['password']);
         }
+
+        $user->update($updateData);
 
         $user->roles()->sync($validated['role_ids'] ?? []);
 

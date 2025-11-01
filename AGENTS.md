@@ -1,0 +1,3 @@
+- to deploy copy file to ssh root@cf.avolut.com in docker container app-okksscs4w0s8oc0go0k4cg8k
+- to query use local psql with server info in .env
+- when querying mysql use local mysql
