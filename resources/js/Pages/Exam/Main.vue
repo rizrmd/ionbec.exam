@@ -96,22 +96,16 @@ const submitAnswer = async (partial = false) => {
 
     Object.keys(newAnswers).forEach(key => {
       // Add to done quests if not already there
-      if (!checkDoneQuest(key)) doneQuests.value.push(key)
+      addToStateArray(doneQuests.value, key)
 
       // Remove from skipped quests if answered
-      const skippedIndex = skippedQuests.value.indexOf(key);
-      if (skippedIndex !== -1) {
-        skippedQuests.value.splice(skippedIndex, 1);
-      }
+      removeFromStateArray(skippedQuests.value, key)
 
       // Remove from later quests if answered
-      const laterIndex = laterQuests.value.indexOf(key);
-      if (laterIndex !== -1) {
-        laterQuests.value.splice(laterIndex, 1);
-        // Also uncheck the checkbox
-        if (laters.value[key]) {
-          laters.value[key] = false;
-        }
+      removeFromStateArray(laterQuests.value, key)
+      // Also uncheck the checkbox
+      if (laters.value[key]) {
+        laters.value[key] = false;
       }
     })
 
@@ -170,7 +164,7 @@ const getQuestions = async (index) => {
   // Only add to skipped if not already done or skipped
   item.questions.forEach((question) => {
     if (!checkSkippedQuest(question.hash) && !checkDoneQuest(question.hash)) {
-      skippedQuests.value.push(question.hash)
+      addToStateArray(skippedQuests.value, question.hash)
     }
   })
 
@@ -197,26 +191,23 @@ const getQuestions = async (index) => {
               answerVal.value[question.hash] = answerValue
 
               // Add to doneQuests if not already there
-              if (!checkDoneQuest(question.hash)) {
-                doneQuests.value.push(question.hash)
-              }
+              addToStateArray(doneQuests.value, question.hash)
 
               // Remove from skipped if answered
-              const skippedIndex = skippedQuests.value.indexOf(question.hash);
-              if (skippedIndex !== -1) {
-                skippedQuests.value.splice(skippedIndex, 1);
-              }
+              removeFromStateArray(skippedQuests.value, question.hash)
 
               // Remove from later if answered
-              const laterIndex = laterQuests.value.indexOf(question.hash);
-              if (laterIndex !== -1) {
-                laterQuests.value.splice(laterIndex, 1);
+              removeFromStateArray(laterQuests.value, question.hash)
+              // Also uncheck the checkbox
+              if (laters.value[question.hash]) {
+                laters.value[question.hash] = false;
               }
             }
           }
         })
 
-        // Update localStorage after all changes
+        // CRITICAL: Update localStorage AFTER processing server response
+        // This ensures the server state is properly merged with local state
         localStorage.setItem('exam-state', JSON.stringify({
           skipped: skippedQuests.value,
           later: laterQuests.value,
@@ -225,6 +216,13 @@ const getQuestions = async (index) => {
       } else {
         loadingQuestion.value = false;
         pageNumber.value = Math.ceil((index + 1) / 20)
+        
+        // Also update localStorage when no server data
+        localStorage.setItem('exam-state', JSON.stringify({
+          skipped: skippedQuests.value,
+          later: laterQuests.value,
+          done: doneQuests.value,
+        }))
       }
     })
     .catch((err) => {
@@ -234,6 +232,21 @@ const getQuestions = async (index) => {
 }
 const checkSkippedQuest = (hash) => skippedQuests.value.indexOf(hash) !== -1;
 const checkDoneQuest = (hash) => doneQuests.value.indexOf(hash) !== -1;
+
+// Helper function to add item to array without duplicates
+const addToStateArray = (array, item) => {
+  if (!array.includes(item)) {
+    array.push(item);
+  }
+};
+
+// Helper function to remove item from array safely
+const removeFromStateArray = (array, item) => {
+  const index = array.indexOf(item);
+  if (index !== -1) {
+    array.splice(index, 1);
+  }
+};
 const selectAnswer = function (answerHash, questionHash) {
   answerVal.value[questionHash] = answerHash
   submitAnswer(true)
@@ -273,10 +286,21 @@ onMounted(() => {
     return
   }
 
-  // First, populate doneQuests from attemptQuestions (server data)
+  // CRITICAL: First load localStorage to preserve any existing state
+  const examState = JSON.parse(localStorage.getItem('exam-state'));
+  if (examState) {
+    // Load all state from localStorage first
+    skippedQuests.value = examState.skipped ?? []
+    laterQuests.value = examState.later ?? []
+    doneQuests.value = examState.done ?? []
+  }
+
+  // Then merge with server data (attemptQuestions)
+  // This ensures server data supplements, not replaces, local data
   items.value.forEach((item) => {
     item.questions.forEach((question) => {
       if (attemptQuestions.value && attemptQuestions.value.find((data) => data.question.hash === question.hash)) {
+        // Only add to doneQuests if not already there (preserve local state)
         if (!doneQuests.value.includes(question.hash)) {
           doneQuests.value.push(question.hash)
         }
@@ -284,24 +308,12 @@ onMounted(() => {
     })
   })
 
-  // Then load and merge with localStorage
-  const examState = JSON.parse(localStorage.getItem('exam-state'));
-  if (examState) {
-    // Merge skipped from localStorage
-    skippedQuests.value = examState.skipped ?? []
-
-    // Merge later from localStorage
-    laterQuests.value = examState.later ?? []
-
-    // Merge done from localStorage with server data
-    if (examState.done) {
-      examState.done.forEach((hash) => {
-        if (!doneQuests.value.includes(hash)) {
-          doneQuests.value.push(hash)
-        }
-      })
-    }
-  }
+  // Update localStorage with merged state
+  localStorage.setItem('exam-state', JSON.stringify({
+    skipped: skippedQuests.value,
+    later: laterQuests.value,
+    done: doneQuests.value,
+  }))
 
   getQuestions(0)
 })
@@ -331,15 +343,13 @@ const zoomImage = (url, alt) => {
 
 const markAsLater = (e, hash) => {
   if (e.target.checked) {
-    if (laterQuests.value.indexOf(hash) === -1) {
-      laterQuests.value.push(hash)
-    }
+    addToStateArray(laterQuests.value, hash)
   } else {
-    const index = laterQuests.value.findIndex((q) => q === hash);
-    if (index >= 0) {
-      laterQuests.value.splice(index, 1);
-    }
+    removeFromStateArray(laterQuests.value, hash)
   }
+
+  // Update checkbox state
+  laters.value[hash] = e.target.checked;
 
   // Update localStorage
   localStorage.setItem('exam-state', JSON.stringify({
