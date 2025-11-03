@@ -147,9 +147,11 @@ const doneQuests = ref([]);
 const getQuestions = async (index) => {
   const item = items.value[index];
   if (questionData.value !== null && questionData.value.item_hash === item.hash) return null;
-  await submitAnswer()
+  await submitAnswer(true) // Use partial=true to avoid resetting answerVal during navigation
 
-  answerVal.value = [];
+  // CRITICAL FIX: Don't reset answerVal - it contains all stored answers!
+// Only reset current question's data, not all answers
+// answerVal.value = []; // REMOVED - This was causing green indicators to disappear
 
   vignetteData.value = item.is_vignette ? item.content : null
   questionData.value = {
