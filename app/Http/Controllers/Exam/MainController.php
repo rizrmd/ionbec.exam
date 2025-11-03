@@ -411,6 +411,11 @@ class MainController extends Controller
         }
 
         // Find item by hash
+        \Log::info('Attempting to find item by hash', [
+            'hash_value' => $hashValue,
+            'using_without_globalscope' => true
+        ]);
+
         $item = Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
             ->where('hash', $hashValue)
             ->first();
@@ -420,6 +425,27 @@ class MainController extends Controller
                 'item_hash' => $hashValue,
                 'original_item_hash' => $item_hash
             ]);
+
+            // DEBUG: Try to find similar hashes
+            \Log::info('Looking for similar hashes', [
+                'search_hash' => $hashValue
+            ]);
+
+            $similarItems = Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->where('hash', 'like', '%' . substr($hashValue, 0, 4) . '%')
+                ->limit(5)
+                ->get(['id', 'hash', 'title']);
+
+            if ($similarItems->count() > 0) {
+                \Log::info('Found similar hashes', [
+                    'similar_items' => $similarItems->toArray()
+                ]);
+            } else {
+                \Log::info('No similar hashes found', [
+                    'search_pattern' => '%' . substr($hashValue, 0, 4) . '%'
+                ]);
+            }
+
             return response()->json([
                 'error' => 'Item not found',
                 'questions' => [],
