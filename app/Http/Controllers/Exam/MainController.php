@@ -662,6 +662,21 @@ class MainController extends Controller
             });
         });
 
+        // CRITICAL FIX: Add item hash to attempt questions for frontend matching
+        if ($attempt && $attempt->questions) {
+            $attempt->questions->each(function ($question) use ($item) {
+                // Frontend needs item.hash to match with current item, not question.hash
+                $question->item_hash = $item->hash;
+
+                \Log::info('Added item hash to attempt question', [
+                    'question_hash' => $question->hash,
+                    'item_hash' => $item->hash,
+                    'question_id' => $question->id,
+                    'item_id' => $item->id
+                ]);
+            });
+        }
+
         \Log::info('Returning questions response', [
             'questions_count' => $questions->count(),
             'attempt_id' => $attempt ? $attempt->id : null,

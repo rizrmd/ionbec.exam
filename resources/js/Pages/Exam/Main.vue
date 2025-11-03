@@ -195,7 +195,7 @@ const getQuestions = async (index) => {
           const attemptAnswer = attempt.questions;
           console.log('Processing attempt answers:', attemptAnswer)
           attemptAnswer.forEach((question) => {
-            console.log('Processing question:', question.hash, 'pivot:', question.pivot)
+            console.log('Processing question:', question.hash, 'item_hash:', question.item_hash, 'pivot:', question.pivot)
             // Only process if question has pivot (was answered)
             if (question.pivot) {
               const answerValue = (item.item_type.value === 'multiple-choice') ? question.pivot.answer_hash : question.pivot.answer
@@ -205,20 +205,22 @@ const getQuestions = async (index) => {
               const hasAnswer = answerValue !== null && answerValue !== undefined && answerValue !== ''
 
               if (hasAnswer) {
-                console.log('Question answered, adding to done:', question.hash)
-                answerVal.value[question.hash] = answerValue
+                // CRITICAL FIX: Use item_hash for matching with current item, not question.hash
+                const hashForMatching = question.item_hash || question.hash
+                console.log('Question answered, adding to done:', hashForMatching)
+                answerVal.value[hashForMatching] = answerValue
 
                 // Add to doneQuests if not already there
-                addToStateArray(doneQuests.value, question.hash)
+                addToStateArray(doneQuests.value, hashForMatching)
 
                 // Remove from skipped if answered
-                removeFromStateArray(skippedQuests.value, question.hash)
+                removeFromStateArray(skippedQuests.value, hashForMatching)
 
                 // Remove from later if answered
-                removeFromStateArray(laterQuests.value, question.hash)
+                removeFromStateArray(laterQuests.value, hashForMatching)
                 // Also uncheck the checkbox
-                if (laters.value[question.hash]) {
-                  laters.value[question.hash] = false;
+                if (laters.value[hashForMatching]) {
+                  laters.value[hashForMatching] = false;
                 }
               }
             }
