@@ -324,7 +324,7 @@ class MainController extends Controller
             }
 
             $data['attempt'] = $attempt;
-            $data['attemptQuestions'] = AttemptQuestion::query()->with('question')->where('attempt_id', $attempt->id)->get();
+            $data['attemptQuestions'] = $attempt->questions;
             
             // For non-automatic start with existing attempt, calculate remaining time from attempt start
             // This overrides the default duration set for new DEMO sessions
