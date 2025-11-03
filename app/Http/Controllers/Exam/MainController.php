@@ -474,17 +474,38 @@ class MainController extends Controller
         ]);
 
         $attempt = null;
+
+        \Log::info('Looking for attempt', [
+            'has_taker_in_session' => isset($dataSession['taker']),
+            'has_delivery_in_session' => isset($dataSession['delivery']),
+            'taker_data' => isset($dataSession['taker']) ? (is_object($dataSession['taker']) ? [
+                'type' => get_class($dataSession['taker']),
+                'id' => property_exists($dataSession['taker'], 'id') ? $dataSession['taker']->id : 'no id'
+            ] : $dataSession['taker']) : null,
+            'delivery_data' => isset($dataSession['delivery']) ? (is_object($dataSession['delivery']) ? [
+                'type' => get_class($dataSession['delivery']),
+                'id' => property_exists($dataSession['delivery'], 'id') ? $dataSession['delivery']->id : 'no id'
+            ] : $dataSession['delivery']) : null
+        ]);
+
         if ($dataSession['taker'] && $dataSession['delivery']) {
             // Handle both Eloquent and stdClass objects
-            $deliveryId = is_object($dataSession['delivery']) && property_exists($dataSession['delivery'], 'id') 
-                ? $dataSession['delivery']->id 
+            $deliveryId = is_object($dataSession['delivery']) && property_exists($dataSession['delivery'], 'id')
+                ? $dataSession['delivery']->id
                 : null;
-                
+
+            \Log::info('Processing delivery', ['delivery_id' => $deliveryId]);
+
             if ($deliveryId) {
                 $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
                     ->where('id', $deliveryId)
                     ->first();
-                    
+
+                \Log::info('Delivery query result', [
+                    'delivery_found' => $delivery ? true : false,
+                    'delivery_exam_id' => $delivery ? $delivery->exam_id : null
+                ]);
+
                 // Try relationship first, then direct query
                 $exam = $delivery ? $delivery->exam : null;
                 if (!$exam && $delivery && $delivery->exam_id) {
@@ -492,14 +513,29 @@ class MainController extends Controller
                         ->where('id', $delivery->exam_id)
                         ->first();
                 }
-                
+
+                \Log::info('Exam resolution', [
+                    'exam_found' => $exam ? true : false,
+                    'exam_id' => $exam ? $exam->id : null
+                ]);
+
                 if ($exam) {
                     // Handle taker ID extraction
                     $takerId = is_object($dataSession['taker']) && property_exists($dataSession['taker'], 'id')
                         ? $dataSession['taker']->id
                         : null;
-                        
+
+                    \Log::info('Taker ID extraction', ['taker_id' => $takerId]);
+
                     if ($takerId) {
+                        $questionsId = $questions->pluck('id')->toArray();
+
+                        \Log::info('Searching for attempt', [
+                            'taker_id' => $takerId,
+                            'exam_id' => $exam->id,
+                            'questions_ids' => $questionsId
+                        ]);
+
                         $attempt = Attempt::query()
                             ->where('attempted_by', $takerId)
                             ->where('exam_id', $exam->id)
@@ -507,6 +543,12 @@ class MainController extends Controller
                                 $query->whereIn('question_id', $questionsId);
                             })
                             ->latest()->first();
+
+                        \Log::info('Attempt query result', [
+                            'attempt_found' => $attempt ? true : false,
+                            'attempt_id' => $attempt ? $attempt->id : null,
+                            'attempt_questions_count' => $attempt && $attempt->questions ? $attempt->questions->count() : 0
+                        ]);
                     }
                 }
             }
@@ -523,7 +565,9 @@ class MainController extends Controller
 
         \Log::info('Returning questions response', [
             'questions_count' => $questions->count(),
-            'attempt_id' => $attempt ? $attempt->id : null
+            'attempt_id' => $attempt ? $attempt->id : null,
+            'has_attempt_questions' => $attempt ? ($attempt->questions ?? false) : false,
+            'attempt_questions_count' => $attempt ? (isset($attempt->questions) ? $attempt->questions->count() : 0) : 0
         ]);
 
         return response()->json([
@@ -535,6 +579,12 @@ class MainController extends Controller
     #[Post('/exam/answer', name: 'exam.answer')]
     public function answer(Request $request): \Illuminate\Http\JsonResponse
     {
+        \Log::info('Answer submission received', [
+            'attempt_hash' => $request->attempt_hash,
+            'answers_count' => count($request->answers_value),
+            'answers_value' => $request->answers_value
+        ]);
+
         $request->validate([
             'attempt_hash' => ['required', new ExistsByHash(Attempt::class)],
             'answers_value' => 'array',
