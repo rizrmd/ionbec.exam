@@ -179,10 +179,21 @@ const getQuestions = async (index) => {
       console.log('Server response for item:', item.hash, res.data)
       if (res.data && res.data.questions) {
         loadingQuestion.value = false;
-        const attemptAnswer = res.data.questions;
-        console.log('attemptAnswer:', attemptAnswer)
+        const questions = res.data.questions;
+        const attempt = res.data.attempt;
+        
+        // Load questions into the item
+        item.questions = questions;
+        
+        // Sync laters checkbox state with laterQuests
+        item.questions.forEach((question) => {
+          laters.value[question.hash] = laterQuests.value.indexOf(question.hash) !== -1;
+        })
 
-        if (attemptAnswer && attemptAnswer.length > 0) {
+        // Process attempt answers if they exist
+        if (attempt && attempt.questions && attempt.questions.length > 0) {
+          const attemptAnswer = attempt.questions;
+          console.log('Processing attempt answers:', attemptAnswer)
           attemptAnswer.forEach((question) => {
             console.log('Processing question:', question.hash, 'pivot:', question.pivot)
             // Only process if question has pivot (was answered)

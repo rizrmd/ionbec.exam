@@ -408,7 +408,10 @@ class MainController extends Controller
             });
         });
 
-        return response()->json($attempt);
+        return response()->json([
+            'questions' => $questions,
+            'attempt' => $attempt
+        ]);
     }
 
     #[Post('/exam/answer', name: 'exam.answer')]
