@@ -352,78 +352,31 @@ class MainController extends Controller
         return Inertia::render('Exam/Main', $data);
     }
 
-    #[Get('/exam/questions/{item_hash}', name: 'exam.get-taker-answer')]
-    public function getQuestions($item_hash): \Illuminate\Http\JsonResponse
+    #[Get('/exam/questions/{item_id}', name: 'exam.get-taker-answer')]
+    public function getQuestions($item_id): \Illuminate\Http\JsonResponse
     {
         $dataSession = Session::get('exam');
 
         \Log::info('getQuestions called', [
-            'item_hash' => $item_hash,
-            'item_hash_type' => gettype($item_hash)
+            'item_id' => $item_id,
+            'item_id_type' => gettype($item_id)
         ]);
 
-        // QUICK FIX: Use ID-based lookup since all items have NULL hash
-        $itemId = null;
-
-        // If item_hash is an object (from frontend), try to extract ID
-        if (is_object($item_hash)) {
-            \Log::info('Processing object item_hash for ID extraction', [
-                'object_type' => get_class($item_hash),
-                'object_properties' => array_keys(get_object_vars($item_hash)),
-                'has_id_property' => property_exists($item_hash, 'id')
-            ]);
-
-            // Try to get ID from object
-            if (property_exists($item_hash, 'id')) {
-                $itemId = $item_hash->id;
-                \Log::info('Extracted ID from object using property_exists', [
-                    'item_id' => $itemId
-                ]);
-            } elseif (isset($item_hash->id)) {
-                $itemId = $item_hash->id;
-                \Log::info('Extracted ID from object using isset', [
-                    'item_id' => $itemId
-                ]);
-            } else {
-                // Convert object to array and look for ID
-                $itemArray = (array) $item_hash;
-                if (array_key_exists('id', $itemArray)) {
-                    $itemId = $itemArray['id'];
-                    \Log::info('Extracted ID from object using array conversion', [
-                        'item_id' => $itemId
-                    ]);
-                } else {
-                    \Log::error('Cannot find ID in object', [
-                        'object_type' => get_class($item_hash),
-                        'object_properties' => array_keys(get_object_vars($item_hash)),
-                        'array_keys' => array_keys($itemArray)
-                    ]);
-                    return response()->json([
-                        'error' => 'Invalid item_hash format - cannot find ID property',
-                        'questions' => [],
-                        'attempt' => null
-                    ], 400);
-                }
-            }
-        } elseif (is_numeric($item_hash)) {
-            // If it's a numeric ID (direct)
-            $itemId = (int) $item_hash;
-            \Log::info('Using numeric ID directly', [
-                'item_id' => $itemId
-            ]);
-        } else {
-            \Log::error('Invalid item_hash format - expected object or numeric ID', [
-                'item_hash' => $item_hash,
-                'type' => gettype($item_hash)
+        // Validate item_id
+        if (!is_numeric($item_id)) {
+            \Log::error('Invalid item_id format - expected numeric', [
+                'item_id' => $item_id,
+                'type' => gettype($item_id)
             ]);
             return response()->json([
-                'error' => 'Invalid item_hash format - expected object or numeric ID',
+                'error' => 'Invalid item_id format - expected numeric',
                 'questions' => [],
                 'attempt' => null
             ], 400);
         }
 
-        // Find item by ID (QUICK FIX - use ID instead of hash)
+        $itemId = (int) $item_id;
+
         \Log::info('Attempting to find item by ID', [
             'item_id' => $itemId,
             'using_without_globalscope' => true
