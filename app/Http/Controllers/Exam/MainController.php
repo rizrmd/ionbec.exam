@@ -549,6 +549,51 @@ class MainController extends Controller
                             'attempt_id' => $attempt ? $attempt->id : null,
                             'attempt_questions_count' => $attempt && $attempt->questions ? $attempt->questions->count() : 0
                         ]);
+
+                        // FALLBACK: If no attempt found by taker_id and exam_id, try using delivery_id
+                        if (!$attempt && $delivery) {
+                            \Log::info('Attempting fallback search using delivery_id', [
+                                'delivery_id' => $delivery->id,
+                                'taker_id' => $takerId
+                            ]);
+
+                            $attempt = Attempt::query()
+                                ->where('delivery_id', $delivery->id)
+                                ->where('attempted_by', $takerId)
+                                ->with('questions', function ($query) use ($questionsId) {
+                                    $query->whereIn('question_id', $questionsId);
+                                })
+                                ->latest()->first();
+
+                            \Log::info('Fallback attempt query result', [
+                                'attempt_found' => $attempt ? true : false,
+                                'attempt_id' => $attempt ? $attempt->id : null,
+                                'attempt_questions_count' => $attempt && $attempt->questions ? $attempt->questions->count() : 0
+                            ]);
+                        }
+
+                        // FINAL FALLBACK: Try to find any attempt for this taker and exam combo
+                        if (!$attempt) {
+                            \Log::info('Final fallback: any attempt for taker and exam', [
+                                'taker_id' => $takerId,
+                                'exam_id' => $exam->id
+                            ]);
+
+                            $attempt = Attempt::query()
+                                ->where('attempted_by', $takerId)
+                                ->where('exam_id', $exam->id)
+                                ->with('questions', function ($query) use ($questionsId) {
+                                    $query->whereIn('question_id', $questionsId);
+                                })
+                                ->orderBy('created_at', 'desc')
+                                ->first();
+
+                            \Log::info('Final fallback attempt query result', [
+                                'attempt_found' => $attempt ? true : false,
+                                'attempt_id' => $attempt ? $attempt->id : null,
+                                'attempt_questions_count' => $attempt && $attempt->questions ? $attempt->questions->count() : 0
+                            ]);
+                        }
                     }
                 }
             }
