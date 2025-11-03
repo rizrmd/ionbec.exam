@@ -270,7 +270,11 @@ const removeFromStateArray = (array, item) => {
   }
 };
 const selectAnswer = function (answerHash, questionHash) {
-  answerVal.value[questionHash] = answerHash
+  // Find the current question being answered to get its item_hash
+  const currentQuestion = questionData.value.questions.find(q => q.hash === questionHash)
+  const hashForStorage = currentQuestion?.item_hash || questionHash
+  answerVal.value[hashForStorage] = answerHash
+  console.log('Answer stored:', {questionHash, itemHash: currentQuestion?.item_hash, storageKey: hashForStorage, answerHash})
   submitAnswer(true)
 };
 
