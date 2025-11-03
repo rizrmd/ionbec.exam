@@ -352,43 +352,47 @@ class MainController extends Controller
         return Inertia::render('Exam/Main', $data);
     }
 
-    #[Get('/exam/questions/{item_id}', name: 'exam.get-taker-answer')]
-    public function getQuestions($item_id): \Illuminate\Http\JsonResponse
+    #[Get('/exam/questions/{item_hash}', name: 'exam.get-taker-answer')]
+    public function getQuestions($item_hash): \Illuminate\Http\JsonResponse
     {
         $dataSession = Session::get('exam');
 
         \Log::info('getQuestions called', [
-            'item_id' => $item_id,
-            'item_id_type' => gettype($item_id)
+            'item_hash' => $item_hash,
+            'item_hash_type' => gettype($item_hash)
         ]);
 
-        // Validate item_id
-        if (!is_numeric($item_id)) {
-            \Log::error('Invalid item_id format - expected numeric', [
-                'item_id' => $item_id,
-                'type' => gettype($item_id)
+        // Handle different hash formats - frontend might send object or string
+        if (is_object($item_hash) && property_exists($item_hash, 'hash')) {
+            $actualHash = $item_hash->hash;
+            \Log::info('Processing object hash', ['extracted_hash' => $actualHash]);
+        } elseif (is_string($item_hash)) {
+            $actualHash = $item_hash;
+            \Log::info('Processing string hash', ['hash' => $actualHash]);
+        } else {
+            \Log::error('Invalid hash format', [
+                'item_hash' => $item_hash,
+                'type' => gettype($item_hash)
             ]);
             return response()->json([
-                'error' => 'Invalid item_id format - expected numeric',
+                'error' => 'Invalid hash format',
                 'questions' => [],
                 'attempt' => null
             ], 400);
         }
 
-        $itemId = (int) $item_id;
-
-        \Log::info('Attempting to find item by ID', [
-            'item_id' => $itemId,
+        \Log::info('Attempting to find item', [
+            'hash' => $actualHash,
             'using_without_globalscope' => true
         ]);
 
         $item = Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
-            ->where('id', $itemId)
+            ->where('hash', $actualHash)
             ->first();
 
         if (!$item) {
             \Log::error('Item not found', [
-                'item_id' => $itemId,
+                'hash' => $actualHash,
                 'original_item_hash' => $item_hash
             ]);
 
@@ -401,6 +405,7 @@ class MainController extends Controller
 
         \Log::info('Item found', [
             'item_id' => $item->id,
+            'item_hash' => $item->hash,
             'item_title' => substr($item->title, 0, 50)
         ]);
 
