@@ -146,6 +146,16 @@ class Delivery extends Model
         return $this->morphMany(ActivityLog::class, 'subject');
     }
 
+    /**
+     * Define `hasOne` relationship with DeliverySnapshot model.
+     *
+     * @return Relations\HasOne
+     */
+    public function snapshot(): Relations\HasOne
+    {
+        return $this->hasOne(DeliverySnapshot::class, 'delivery_id', 'id');
+    }
+
     public function hasAttemptTaker($takerId)
     {
         return $this->attempts->contains(fn (Attempt $attempt) => (string) $takerId === (string) $attempt->attempted_by);

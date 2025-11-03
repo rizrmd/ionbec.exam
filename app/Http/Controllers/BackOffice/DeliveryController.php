@@ -26,6 +26,7 @@ use App\Knowledge\Exam\Item\ItemType;
 use Illuminate\Support\Facades\Session;
 use App\Models\Attempts\AttemptQuestion;
 use Veelasky\LaravelHashId\Rules\ExistsByHash;
+use App\Services\ExamSnapshotService;
 
 class DeliveryController extends Controller
 {
@@ -115,6 +116,18 @@ class DeliveryController extends Controller
         $delivery->is_anytime = $is_interview ? false : ! $request->automatic_start;
         $delivery->save();
 
+        // Create exam snapshot for this delivery to ensure exam integrity
+        try {
+            $snapshotService = app(ExamSnapshotService::class);
+            $snapshotService->createSnapshot($delivery);
+        } catch (\Exception $e) {
+            \Log::error('Failed to create delivery snapshot', [
+                'delivery_id' => $delivery->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't fail delivery creation if snapshot fails - it will use live exam as fallback
+        }
+
         $user = auth()->user();
         $log = ActivityLog::create([
             'log_name' => 'New Delivery Created!',
@@ -152,11 +165,14 @@ class DeliveryController extends Controller
             ->where('delivery_id', $delivery->id)
             ->where('exam_id', $delivery->exam_id);
 
+        // Apply search filter using direct join to avoid ClientScope issues
         $attempts->when($request->input('query') ?? false, function ($query, $queryString) {
-            $query->whereHas('taker', function ($q) use ($queryString) {
-                $q->where('name', 'like', "%{$queryString}%");
-                $q->orWhere('email', 'like', "%{$queryString}%");
-            });
+            $query->join('takers', 'attempts.attempted_by', '=', 'takers.id')
+                ->where(function ($q) use ($queryString) {
+                    $q->where('takers.name', 'like', "%{$queryString}%")
+                      ->orWhere('takers.email', 'like', "%{$queryString}%");
+                })
+                ->select('attempts.*'); // Only select attempts columns to avoid conflicts
         });
 
         $paginatedAttempts = $attempts->paginate($request->input('perPage', 15))->withQueryString();

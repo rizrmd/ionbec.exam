@@ -182,40 +182,49 @@ const getQuestions = async (index) => {
   loadingQuestion.value = true;
   axios.get(route('exam.get-taker-answer', { item_hash: item.hash }))
     .then((res) => {
+      console.log('Server response for item:', item.hash, res.data)
       if (res.data) {
         loadingQuestion.value = false;
         const attemptAnswer = res.data.questions;
-        attemptAnswer.forEach((question) => {
-          // Only process if question has pivot (was answered)
-          if (question.pivot) {
-            const answerValue = (item.item_type.value === 'multiple-choice') ? question.pivot.answer_hash : question.pivot.answer
+        console.log('attemptAnswer:', attemptAnswer)
 
-            // Check if answer actually exists (not null/empty)
-            const hasAnswer = answerValue !== null && answerValue !== undefined && answerValue !== ''
+        if (attemptAnswer && attemptAnswer.length > 0) {
+          attemptAnswer.forEach((question) => {
+            console.log('Processing question:', question.hash, 'pivot:', question.pivot)
+            // Only process if question has pivot (was answered)
+            if (question.pivot) {
+              const answerValue = (item.item_type.value === 'multiple-choice') ? question.pivot.answer_hash : question.pivot.answer
+              console.log('Answer value:', answerValue)
 
-            if (hasAnswer) {
-              answerVal.value[question.hash] = answerValue
+              // Check if answer actually exists (not null/empty)
+              const hasAnswer = answerValue !== null && answerValue !== undefined && answerValue !== ''
 
-              // Add to doneQuests if not already there
-              if (!checkDoneQuest(question.hash)) {
-                doneQuests.value.push(question.hash)
-              }
+              if (hasAnswer) {
+                console.log('Question answered, adding to done:', question.hash)
+                answerVal.value[question.hash] = answerValue
 
-              // Remove from skipped if answered
-              const skippedIndex = skippedQuests.value.indexOf(question.hash);
-              if (skippedIndex !== -1) {
-                skippedQuests.value.splice(skippedIndex, 1);
-              }
+                // Add to doneQuests if not already there
+                if (!checkDoneQuest(question.hash)) {
+                  doneQuests.value.push(question.hash)
+                }
 
-              // Remove from later if answered
-              const laterIndex = laterQuests.value.indexOf(question.hash);
-              if (laterIndex !== -1) {
-                laterQuests.value.splice(laterIndex, 1);
+                // Remove from skipped if answered
+                const skippedIndex = skippedQuests.value.indexOf(question.hash);
+                if (skippedIndex !== -1) {
+                  skippedQuests.value.splice(skippedIndex, 1);
+                }
+
+                // Remove from later if answered
+                const laterIndex = laterQuests.value.indexOf(question.hash);
+                if (laterIndex !== -1) {
+                  laterQuests.value.splice(laterIndex, 1);
+                }
               }
             }
-          }
-        })
+          })
+        }
 
+        console.log('Done quests after processing:', doneQuests.value)
         // Update localStorage after all changes
         localStorage.setItem('exam-state', JSON.stringify({
           skipped: skippedQuests.value,

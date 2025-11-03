@@ -95,12 +95,9 @@ class MainController extends Controller
             return redirect()->route('exam.finished')->with('error', 'Delivery not found');
         }
 
-        // Check also ScheduleController->login
-        if (! $dataSession['admin'] && $delivery->automatic_start) {
-            if (strtotime($delivery->scheduled_at) >= strtotime('now')) {
-                return redirect()->route('exam.waiting-room');
-            }
-        }
+        // NOTE: Waiting room redirect logic removed
+        // WaitingRoomController now handles the redirect to exam when time expires
+        // This prevents redirect loop between waiting-room and exam
 
         // query taker and exam only when not in waiting-room.
         $takerId = null;
@@ -196,27 +193,85 @@ class MainController extends Controller
         } else if ($examData['success'] ?? false) {
             // Use Rust-processed data for normal exams (lazy loading)
             $items = collect($examData['items']);
-        } else if ($isDemoSession) {
-            // DEMO fallback: Load complete question data from database
-            $items = $exam->items()->with(['attachments', 'questions.answers'])->orderByPivot('order')->get();
-            foreach ($items as $item) {
-                $item->questions_count = $item->questions()->count();
-                // Load complete questions for DEMO instead of empty collection
-                $item->questions = $item->questions()->with('answers')->get();
-                // Hide correct answers from frontend
-                $item->questions->each(function ($question) {
-                    $question->answers->each(function ($answer) {
-                        unset($answer->is_correct_answer);
-                    });
-                });
-            }
-            \Log::info('DEMO: Using complete PHP fallback data', ['items_count' => $items->count()]);
         } else {
-            // Normal fallback to PHP (lazy loading approach)
-            $items = $exam->items()->with(['attachments'])->orderByPivot('order')->get();
-            foreach ($items as $item) {
-                $item->questions_count = $item->questions()->count();
-                $item->questions = collect();
+            // Check if delivery has snapshot first
+            $snapshot = $delivery->snapshot;
+
+            if ($snapshot) {
+                // Use snapshot data - ensures exam consistency
+                \Log::info('MainController: Using delivery snapshot', [
+                    'delivery_id' => $delivery->id,
+                    'total_questions' => $snapshot->total_questions,
+                    'total_items' => $snapshot->total_items,
+                ]);
+
+                $items = collect($snapshot->exam_structure['items'] ?? []);
+
+                // Convert snapshot data to objects for compatibility
+                $items = $items->map(function ($itemData) use ($isDemoSession) {
+                    $item = (object) $itemData;
+
+                    // Convert questions array
+                    if (isset($item->questions) && is_array($item->questions)) {
+                        $item->questions = collect($item->questions)->map(function ($questionData) use ($isDemoSession) {
+                            $question = (object) $questionData;
+
+                            // Convert answers array
+                            if (isset($question->answers) && is_array($question->answers)) {
+                                $question->answers = collect($question->answers)->map(function ($answerData) use ($isDemoSession) {
+                                    $answer = (object) $answerData;
+                                    // Hide correct answer for non-demo sessions
+                                    if (!$isDemoSession) {
+                                        unset($answer->is_correct_answer);
+                                    }
+                                    return $answer;
+                                });
+                            }
+
+                            return $question;
+                        });
+
+                        // For DEMO, load all questions. For normal exam, use lazy loading
+                        if (!$isDemoSession) {
+                            $item->questions_count = count($itemData['questions'] ?? []);
+                            $item->questions = collect([]); // Lazy loading
+                        }
+                    }
+
+                    // Convert attachments array
+                    if (isset($item->attachments) && is_array($item->attachments)) {
+                        $item->attachments = collect($item->attachments)->map(function ($attachmentData) {
+                            return (object) $attachmentData;
+                        });
+                    }
+
+                    return $item;
+                });
+            } else if ($isDemoSession) {
+                // DEMO fallback: Load complete question data from database
+                $items = $exam->items()->with(['attachments', 'questions.answers'])->orderByPivot('order')->get();
+                foreach ($items as $item) {
+                    $item->questions_count = $item->questions()->count();
+                    // Load complete questions for DEMO instead of empty collection
+                    $item->questions = $item->questions()->with('answers')->get();
+                    // Hide correct answers from frontend
+                    $item->questions->each(function ($question) {
+                        $question->answers->each(function ($answer) {
+                            unset($answer->is_correct_answer);
+                        });
+                    });
+                }
+                \Log::info('DEMO: Using complete PHP fallback data', ['items_count' => $items->count()]);
+            } else {
+                // Normal fallback to PHP (lazy loading approach) - for old deliveries without snapshot
+                \Log::warning('MainController: No snapshot found, using live exam data', [
+                    'delivery_id' => $delivery->id,
+                ]);
+                $items = $exam->items()->with(['attachments'])->orderByPivot('order')->get();
+                foreach ($items as $item) {
+                    $item->questions_count = $item->questions()->count();
+                    $item->questions = collect();
+                }
             }
         }
 

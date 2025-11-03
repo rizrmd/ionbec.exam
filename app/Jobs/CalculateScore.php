@@ -88,15 +88,35 @@ class CalculateScore implements ShouldQueue
             return;
         }
 
+        // Get total questions from snapshot if available, otherwise from current exam
+        $delivery = $this->attempt->delivery;
+        $totalQuestions = 0;
+        $itemIds = [];
+
+        if ($delivery && $delivery->snapshot) {
+            // Use snapshot for accurate question count
+            $totalQuestions = $delivery->snapshot->total_questions;
+            // Get item IDs from snapshot
+            $itemIds = collect($delivery->snapshot->exam_structure['items'] ?? [])->pluck('id');
+        } else {
+            // Fallback to current exam structure (legacy behavior)
+            $itemQuery = Item::query()
+                ->with('questions')
+                ->whereHas(
+                    'exams',
+                    fn (Builder $builder) => $builder->where('id', $this->attempt->exam_id)
+                );
+            $itemIds = $itemQuery->pluck('id');
+            $totalQuestions = Question::query()->whereIn('item_id', $itemIds)->count();
+        }
+
+        // Always query items from database for scoring logic
         $itemQuery = Item::query()
             ->with('questions')
             ->whereHas(
                 'exams',
                 fn (Builder $builder) => $builder->where('id', $this->attempt->exam_id)
-            ); // 83
-        $itemIds = $itemQuery->pluck('id');
-        $totalQuestions = Question::query()->whereIn('item_id', $itemIds)->count(); // 100
-
+            );
         $items = $itemQuery->cursor();
         $totalScore = 0;
         $totalItems = 0;
@@ -146,7 +166,11 @@ class CalculateScore implements ShouldQueue
         }
 
         $this->attempt->score = $totalScore / $totalItems;
-        $this->attempt->progress = ceil($attemptQuestionsQuery->count() * 100 / $totalQuestions);
+
+        // Calculate progress and cap at 100% to prevent issues with orphaned questions
+        $calculatedProgress = ceil($attemptQuestionsQuery->count() * 100 / $totalQuestions);
+        $this->attempt->progress = min($calculatedProgress, 100);
+
         $this->attempt->save();
 
         event(new ScoringEvent($this->attempt));

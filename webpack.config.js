@@ -7,4 +7,7 @@ module.exports = {
       '@images': path.resolve('resources/images'),
     },
   },
+  output: {
+    chunkFilename: 'js/[name].[contenthash].js',
+  },
 };
