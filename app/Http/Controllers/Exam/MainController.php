@@ -367,18 +367,24 @@ class MainController extends Controller
             $actualHash = $item_hash;
             \Log::info('Processing string hash', ['hash' => $actualHash]);
         } elseif (is_object($item_hash)) {
-            // Handle Laravel Eloquent model serialization
-            // Object comes as: {"App\\Models\\Exams\\Item": {"hash": "abc", ...}}
+            // Handle object serialization - could be nested or flat structure
             $jsonString = json_encode($item_hash);
             $assocArray = json_decode($jsonString, true);
 
             \Log::info('Debugging object hash', [
                 'original_item_hash_type' => get_class($item_hash),
                 'json_string' => $jsonString,
-                'assoc_array_keys' => array_keys($assocArray)
+                'assoc_array_keys' => array_keys($assocArray),
+                'has_direct_hash' => isset($assocArray['hash'])
             ]);
 
-            if (is_array($assocArray) && count($assocArray) > 0) {
+            // Check for direct hash property first (flat structure)
+            if (isset($assocArray['hash'])) {
+                $actualHash = $assocArray['hash'];
+                \Log::info('Processing direct hash property', ['extracted_hash' => $actualHash]);
+            }
+            // Check for nested structure: {"App\\Models\\Exams\\Item": {"hash": "abc"}}
+            elseif (is_array($assocArray) && count($assocArray) > 0) {
                 $modelClass = array_key_first($assocArray);
 
                 if ($modelClass && isset($assocArray[$modelClass]['hash'])) {
@@ -388,12 +394,12 @@ class MainController extends Controller
                         'extracted_hash' => $actualHash
                     ]);
                 } else {
-                    \Log::error('Invalid nested object - no hash found', [
+                    \Log::error('Invalid object format - no hash found in any structure', [
                         'model_class' => $modelClass,
                         'assoc_array' => $assocArray
                     ]);
                     return response()->json([
-                        'error' => 'Invalid hash format - no hash found in nested object',
+                        'error' => 'Invalid hash format - no hash found',
                         'questions' => [],
                         'attempt' => null
                     ], 400);
