@@ -176,7 +176,7 @@ const getQuestions = async (index) => {
   loadingQuestion.value = true;
   axios.get(route('exam.get-taker-answer', { item_hash: item.hash }))
     .then((res) => {
-      if (res.data) {
+      if (res.data && res.data.questions) {
         loadingQuestion.value = false;
         const attemptAnswer = res.data.questions;
         attemptAnswer.forEach((question) => {
