@@ -367,22 +367,46 @@ class MainController extends Controller
 
         // If item_hash is an object (from frontend), extract the hash
         if (is_object($item_hash)) {
+            \Log::info('Processing object item_hash', [
+                'object_type' => get_class($item_hash),
+                'object_properties' => array_keys(get_object_vars($item_hash)),
+                'has_hash_property' => property_exists($item_hash, 'hash')
+            ]);
+
+            // Check for hash property using multiple methods
             if (property_exists($item_hash, 'hash')) {
                 $hashValue = $item_hash->hash;
-                \Log::info('Extracted hash from object', [
+                \Log::info('Extracted hash from object using property_exists', [
+                    'original_type' => get_class($item_hash),
+                    'extracted_hash' => $hashValue
+                ]);
+            } elseif (isset($item_hash->hash)) {
+                $hashValue = $item_hash->hash;
+                \Log::info('Extracted hash from object using isset', [
                     'original_type' => get_class($item_hash),
                     'extracted_hash' => $hashValue
                 ]);
             } else {
-                \Log::error('Object item_hash does not have hash property', [
-                    'object_type' => get_class($item_hash),
-                    'object_properties' => array_keys(get_object_vars($item_hash))
-                ]);
-                return response()->json([
-                    'error' => 'Invalid item_hash format - object missing hash property',
-                    'questions' => [],
-                    'attempt' => null
-                ], 400);
+                // Convert object to array and look for hash
+                $itemArray = (array) $item_hash;
+                if (array_key_exists('hash', $itemArray)) {
+                    $hashValue = $itemArray['hash'];
+                    \Log::info('Extracted hash from object using array conversion', [
+                        'original_type' => get_class($item_hash),
+                        'extracted_hash' => $hashValue
+                    ]);
+                } else {
+                    \Log::error('Cannot find hash in object', [
+                        'object_type' => get_class($item_hash),
+                        'object_properties' => array_keys(get_object_vars($item_hash)),
+                        'array_keys' => array_keys($itemArray)
+                    ]);
+                    return response()->json([
+                        'error' => 'Invalid item_hash format - cannot find hash property',
+                        'questions' => [],
+                        'attempt' => null
+                    ], 400);
+                }
             }
         }
 
