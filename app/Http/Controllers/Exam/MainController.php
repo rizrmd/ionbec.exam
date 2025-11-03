@@ -593,9 +593,10 @@ class MainController extends Controller
                         $attempt = Attempt::query()
                             ->where('attempted_by', $takerId)
                             ->where('exam_id', $exam->id)
-                            ->with('questions', function ($query) use ($questionsId) {
-                                $query->whereIn('question_id', $questionsId);
-                            })
+                            ->with(['questions' => function ($query) use ($questionsId) {
+                                $query->whereIn('question_id', $questionsId)
+                                      ->withPivot(['answer_hash', 'answer', 'is_correct', 'score']);
+                            }])
                             ->latest()->first();
 
                         \Log::info('Attempt query result', [
@@ -614,9 +615,10 @@ class MainController extends Controller
                             $attempt = Attempt::query()
                                 ->where('delivery_id', $delivery->id)
                                 ->where('attempted_by', $takerId)
-                                ->with('questions', function ($query) use ($questionsId) {
-                                    $query->whereIn('question_id', $questionsId);
-                                })
+                                ->with(['questions' => function ($query) use ($questionsId) {
+                                    $query->whereIn('question_id', $questionsId)
+                                          ->withPivot(['answer_hash', 'answer', 'is_correct', 'score']);
+                                }])
                                 ->latest()->first();
 
                             \Log::info('Fallback attempt query result', [
@@ -636,9 +638,10 @@ class MainController extends Controller
                             $attempt = Attempt::query()
                                 ->where('attempted_by', $takerId)
                                 ->where('exam_id', $exam->id)
-                                ->with('questions', function ($query) use ($questionsId) {
-                                    $query->whereIn('question_id', $questionsId);
-                                })
+                                ->with(['questions' => function ($query) use ($questionsId) {
+                                    $query->whereIn('question_id', $questionsId)
+                                          ->withPivot(['answer_hash', 'answer', 'is_correct', 'score']);
+                                }])
                                 ->orderBy('created_at', 'desc')
                                 ->first();
 
