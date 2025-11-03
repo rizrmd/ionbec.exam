@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(php:*)",
+      "Bash(composer:*)",
+      "Bash(pkill:*)",
+      "Bash(ssh:*)",
+      "Bash(git pull:*)",
+      "Bash(scp:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run:*)",
+      "Bash(git config:*)",
+      "Bash(git reset:*)",
+      "Bash(git push:*)",
+      "Bash(PGPASSWORD='6LP0Ojegy7IUU6kaX9lLkmZRUiAdAUNOltWyL3LegfYGR6rPQtB4DUSVqjdA78ES' psql -h 107.155.75.50 -p 5986 -U postgres -d ionbec-new -c \"SELECT id, name, group_id, exam_id, client_id FROM deliveries WHERE MD5(CONCAT(id::text, ''ionbec'')) = ''y3Ed7rzD'' LIMIT 1;\")",
+      "Bash(cat:*)",
+      "Bash(git checkout:*)",
+      "Bash(PGPASSWORD='6LP0Ojegy7IUU6kaX9lLkmZRUiAdAUNOltWyL3LegfYGR6rPQtB4DUSVqjdA78ES' psql -h 107.155.75.50 -p 5986 -U postgres -d ionbec-new -c \"SELECT id, title, type, created_at FROM items ORDER BY id LIMIT 20;\")",
+      "Bash(PGPASSWORD='6LP0Ojegy7IUU6kaX9lLkmZRUiAdAUNOltWyL3LegfYGR6rPQtB4DUSVqjdA78ES' psql:*)",
+      "Read(//c/**)",
+      "Bash(move:*)",
+      "Bash(timeout 120 php artisan:*)",
+      "Bash(timeout 120 php:*)",
+      "WebFetch(domain:ionbec.com)",
+      "Bash(docker-compose ps:*)",
+      "Bash(wsl:*)",
+      "Bash(systemctl:*)",
+      "Bash(service:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

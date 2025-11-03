@@ -356,9 +356,27 @@ class MainController extends Controller
     public function getQuestions(Item $item): \Illuminate\Http\JsonResponse
     {
         $dataSession = Session::get('exam');
+
+        \Log::info('getQuestions called', [
+            'item_hash' => $item->hash,
+            'item_id' => $item->id,
+            'item_type' => get_class($item)
+        ]);
+
         $questionQuery = Question::withoutGlobalScope(\App\Scopes\ClientScope::class)->where('item_id', $item->id)->with('answers');
         $questions = $questionQuery->clone()->get();
         $questionsId = $questionQuery->pluck('id');
+
+        \Log::info('Questions query result', [
+            'questions_count' => $questions->count(),
+            'item_id' => $item->id,
+            'first_question' => $questions->first() ? [
+                'id' => $questions->first()->id,
+                'question_text' => substr(strip_tags($questions->first()->question), 0, 100),
+                'type' => $questions->first()->type ? $questions->first()->type->name : 'no type',
+                'answers_count' => $questions->first()->answers ? $questions->first()->answers->count() : 0
+            ] : null
+        ]);
 
         $attempt = null;
         if ($dataSession['taker'] && $dataSession['delivery']) {
@@ -407,6 +425,11 @@ class MainController extends Controller
                 unset($questions[$questionKey]->answers[$answerKey]->is_correct_answer);
             });
         });
+
+        \Log::info('Returning questions response', [
+            'questions_count' => $questions->count(),
+            'attempt_id' => $attempt ? $attempt->id : null
+        ]);
 
         return response()->json([
             'questions' => $questions,
