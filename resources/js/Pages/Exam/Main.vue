@@ -201,6 +201,8 @@ const getQuestions = async (index) => {
             console.log('Processing question:', question.hash, 'item_hash:', question.item_hash, 'pivot:', question.pivot)
             // Only process if question has pivot (was answered)
             if (question.pivot) {
+              // CRITICAL FIX: Use item_hash for matching with current item, not question.hash
+              const hashForMatching = question.item_hash || question.hash
               const answerValue = (item.item_type.value === 'multiple-choice') ? question.pivot.answer_hash : question.pivot.answer
               console.log('Answer value:', answerValue, 'Stored with key:', hashForMatching)
 
@@ -208,8 +210,6 @@ const getQuestions = async (index) => {
               const hasAnswer = answerValue !== null && answerValue !== undefined && answerValue !== ''
 
               if (hasAnswer) {
-                // CRITICAL FIX: Use item_hash for matching with current item, not question.hash
-                const hashForMatching = question.item_hash || question.hash
                 console.log('Question answered, adding to done:', hashForMatching)
                 answerVal.value[hashForMatching] = answerValue
 
