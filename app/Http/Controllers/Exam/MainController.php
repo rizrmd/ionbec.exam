@@ -358,17 +358,43 @@ class MainController extends Controller
         $dataSession = Session::get('exam');
 
         \Log::info('getQuestions called', [
-            'item_hash' => $item_hash
+            'item_hash' => $item_hash,
+            'item_hash_type' => gettype($item_hash)
         ]);
 
-        // FIXED: Find item by hash instead of route model binding
+        // FIXED: Handle both string hash and object item_hash from frontend
+        $hashValue = $item_hash;
+
+        // If item_hash is an object (from frontend), extract the hash
+        if (is_object($item_hash)) {
+            if (property_exists($item_hash, 'hash')) {
+                $hashValue = $item_hash->hash;
+                \Log::info('Extracted hash from object', [
+                    'original_type' => get_class($item_hash),
+                    'extracted_hash' => $hashValue
+                ]);
+            } else {
+                \Log::error('Object item_hash does not have hash property', [
+                    'object_type' => get_class($item_hash),
+                    'object_properties' => array_keys(get_object_vars($item_hash))
+                ]);
+                return response()->json([
+                    'error' => 'Invalid item_hash format - object missing hash property',
+                    'questions' => [],
+                    'attempt' => null
+                ], 400);
+            }
+        }
+
+        // Find item by hash
         $item = Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
-            ->where('hash', $item_hash)
+            ->where('hash', $hashValue)
             ->first();
 
         if (!$item) {
             \Log::error('Item not found', [
-                'item_hash' => $item_hash
+                'item_hash' => $hashValue,
+                'original_item_hash' => $item_hash
             ]);
             return response()->json([
                 'error' => 'Item not found',
