@@ -456,9 +456,10 @@ class MainController extends Controller
         ]);
 
         // FIXED: Load questions with all necessary relationships
+        // Note: 'type' is an accessor, not a relationship, so it shouldn't be in with()
         $questions = Question::withoutGlobalScope(\App\Scopes\ClientScope::class)
             ->where('item_id', $item->id)
-            ->with(['answers', 'type'])
+            ->with(['answers'])
             ->get();
 
         \Log::info('Questions query result', [
