@@ -109,11 +109,12 @@ const submitAnswer = async (partial = false) => {
       }
     })
 
-    // Update localStorage
+    // Update localStorage - CRITICAL: Save answerVal data too!
     localStorage.setItem('exam-state', JSON.stringify({
       skipped: skippedQuests.value,
       later: laterQuests.value,
       done: doneQuests.value,
+      answerData: answerVal.value, // Save all answers!
     }))
 
     if (Object.keys(newAnswers).length >= 1) {
@@ -323,38 +324,64 @@ onMounted(() => {
     doneQuests.value = examState.done ?? []
   }
 
+  // CRITICAL FIX: Load answer data from localStorage first
+  console.log('DEBUG: onMounted - Loading from localStorage')
+  const savedExamState = JSON.parse(localStorage.getItem('exam-state') || '{}');
+  console.log('DEBUG: localStorage answerData:', savedExamState.answerData || 'NULL')
+
+  // Populate answerVal from localStorage if available
+  if (examState.answerData && typeof examState.answerData === 'object') {
+    Object.keys(examState.answerData).forEach(key => {
+      if (examState.answerData[key]) {
+        answerVal.value[key] = examState.answerData[key]
+        console.log('✅ Restored answerVal from localStorage:', {key, value: examState.answerData[key]})
+      }
+    })
+  }
+
   // Then merge with server data (attemptQuestions)
   // This ensures server data supplements, not replaces, local data
+  console.log('DEBUG: onMounted - attemptQuestions.value:', attemptQuestions.value ? JSON.stringify(attemptQuestions.value.map(q => ({hash: q.question.hash, item_hash: q.item_hash, pivot: q.pivot}))).substring(0, 500) + '...' : 'NULL')
+  console.log('DEBUG: onMounted - items.value count:', items.value.length)
+
   items.value.forEach((item) => {
+    console.log('DEBUG: Processing item:', item.hash, item.title)
     item.questions.forEach((question) => {
       const attemptQuestion = attemptQuestions.value && attemptQuestions.value.find((data) => data.question.hash === question.hash)
+      console.log('DEBUG: Question:', question.hash, 'attemptQuestion found:', !!attemptQuestion)
       if (attemptQuestion) {
         // CRITICAL FIX: Populate answerVal with existing answer hashes
         if (attemptQuestion.pivot && attemptQuestion.pivot.answer_hash) {
           const hashForMatching = question.item_hash || question.hash
           answerVal.value[hashForMatching] = attemptQuestion.pivot.answer_hash
-          console.log('Populated answerVal from server data:', {
+          console.log('✅ Populated answerVal from server data:', {
             hashForMatching,
             answerHash: attemptQuestion.pivot.answer_hash,
             questionHash: question.hash,
             itemHash: question.item_hash
           })
+        } else {
+          console.log('❌ No pivot data or answer_hash in attemptQuestion')
         }
 
         // Only add to doneQuests if not already there (preserve local state)
         const hashForMatching = question.item_hash || question.hash
         if (!doneQuests.value.includes(hashForMatching)) {
           doneQuests.value.push(hashForMatching)
+          console.log('✅ Added to doneQuests:', hashForMatching)
         }
       }
     })
   })
 
-  // Update localStorage with merged state
+  console.log('DEBUG: Final answerVal state:', answerVal.value)
+
+  // Update localStorage with merged state - include answerVal data!
   localStorage.setItem('exam-state', JSON.stringify({
     skipped: skippedQuests.value,
     later: laterQuests.value,
     done: doneQuests.value,
+    answerData: answerVal.value, // Save current answer state
   }))
 
   getQuestions(0)
