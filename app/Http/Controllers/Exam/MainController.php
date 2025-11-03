@@ -480,19 +480,48 @@ class MainController extends Controller
             'has_delivery_in_session' => isset($dataSession['delivery']),
             'taker_data' => isset($dataSession['taker']) ? (is_object($dataSession['taker']) ? [
                 'type' => get_class($dataSession['taker']),
-                'id' => property_exists($dataSession['taker'], 'id') ? $dataSession['taker']->id : 'no id'
+                'id' => property_exists($dataSession['taker'], 'id') ? $dataSession['taker']->id : 'no id',
+                'attributes' => method_exists($dataSession['taker'], 'getAttributes') ? $dataSession['taker']->getAttributes() : 'no method'
             ] : $dataSession['taker']) : null,
             'delivery_data' => isset($dataSession['delivery']) ? (is_object($dataSession['delivery']) ? [
                 'type' => get_class($dataSession['delivery']),
-                'id' => property_exists($dataSession['delivery'], 'id') ? $dataSession['delivery']->id : 'no id'
+                'id' => property_exists($dataSession['delivery'], 'id') ? $dataSession['delivery']->id : 'no id',
+                'attributes' => method_exists($dataSession['delivery'], 'getAttributes') ? $dataSession['delivery']->getAttributes() : 'no method'
             ] : $dataSession['delivery']) : null
         ]);
 
         if ($dataSession['taker'] && $dataSession['delivery']) {
-            // Handle both Eloquent and stdClass objects
-            $deliveryId = is_object($dataSession['delivery']) && property_exists($dataSession['delivery'], 'id')
-                ? $dataSession['delivery']->id
-                : null;
+            // Handle both Eloquent and stdClass objects - try multiple ID extraction methods
+            $deliveryId = null;
+
+            if (is_object($dataSession['delivery'])) {
+                // Method 1: Direct property access
+                if (property_exists($dataSession['delivery'], 'id')) {
+                    $deliveryId = $dataSession['delivery']->id;
+                }
+
+                // Method 2: Method access (getId)
+                if (!$deliveryId && method_exists($dataSession['delivery'], 'getId')) {
+                    $deliveryId = $dataSession['delivery']->getId();
+                }
+
+                // Method 3: Attribute array access
+                if (!$deliveryId && method_exists($dataSession['delivery'], 'getAttributes')) {
+                    $attributes = $dataSession['delivery']->getAttributes();
+                    $deliveryId = $attributes['id'] ?? null;
+                }
+
+                // Method 4: Array access
+                if (!$deliveryId && isset($dataSession['delivery']['id'])) {
+                    $deliveryId = $dataSession['delivery']['id'];
+                }
+            }
+
+            \Log::info('Delivery ID extraction', [
+                'delivery_id' => $deliveryId,
+                'delivery_object_type' => is_object($dataSession['delivery']) ? get_class($dataSession['delivery']) : 'not object',
+                'extraction_methods_tried' => ['property', 'getId()', 'getAttributes()', 'array access']
+            ]);
 
             \Log::info('Processing delivery', ['delivery_id' => $deliveryId]);
 
@@ -520,12 +549,37 @@ class MainController extends Controller
                 ]);
 
                 if ($exam) {
-                    // Handle taker ID extraction
-                    $takerId = is_object($dataSession['taker']) && property_exists($dataSession['taker'], 'id')
-                        ? $dataSession['taker']->id
-                        : null;
+                    // Handle taker ID extraction - try multiple methods like delivery
+                    $takerId = null;
 
-                    \Log::info('Taker ID extraction', ['taker_id' => $takerId]);
+                    if (is_object($dataSession['taker'])) {
+                        // Method 1: Direct property access
+                        if (property_exists($dataSession['taker'], 'id')) {
+                            $takerId = $dataSession['taker']->id;
+                        }
+
+                        // Method 2: Method access (getId)
+                        if (!$takerId && method_exists($dataSession['taker'], 'getId')) {
+                            $takerId = $dataSession['taker']->getId();
+                        }
+
+                        // Method 3: Attribute array access
+                        if (!$takerId && method_exists($dataSession['taker'], 'getAttributes')) {
+                            $attributes = $dataSession['taker']->getAttributes();
+                            $takerId = $attributes['id'] ?? null;
+                        }
+
+                        // Method 4: Array access
+                        if (!$takerId && isset($dataSession['taker']['id'])) {
+                            $takerId = $dataSession['taker']['id'];
+                        }
+                    }
+
+                    \Log::info('Taker ID extraction', [
+                        'taker_id' => $takerId,
+                        'taker_object_type' => is_object($dataSession['taker']) ? get_class($dataSession['taker']) : 'not object',
+                        'extraction_methods_tried' => ['property', 'getId()', 'getAttributes()', 'array access']
+                    ]);
 
                     if ($takerId) {
                         $questionsId = $questions->pluck('id')->toArray();
