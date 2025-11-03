@@ -445,6 +445,10 @@ const markAsLater = (e, hash) => {
                   <button v-for="(answer, ansIndex) in question.answers" :key="ansIndex" @click="selectAnswer(answer.hash, question.hash)" :class="['flex text-left px-3 py-2 bg-gray-100 rounded-md', answerVal[question.item_hash || question.hash] === answer.hash ? 'bg-green-600 text-white' : 'hover:bg-green-200 hover:text-green-600']" @click.once="console.log('Click check:', {questionHash: question.hash, itemHash: question.item_hash, answerHash: answer.hash, storedValue: answerVal[question.item_hash || question.hash]})">
                     <span class="mr-3 font-bold uppercase">{{ answerIndex[ansIndex] }}</span> <span v-html="answer.answer"></span>
                   </button>
+                  <!-- DEBUG: Show answerVal state for this question -->
+                  <div class="text-xs text-gray-500 mt-2" v-if="question.item_hash || question.hash">
+                    DEBUG: answerVal for {{ question.item_hash || question.hash }}: {{ answerVal[question.item_hash || question.hash] }}
+                  </div>
                 </div>
                 <div class="mt-4" v-else>
                   <Editor class="my-2" v-model="answerVal[question.item_hash || question.hash]" @blur="submitAnswer(true)" />
