@@ -1,70 +1,77 @@
 <?php
 
 /**
- * Debug script untuk memeriksa hash lookup issue
+ * DEBUG HASH LOOKUP
+ * Test why some hashes are found and others arent in database queries
  */
 
-echo "=== DEBUG HASH LOOKUP ISSUE ===\n\n";
+echo "=== DEBUGGING HASH LOOKUP ===\n\n";
 
-// Test hash yang bermasalah dari logs
-$problemHashes = [
-    'Adkn2GkR',  // BE 051125 - MCQ 24
-    'DxKJG4Bq',  // BE 051125 - MCQ 70 / BE18718-UI9
-    'VbBa9OBw',  // BE 051125 - MCQ 36
-    'dVg6P0Bp',  // BE 051125 - MCQ 12
-];
+// Connect to database directly using production credentials
+$host = "107.155.75.50";
+$port = "5986";
+$dbname = "ionbec-new";
+$username = "postgres";
+$password = "6LP0Ojegy7IUU6kaX9lLkmZRUiAdAUNOltWyL3LegfYGR6rPQtB4DUSVqjdA78ES";
 
-foreach ($problemHashes as $hash) {
-    echo "Testing hash: $hash\n";
+try {
+    $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Build URL untuk testing API
-    $url = "https://ionbec.com/exam/questions/$hash";
+    echo "✅ Database connected successfully\n\n";
 
-    // Test dengan curl (bypass SSL untuk testing)
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HEADER, true);
-    curl_setopt($ch, CURLOPT_NOBODY, false);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    // Test both working and failing hashes from recent logs
+    $testHashes = [
+        // Working hashes from logs
+        "3ZBYv4k0" => ["title" => "BE 051125 - MCQ 11", "status" => "working"],
+        "53gDGMky" => ["title" => "BE 051125 - MCQ 9 & 10", "status" => "working"],
+        "xDkVA1BX" => ["title" => "BE 051125 - MCQ 40", "status" => "working"],
+        "3oKMJAB6" => ["title" => "BE 051125 - MCQ 39", "status" => "working"],
+        "RxBWnZKr" => ["title" => "BE 051125 - MCQ 38", "status" => "working"],
 
-    // Add cookies untuk session (dummy session)
-    curl_setopt($ch, CURLOPT_COOKIE, 'exam_session=test');
+        // Failing hashes from logs
+        "0Qk8Pqko" => ["title" => "BE 051125 - MCQ 30", "status" => "failing"],
+        "lAKjyXg9" => ["title" => "BE 051125 - MCQ 42", "status" => "failing"],
+        "qZgleXK5" => ["title" => "BE 051125 - MCQ 5", "status" => "failing"],
+        "DxKJDpkq" => ["title" => "BE 051125 - MCQ 13", "status" => "failing"],
+        "MlK1PYgN" => ["title" => "BE 051125 - MCQ 14", "status" => "failing"],
+    ];
 
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
-    curl_close($ch);
+    echo "=== TESTING DIRECT DATABASE LOOKUPS ===\n";
 
-    echo "HTTP Code: $httpCode\n";
+    foreach ($testHashes as $hash => $info) {
+        echo "\nTesting hash:  ({$info[title]}) [{$info[status]}]\n";
 
-    if ($error) {
-        echo "CURL Error: $error\n";
-    } else {
-        // Parse response
-        $headerSize = strpos($response, "\r\n\r\n");
-        $headers = substr($response, 0, $headerSize);
-        $body = substr($response, $headerSize + 4);
+        // Test 1: Simple hash lookup
+        $stmt = $pdo->prepare("SELECT id, title, hash FROM items WHERE hash = ? LIMIT 1");
+        $stmt->execute([$hash]);
+        $item = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($httpCode === 302) {
-            echo "Redirected to login (expected for non-auth session)\n";
-        } elseif ($httpCode === 200) {
-            echo "Success! Got response\n";
-            $jsonData = json_decode($body, true);
-            if ($jsonData && isset($jsonData['questions'])) {
-                echo "Questions found: " . (is_array($jsonData['questions']) ? count($jsonData['questions']) : 'not an array') . "\n";
-            }
-        } elseif ($httpCode === 404) {
-            echo "Item not found (404)\n";
+        if ($item) {
+            echo "  ✅ Direct lookup: FOUND - ID: {$item[id]}, Title: {[title]}\n";
         } else {
-            echo "Unexpected response code: $httpCode\n";
-            echo "Response: " . substr($body, 0, 200) . "...\n";
+            echo "  ❌ Direct lookup: NOT FOUND\n";
         }
     }
 
-    echo "----------------------------------------\n\n";
+    // Test 2: Check the ClientScope that might be affecting queries
+    echo "\n=== TESTING CLIENT SCOPE EFFECTS ===\n";
+
+    // Check client_id for items that work vs dont work
+    foreach ($testHashes as $hash => $info) {
+        $stmt = $pdo->prepare("SELECT id, title, hash, client_id FROM items WHERE hash = ? LIMIT 1");
+        $stmt->execute([$hash]);
+        $item = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($item) {
+            echo "Hash  -> client_id: {$item[client_id]}\n";
+        }
+    }
+
+} catch (PDOException $e) {
+    echo "❌ Database connection failed: " . $e->getMessage() . "\n";
+} catch (Exception $e) {
+    echo "❌ Script error: " . $e->getMessage() . "\n";
 }
 
-echo "Hash lookup test completed.\n";
+echo "\n=== DEBUG HASH LOOKUP COMPLETE ===\n";

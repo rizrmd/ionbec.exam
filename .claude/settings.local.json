@@ -28,7 +28,9 @@
       "Bash(docker-compose ps:*)",
       "Bash(wsl:*)",
       "Bash(systemctl:*)",
-      "Bash(service:*)"
+      "Bash(service:*)",
+      "Bash(echo:*)",
+      "Bash(debug_hash_lookup.php:*)"
     ],
     "deny": [],
     "ask": []
