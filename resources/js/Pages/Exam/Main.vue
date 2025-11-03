@@ -199,7 +199,7 @@ const getQuestions = async (index) => {
             // Only process if question has pivot (was answered)
             if (question.pivot) {
               const answerValue = (item.item_type.value === 'multiple-choice') ? question.pivot.answer_hash : question.pivot.answer
-              console.log('Answer value:', answerValue)
+              console.log('Answer value:', answerValue, 'Stored with key:', hashForMatching)
 
               // Check if answer actually exists (not null/empty)
               const hasAnswer = answerValue !== null && answerValue !== undefined && answerValue !== ''
@@ -438,7 +438,7 @@ const markAsLater = (e, hash) => {
               <div class="whitespace-pre-wrap mb-4" v-html="question.question"></div>
               <div v-if="!loadingQuestion">
                 <div class="flex flex-col gap-2 mt-6 w-auto" v-if="question.type !== null && question.type?.name === 'multiple-choice'">
-                  <button v-for="(answer, ansIndex) in question.answers" :key="ansIndex" @click="selectAnswer(answer.hash, question.hash)" :class="['flex text-left px-3 py-2 bg-gray-100 rounded-md', answerVal[question.item_hash || question.hash] === answer.hash ? 'bg-green-600 text-white' : 'hover:bg-green-200 hover:text-green-600']">
+                  <button v-for="(answer, ansIndex) in question.answers" :key="ansIndex" @click="selectAnswer(answer.hash, question.hash)" :class="['flex text-left px-3 py-2 bg-gray-100 rounded-md', answerVal[question.item_hash || question.hash] === answer.hash ? 'bg-green-600 text-white' : 'hover:bg-green-200 hover:text-green-600']" @click.once="console.log('Click check:', {questionHash: question.hash, itemHash: question.item_hash, answerHash: answer.hash, storedValue: answerVal[question.item_hash || question.hash]})">
                     <span class="mr-3 font-bold uppercase">{{ answerIndex[ansIndex] }}</span> <span v-html="answer.answer"></span>
                   </button>
                 </div>
