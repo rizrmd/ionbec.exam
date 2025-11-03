@@ -325,10 +325,24 @@ onMounted(() => {
   // This ensures server data supplements, not replaces, local data
   items.value.forEach((item) => {
     item.questions.forEach((question) => {
-      if (attemptQuestions.value && attemptQuestions.value.find((data) => data.question.hash === question.hash)) {
+      const attemptQuestion = attemptQuestions.value && attemptQuestions.value.find((data) => data.question.hash === question.hash)
+      if (attemptQuestion) {
+        // CRITICAL FIX: Populate answerVal with existing answer hashes
+        if (attemptQuestion.pivot && attemptQuestion.pivot.answer_hash) {
+          const hashForMatching = question.item_hash || question.hash
+          answerVal.value[hashForMatching] = attemptQuestion.pivot.answer_hash
+          console.log('Populated answerVal from server data:', {
+            hashForMatching,
+            answerHash: attemptQuestion.pivot.answer_hash,
+            questionHash: question.hash,
+            itemHash: question.item_hash
+          })
+        }
+
         // Only add to doneQuests if not already there (preserve local state)
-        if (!doneQuests.value.includes(question.hash)) {
-          doneQuests.value.push(question.hash)
+        const hashForMatching = question.item_hash || question.hash
+        if (!doneQuests.value.includes(hashForMatching)) {
+          doneQuests.value.push(hashForMatching)
         }
       }
     })
