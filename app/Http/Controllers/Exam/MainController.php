@@ -362,89 +362,82 @@ class MainController extends Controller
             'item_hash_type' => gettype($item_hash)
         ]);
 
-        // FIXED: Handle both string hash and object item_hash from frontend
-        $hashValue = $item_hash;
+        // QUICK FIX: Use ID-based lookup since all items have NULL hash
+        $itemId = null;
 
-        // If item_hash is an object (from frontend), extract the hash
+        // If item_hash is an object (from frontend), try to extract ID
         if (is_object($item_hash)) {
-            \Log::info('Processing object item_hash', [
+            \Log::info('Processing object item_hash for ID extraction', [
                 'object_type' => get_class($item_hash),
                 'object_properties' => array_keys(get_object_vars($item_hash)),
-                'has_hash_property' => property_exists($item_hash, 'hash')
+                'has_id_property' => property_exists($item_hash, 'id')
             ]);
 
-            // Check for hash property using multiple methods
-            if (property_exists($item_hash, 'hash')) {
-                $hashValue = $item_hash->hash;
-                \Log::info('Extracted hash from object using property_exists', [
-                    'original_type' => get_class($item_hash),
-                    'extracted_hash' => $hashValue
+            // Try to get ID from object
+            if (property_exists($item_hash, 'id')) {
+                $itemId = $item_hash->id;
+                \Log::info('Extracted ID from object using property_exists', [
+                    'item_id' => $itemId
                 ]);
-            } elseif (isset($item_hash->hash)) {
-                $hashValue = $item_hash->hash;
-                \Log::info('Extracted hash from object using isset', [
-                    'original_type' => get_class($item_hash),
-                    'extracted_hash' => $hashValue
+            } elseif (isset($item_hash->id)) {
+                $itemId = $item_hash->id;
+                \Log::info('Extracted ID from object using isset', [
+                    'item_id' => $itemId
                 ]);
             } else {
-                // Convert object to array and look for hash
+                // Convert object to array and look for ID
                 $itemArray = (array) $item_hash;
-                if (array_key_exists('hash', $itemArray)) {
-                    $hashValue = $itemArray['hash'];
-                    \Log::info('Extracted hash from object using array conversion', [
-                        'original_type' => get_class($item_hash),
-                        'extracted_hash' => $hashValue
+                if (array_key_exists('id', $itemArray)) {
+                    $itemId = $itemArray['id'];
+                    \Log::info('Extracted ID from object using array conversion', [
+                        'item_id' => $itemId
                     ]);
                 } else {
-                    \Log::error('Cannot find hash in object', [
+                    \Log::error('Cannot find ID in object', [
                         'object_type' => get_class($item_hash),
                         'object_properties' => array_keys(get_object_vars($item_hash)),
                         'array_keys' => array_keys($itemArray)
                     ]);
                     return response()->json([
-                        'error' => 'Invalid item_hash format - cannot find hash property',
+                        'error' => 'Invalid item_hash format - cannot find ID property',
                         'questions' => [],
                         'attempt' => null
                     ], 400);
                 }
             }
+        } elseif (is_numeric($item_hash)) {
+            // If it's a numeric ID (direct)
+            $itemId = (int) $item_hash;
+            \Log::info('Using numeric ID directly', [
+                'item_id' => $itemId
+            ]);
+        } else {
+            \Log::error('Invalid item_hash format - expected object or numeric ID', [
+                'item_hash' => $item_hash,
+                'type' => gettype($item_hash)
+            ]);
+            return response()->json([
+                'error' => 'Invalid item_hash format - expected object or numeric ID',
+                'questions' => [],
+                'attempt' => null
+            ], 400);
         }
 
-        // Find item by hash
-        \Log::info('Attempting to find item by hash', [
-            'hash_value' => $hashValue,
+        // Find item by ID (QUICK FIX - use ID instead of hash)
+        \Log::info('Attempting to find item by ID', [
+            'item_id' => $itemId,
             'using_without_globalscope' => true
         ]);
 
         $item = Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
-            ->where('hash', $hashValue)
+            ->where('id', $itemId)
             ->first();
 
         if (!$item) {
             \Log::error('Item not found', [
-                'item_hash' => $hashValue,
+                'item_id' => $itemId,
                 'original_item_hash' => $item_hash
             ]);
-
-            // DEBUG: Try to find similar hashes
-            \Log::info('Looking for similar hashes', [
-                'search_hash' => $hashValue
-            ]);
-
-            $similarItems = Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
-                ->where('hash', 'like', '%' . substr($hashValue, 0, 4) . '%')
-                ->limit(5)
-                ->get(['id', 'hash', 'title']);
-
-            if ($similarItems->count() > 0) {
-                \Log::info('Found similar hashes', [
-                    'similar_items' => $similarItems->toArray()
-                ]);
-            } else {
-                \Log::info('No similar hashes found', [
-                    'search_pattern' => '%' . substr($hashValue, 0, 4) . '%'
-                ]);
-            }
 
             return response()->json([
                 'error' => 'Item not found',
@@ -455,7 +448,7 @@ class MainController extends Controller
 
         \Log::info('Item found', [
             'item_id' => $item->id,
-            'item_hash' => $item->hash
+            'item_title' => substr($item->title, 0, 50)
         ]);
 
         // FIXED: Load questions with all necessary relationships
