@@ -28,14 +28,14 @@ class MainController extends Controller
     public function index(): \Illuminate\Http\RedirectResponse|\Inertia\Response
     {
         $dataSession = Session::get('exam');
-        
+
         \Log::info('MainController: Session check', [
             'has_session' => $dataSession ? true : false,
             'has_delivery' => isset($dataSession['delivery']),
             'delivery_type' => isset($dataSession['delivery']) ? gettype($dataSession['delivery']) : 'not_set',
             'delivery_class' => isset($dataSession['delivery']) && is_object($dataSession['delivery']) ? get_class($dataSession['delivery']) : 'not_object'
         ]);
-        
+
         // Check if session exists and has delivery
         if (!$dataSession || !isset($dataSession['delivery']) || !$dataSession['delivery']) {
             \Log::error('MainController: No session or delivery', [
@@ -43,11 +43,11 @@ class MainController extends Controller
             ]);
             return redirect('/')->with('error', 'Session expired. Please login again.');
         }
-        
+
         // Get delivery ID handling both Eloquent and stdClass objects
         $deliveryId = null;
         $delivery = $dataSession['delivery'];
-        
+
         \Log::info('MainController: Delivery object debug', [
             'delivery_type' => gettype($delivery),
             'delivery_class' => is_object($delivery) ? get_class($delivery) : null,
@@ -55,7 +55,7 @@ class MainController extends Controller
             'has_id_property' => is_object($delivery) ? property_exists($delivery, 'id') : false,
             'delivery_attributes' => method_exists($delivery, 'getAttributes') ? array_keys($delivery->getAttributes()) : null
         ]);
-        
+
         if (is_object($delivery)) {
             if (property_exists($delivery, 'id')) {
                 $deliveryId = $delivery->id;
@@ -67,27 +67,27 @@ class MainController extends Controller
                 }
             }
         }
-        
+
         \Log::info('MainController: Extracted delivery ID', [
             'delivery_id' => $deliveryId
         ]);
-        
+
         if (!$deliveryId) {
             \Log::error('MainController: Could not extract delivery ID');
             return redirect()->route('exam.finished')->with('error', 'Invalid delivery data');
         }
-        
+
         // For both DEMO and normal sessions, reload delivery from database
         // Use withoutGlobalScope for DEMO which may not have proper client_id
         $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
             ->where('id', $deliveryId)
             ->first();
-        
+
         \Log::info('MainController: Delivery query result', [
             'found' => $delivery ? true : false,
             'delivery_id' => $delivery ? $delivery->id : null
         ]);
-        
+
         if (!$delivery) {
             \Log::error('MainController: Delivery not found in database', [
                 'attempted_id' => $deliveryId
@@ -115,29 +115,29 @@ class MainController extends Controller
                 }
             }
         }
-        
+
         \Log::info('MainController: Taker extraction', [
             'has_taker' => isset($dataSession['taker']),
             'taker_id' => $takerId
         ]);
-        
+
         $taker = $takerId ? Taker::query()->where('id', $takerId)->first() : null;
-        
+
         \Log::info('MainController: Taker query result', [
             'found' => $taker ? true : false,
             'taker_id' => $taker ? $taker->id : null,
             'taker_email' => $taker ? $taker->email : null
         ]);
-        
+
         // Get exam - first try relationship, then direct query
         $exam = $delivery->exam;
-        
+
         \Log::info('MainController: Exam from delivery relationship', [
             'exam_found' => $exam ? true : false,
             'exam_id' => $exam ? $exam->id : null,
             'delivery_client_id' => $delivery->client_id ?? 'NULL'
         ]);
-        
+
         // If relationship fails, try direct query (for DEMO with client_id issues)
         if (!$exam && $delivery->exam_id) {
             \Log::info('MainController: Trying direct exam query', [
@@ -146,14 +146,14 @@ class MainController extends Controller
             $exam = Exam::withoutGlobalScope(\App\Scopes\ClientScope::class)
                 ->where('id', $delivery->exam_id)
                 ->first();
-                
+
             \Log::info('MainController: Direct exam query result', [
                 'exam_found' => $exam ? true : false,
                 'exam_id' => $exam ? $exam->id : null,
                 'exam_name' => $exam ? $exam->name : null
             ]);
         }
-        
+
         if (!$exam) {
             \Log::error('MainController: Exam not found for delivery', [
                 'delivery_id' => $delivery->id,
@@ -165,19 +165,19 @@ class MainController extends Controller
         // Try Rust service for fast data loading, fallback to PHP
         $rustService = new RustService();
         $examData = $rustService->loadExamData(
-            $exam->id, 
-            $delivery->id, 
+            $exam->id,
+            $delivery->id,
             $taker ? $taker->id : null
         );
-        
+
         // Check if this is DEMO by checking taker email
         $isDemoSession = $taker && $taker->email === 'demo@example.com';
-        
+
         if (($examData['success'] ?? false) && $isDemoSession) {
             // Use Rust-processed data with complete questions for DEMO
             $items = collect($examData['items']);
             \Log::info('DEMO: Using complete Rust data with questions', ['items_count' => $items->count()]);
-            
+
             // Debug first question to check structure
             if ($items->count() > 0) {
                 $firstItem = $items->first();
@@ -279,10 +279,10 @@ class MainController extends Controller
         $remainingSeconds = 0;
         if ($delivery->automatic_start) {
             // Handle DEMO delivery objects where scheduled_at might be a string
-            $scheduledAt = is_string($delivery->scheduled_at) 
-                ? Carbon::parse($delivery->scheduled_at) 
+            $scheduledAt = is_string($delivery->scheduled_at)
+                ? Carbon::parse($delivery->scheduled_at)
                 : $delivery->scheduled_at;
-            
+
             $endTime = $scheduledAt->copy()->addMinutes($delivery->duration);
             $remainingSeconds = max(0, $endTime->diffInSeconds(Carbon::now()));
         } else if ($isDemoSession && $delivery->duration) {
@@ -325,7 +325,7 @@ class MainController extends Controller
 
             $data['attempt'] = $attempt;
             $data['attemptQuestions'] = AttemptQuestion::query()->with('question')->where('attempt_id', $attempt->id)->get();
-            
+
             // For non-automatic start with existing attempt, calculate remaining time from attempt start
             // This overrides the default duration set for new DEMO sessions
             if (!$delivery->automatic_start && !$attempt->wasRecentlyCreated) {
@@ -348,7 +348,7 @@ class MainController extends Controller
             'has_attempt' => isset($data['attempt']),
             'remaining_seconds' => $data['remainingSeconds'] ?? 0
         ]);
-        
+
         return Inertia::render('Exam/Main', $data);
     }
 
@@ -382,16 +382,137 @@ class MainController extends Controller
             'item_hash' => $item->hash
         ]);
 
-        // FIXED: Load questions with all necessary relationships
-        $questions = Question::withoutGlobalScope(\App\Scopes\ClientScope::class)
-            ->where('item_id', $item->id)
-            ->with(['answers', 'type'])
-            ->get();
+        // FIXED: Try multiple approaches to get questions
+        $questions = null;
 
-        \Log::info('Questions query result', [
-            'questions_count' => $questions->count(),
+        // Approach 1: Standard query with relationships
+        try {
+            $questions = Question::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->where('item_id', $item->id)
+                ->with(['answers', 'type'])
+                ->get();
+        } catch (\Exception $e) {
+            \Log::error('Error in main questions query', [
+                'error' => $e->getMessage(),
+                'item_id' => $item->id
+            ]);
+        }
+
+        // Approach 2: If main query fails or returns empty, try without relationships
+        if (!$questions || $questions->count() === 0) {
+            \Log::warning('No questions found with main query, trying fallback', [
+                'item_id' => $item->id
+            ]);
+
+            try {
+                $questions = Question::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                    ->where('item_id', $item->id)
+                    ->get();
+
+                // Manually load relationships
+                foreach ($questions as $question) {
+                    try {
+                        $question->answers = $question->answers()->get();
+                        $question->type = $question->type()->first();
+                    } catch (\Exception $e) {
+                        \Log::error('Error loading relationships for question', [
+                            'question_id' => $question->id,
+                            'error' => $e->getMessage()
+                        ]);
+                        $question->answers = collect([]);
+                        $question->type = null;
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error in fallback questions query', [
+                    'error' => $e->getMessage(),
+                    'item_id' => $item->id
+                ]);
+                $questions = collect([]);
+            }
+        }
+
+        // Approach 3: If still no questions, try direct DB query
+        if (!$questions || $questions->count() === 0) {
+            \Log::warning('Still no questions found, trying direct DB query', [
+                'item_id' => $item->id
+            ]);
+
+            try {
+                $db = \DB::connection();
+                $questionRows = $db->table('questions')
+                    ->where('item_id', $item->id)
+                    ->get();
+
+                $questions = collect([]);
+                foreach ($questionRows as $row) {
+                    $question = new Question();
+                    $question->id = $row->id;
+                    $question->item_id = $row->item_id;
+                    $question->question = $row->question;
+                    $question->type_id = $row->type_id;
+                    $question->score = $row->score;
+                    $question->is_random = $row->is_random;
+
+                    // Try to get type
+                    try {
+                        $typeRow = $db->table('question_types')
+                            ->where('id', $row->type_id)
+                            ->first();
+                        if ($typeRow) {
+                            $question->type = (object) [
+                                'id' => $typeRow->id,
+                                'name' => $typeRow->name
+                            ];
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Error getting question type', [
+                            'question_id' => $row->id,
+                            'error' => $e->getMessage()
+                        ]);
+                        $question->type = null;
+                    }
+
+                    // Try to get answers
+                    try {
+                        $answerRows = $db->table('answers')
+                            ->where('question_id', $row->id)
+                            ->orderBy('order')
+                            ->get();
+
+                        $question->answers = collect([]);
+                        foreach ($answerRows as $answerRow) {
+                            $answer = (object) [
+                                'id' => $answerRow->id,
+                                'answer' => $answerRow->answer,
+                                'order' => $answerRow->order,
+                                'question_id' => $answerRow->question_id
+                            ];
+                            $question->answers->push($answer);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Error getting answers', [
+                            'question_id' => $row->id,
+                            'error' => $e->getMessage()
+                        ]);
+                        $question->answers = collect([]);
+                    }
+
+                    $questions->push($question);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error in direct DB query', [
+                    'error' => $e->getMessage(),
+                    'item_id' => $item->id
+                ]);
+                $questions = collect([]);
+            }
+        }
+
+        \Log::info('Final questions result', [
+            'questions_count' => $questions ? $questions->count() : 0,
             'item_id' => $item->id,
-            'first_question' => $questions->first() ? [
+            'first_question' => $questions && $questions->count() > 0 ? [
                 'id' => $questions->first()->id,
                 'question_text' => substr(strip_tags($questions->first()->question), 0, 100),
                 'type' => $questions->first()->type ? $questions->first()->type->name : 'no type',
@@ -399,18 +520,30 @@ class MainController extends Controller
             ] : null
         ]);
 
+        // Hide correct answers
+        if ($questions) {
+            $questions->each(function ($question, $questionKey) use ($questions) {
+                if ($question->answers) {
+                    $question->answers->each(function ($answer, $answerKey) use ($questions, $questionKey) {
+                        unset($questions[$questionKey]->answers[$answerKey]->is_correct_answer);
+                    });
+                }
+            });
+        }
+
+        // Get attempt data
         $attempt = null;
         if ($dataSession['taker'] && $dataSession['delivery']) {
             // Handle both Eloquent and stdClass objects
-            $deliveryId = is_object($dataSession['delivery']) && property_exists($dataSession['delivery'], 'id') 
-                ? $dataSession['delivery']->id 
+            $deliveryId = is_object($dataSession['delivery']) && property_exists($dataSession['delivery'], 'id')
+                ? $dataSession['delivery']->id
                 : null;
-                
+
             if ($deliveryId) {
                 $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
                     ->where('id', $deliveryId)
                     ->first();
-                    
+
                 // Try relationship first, then direct query
                 $exam = $delivery ? $delivery->exam : null;
                 if (!$exam && $delivery && $delivery->exam_id) {
@@ -418,18 +551,19 @@ class MainController extends Controller
                         ->where('id', $delivery->exam_id)
                         ->first();
                 }
-                
+
                 if ($exam) {
                     // Handle taker ID extraction
                     $takerId = is_object($dataSession['taker']) && property_exists($dataSession['taker'], 'id')
                         ? $dataSession['taker']->id
                         : null;
-                        
+
                     if ($takerId) {
                         $attempt = Attempt::query()
                             ->where('attempted_by', $takerId)
                             ->where('exam_id', $exam->id)
-                            ->with('questions', function ($query) use ($questionsId) {
+                            ->with('questions', function ($query) use ($questions) {
+                                $questionsId = $questions ? $questions->pluck('id') : collect([]);
                                 $query->whereIn('question_id', $questionsId);
                             })
                             ->latest()->first();
@@ -438,22 +572,13 @@ class MainController extends Controller
             }
         }
 
-        //        $item->load('attachments');
-
-        //        hiding is_correct_answer column
-        $questions->each(function ($question, $questionKey) use ($questions) {
-            $questions[$questionKey]->answers->each(function ($answer, $answerKey) use ($questions, $questionKey) {
-                unset($questions[$questionKey]->answers[$answerKey]->is_correct_answer);
-            });
-        });
-
         \Log::info('Returning questions response', [
-            'questions_count' => $questions->count(),
+            'questions_count' => $questions ? $questions->count() : 0,
             'attempt_id' => $attempt ? $attempt->id : null
         ]);
 
         return response()->json([
-            'questions' => $questions,
+            'questions' => $questions ?: collect([]),
             'attempt' => $attempt
         ]);
     }
