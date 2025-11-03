@@ -356,7 +356,7 @@ class MainController extends Controller
     public function getQuestions(Item $item): \Illuminate\Http\JsonResponse
     {
         $dataSession = Session::get('exam');
-        $questionQuery = Question::query()->where('item_id', $item->id)->with('answers');
+        $questionQuery = Question::withoutGlobalScope(\App\Scopes\ClientScope::class)->where('item_id', $item->id)->with('answers');
         $questions = $questionQuery->clone()->get();
         $questionsId = $questionQuery->pluck('id');
 
