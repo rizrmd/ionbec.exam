@@ -362,13 +362,53 @@ class MainController extends Controller
             'item_hash_type' => gettype($item_hash)
         ]);
 
-        // Handle different hash formats - frontend might send object or string
-        if (is_object($item_hash) && property_exists($item_hash, 'hash')) {
-            $actualHash = $item_hash->hash;
-            \Log::info('Processing object hash', ['extracted_hash' => $actualHash]);
-        } elseif (is_string($item_hash)) {
+        // Handle different hash formats - frontend might send nested object or string
+        if (is_string($item_hash)) {
             $actualHash = $item_hash;
             \Log::info('Processing string hash', ['hash' => $actualHash]);
+        } elseif (is_object($item_hash)) {
+            // Handle Laravel Eloquent model serialization
+            // Object comes as: {"App\\Models\\Exams\\Item": {"hash": "abc", ...}}
+            $jsonString = json_encode($item_hash);
+            $assocArray = json_decode($jsonString, true);
+
+            \Log::info('Debugging object hash', [
+                'original_item_hash_type' => get_class($item_hash),
+                'json_string' => $jsonString,
+                'assoc_array_keys' => array_keys($assocArray)
+            ]);
+
+            if (is_array($assocArray) && count($assocArray) > 0) {
+                $modelClass = array_key_first($assocArray);
+
+                if ($modelClass && isset($assocArray[$modelClass]['hash'])) {
+                    $actualHash = $assocArray[$modelClass]['hash'];
+                    \Log::info('Processing nested object hash', [
+                        'model_class' => $modelClass,
+                        'extracted_hash' => $actualHash
+                    ]);
+                } else {
+                    \Log::error('Invalid nested object - no hash found', [
+                        'model_class' => $modelClass,
+                        'assoc_array' => $assocArray
+                    ]);
+                    return response()->json([
+                        'error' => 'Invalid hash format - no hash found in nested object',
+                        'questions' => [],
+                        'attempt' => null
+                    ], 400);
+                }
+            } else {
+                \Log::error('Failed to decode object to array', [
+                    'item_hash' => $item_hash,
+                    'json_decode_result' => $assocArray
+                ]);
+                return response()->json([
+                    'error' => 'Invalid hash format - cannot process object',
+                    'questions' => [],
+                    'attempt' => null
+                ], 400);
+            }
         } else {
             \Log::error('Invalid hash format', [
                 'item_hash' => $item_hash,
