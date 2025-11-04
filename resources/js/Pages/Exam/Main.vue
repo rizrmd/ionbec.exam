@@ -816,7 +816,10 @@ const startTimer = (duration) => {
         // 🔒 SAFETY: Update timer display with enhanced checks
         try {
           if (timerCount && typeof timerCount === 'object' && 'value' in timerCount) {
-            timerCount.value = minutes + ":" + seconds;
+            // Enhanced safety for time formatting
+            const formattedMinutes = typeof minutes === 'string' ? minutes : (minutes ? minutes.toString() : '00');
+            const formattedSeconds = typeof seconds === 'string' ? seconds : (seconds ? seconds.toString() : '00');
+            timerCount.value = `${formattedMinutes}:${formattedSeconds}`;
           } else {
             console.warn('Timer: timerCount object is invalid');
           }
