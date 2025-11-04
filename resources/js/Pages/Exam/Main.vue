@@ -424,13 +424,18 @@ const submitAnswer = async (partial = false) => {
           if (responseData) {
             // Check if the response indicates success
             if (responseData.success === true) {
-              notification.add('success', 'Success', responseData.message || 'Answer saved successfully.')
+              // 🔒 ENHANCED: More informative message with answer count
+              const answerCount = Object.keys(newAnswers).length;
+              const message = responseData.message || `Answer saved successfully (${answerCount} answer${answerCount > 1 ? 's' : ''} saved)`;
+
+              notification.add('success', 'Success', message)
             } else if (responseData.error) {
               // Handle case where server returns error but still HTTP 200
               console.warn('Server returned error in success response:', responseData.error);
               notification.add('error', 'Error', responseData.error);
             } else {
-              notification.add('success', 'Success', 'Answer saved.')
+              const answerCount = Object.keys(newAnswers).length;
+              notification.add('success', 'Success', `Answer saved (${answerCount} answer${answerCount > 1 ? 's' : ''})`)
             }
           }
           if (!partial) answerVal.value = {}

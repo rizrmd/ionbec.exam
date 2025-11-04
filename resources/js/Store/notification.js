@@ -4,11 +4,16 @@ export const notification = reactive({
   data: [],
   lastNotification: {},  // Track last notification by message
   add(type = 'success', title = 'Success', message = '', timeout = 5) {
-    // Throttle duplicate notifications - only show if 3 seconds have passed
+    // 🔒 FIXED: Less aggressive throttling for answer saving notifications
+    // Allow answer save notifications to show more frequently (1 second cooldown)
+    const isAnswerSaveNotification = title === 'Success' && message.includes('saved');
+    const throttleTime = isAnswerSaveNotification ? 1000 : 3000; // 1s for answers, 3s for others
+
+    // Throttle duplicate notifications - but allow answer save notifications more frequently
     const notificationKey = `${type}-${title}-${message}`;
     const now = Date.now();
-    if (this.lastNotification[notificationKey] && 
-        (now - this.lastNotification[notificationKey]) < 3000) {
+    if (this.lastNotification[notificationKey] &&
+        (now - this.lastNotification[notificationKey]) < throttleTime) {
       return; // Skip showing notification if shown recently
     }
     this.lastNotification[notificationKey] = now;
