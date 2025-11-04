@@ -30,7 +30,8 @@
       "Bash(systemctl:*)",
       "Bash(service:*)",
       "Bash(echo:*)",
-      "Bash(debug_hash_lookup.php:*)"
+      "Bash(debug_hash_lookup.php:*)",
+      "Bash(ping:*)"
     ],
     "deny": [],
     "ask": []
