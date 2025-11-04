@@ -329,9 +329,11 @@ class MainController extends Controller
             // CRITICAL FIX: Add item_hash to initial attemptQuestions for onMounted matching
             if ($data['attemptQuestions'] && $data['attemptQuestions']->count() > 0) {
                 $data['attemptQuestions']->each(function ($question) use ($items) {
-                    // Find corresponding item to get its hash
+                    // Find corresponding item by checking question-item relationship directly
                     $matchingItem = $items->first(function ($item) use ($question) {
-                        return $item->questions->contains(function ($q) use ($question) {
+                        // Load the questions for this item to check relationship
+                        $itemQuestions = \App\Models\Exams\Question::where('item_id', $item->id)->get();
+                        return $itemQuestions->contains(function ($q) use ($question) {
                             return $q->id === $question->id;
                         });
                     });
