@@ -15,27 +15,56 @@ class ExamTimerService
     public function calculateRemainingSeconds(Delivery $delivery, Attempt $attempt = null): int
     {
         $baseDuration = $delivery->duration + ($attempt->extra_minute ?? 0);
-        
+
         // Determine the start time based on delivery and attempt
         $startTime = $this->determineStartTime($delivery, $attempt);
-        
+
         if (!$startTime) {
+            // 🔧 DEMO MODE FIX: If no valid start time, check if this is a DEMO exam
+            if ($this->isDemoExam($delivery)) {
+                \Log::info('ExamTimerService: Using fallback for DEMO exam - returning full duration', [
+                    'delivery_id' => $delivery->id,
+                    'base_duration' => $baseDuration,
+                    'demo_fallback' => true
+                ]);
+                return $baseDuration * 60; // Return full duration in seconds
+            }
             return 0;
         }
-        
+
         $endTime = $startTime->copy()->addMinutes($baseDuration);
         $remainingSeconds = max(0, $endTime->diffInSeconds(Carbon::now()));
-        
+
         \Log::info('ExamTimerService: Calculated remaining time', [
             'delivery_id' => $delivery->id,
             'attempt_id' => $attempt->id ?? null,
             'base_duration' => $baseDuration,
             'start_time' => $startTime->toDateTimeString(),
             'end_time' => $endTime->toDateTimeString(),
-            'remaining_seconds' => $remainingSeconds
+            'remaining_seconds' => $remainingSeconds,
+            'remaining_minutes' => round($remainingSeconds / 60, 2)
         ]);
-        
+
         return $remainingSeconds;
+    }
+
+    /**
+     * Check if this is a DEMO/TEST exam that needs fallback handling
+     */
+    private function isDemoExam(Delivery $delivery): bool
+    {
+        $deliveryName = strtolower($delivery->name ?? '');
+
+        // Check for DEMO indicators in delivery name
+        $demoIndicators = ['demo', 'test', 'trial', 'try out'];
+
+        foreach ($demoIndicators as $indicator) {
+            if (strpos($deliveryName, $indicator) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
     
     /**
@@ -43,15 +72,44 @@ class ExamTimerService
      */
     private function determineStartTime(Delivery $delivery, Attempt $attempt = null): ?Carbon
     {
+        // 🔧 CRITICAL FIX: Handle automatic_start with fallback to attempt start time
         if ($delivery->automatic_start) {
-            return $delivery->scheduled_at;
+            // If scheduled_at is reasonable (not too old and not too far in future), use it
+            $scheduledTime = $delivery->scheduled_at;
+            $now = Carbon::now();
+            $hoursDiff = abs($scheduledTime->diffInHours($now));
+
+            // Only use scheduled_at if it's within reasonable range (max 24 hours difference)
+            if ($hoursDiff <= 24 && $scheduledTime->lte($now)) {
+                return $scheduledTime;
+            }
+
+            // 🔒 DEMO MODE FIX: For automatic_start with invalid scheduled time,
+            // use attempt start time instead (more reliable for DEMO/Testing)
+            if ($attempt && $attempt->started_at) {
+                \Log::info('ExamTimerService: Using attempt start time instead of invalid scheduled time', [
+                    'delivery_id' => $delivery->id,
+                    'scheduled_at' => $scheduledTime->toDateTimeString(),
+                    'attempt_started_at' => $attempt->started_at->toDateTimeString(),
+                    'hours_diff' => $hoursDiff
+                ]);
+                return $attempt->started_at;
+            }
+
+            // If no attempt or invalid scheduled time, return null to handle gracefully
+            \Log::warning('ExamTimerService: Invalid scheduled time and no attempt available', [
+                'delivery_id' => $delivery->id,
+                'scheduled_at' => $scheduledTime->toDateTimeString(),
+                'automatic_start' => $delivery->automatic_start
+            ]);
+            return null;
         }
-        
+
         // For manual start, use attempt start time if available
         if ($attempt && $attempt->started_at) {
             return $attempt->started_at;
         }
-        
+
         return null;
     }
     
