@@ -42,9 +42,14 @@ class ExamController extends Controller
             }]);
         
         $delivery = $deliveryQuery->first();
-        
+
         if (! $delivery) {
             return redirect()->back()->with('error', 'Invalid token');
+        }
+
+        // Check if delivery has expired
+        if ($delivery->ended_at && now()->isAfter($delivery->ended_at)) {
+            return redirect()->back()->with('error', 'Token expired - Ujian telah berakhir. Hubungi yang berwenang untuk mendapatkan informasi lebih lanjut.');
         }
         
         $taker = $delivery->takers->first();
