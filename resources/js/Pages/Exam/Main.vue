@@ -594,6 +594,9 @@ const getQuestions = async (index) => {
       answerState: currentAnswers
     }
 
+    // Initialize image error handling states
+    initializeImageStates(item.attachments);
+
     vignetteData.value = item.is_vignette ? item.content : null
 
     // Only add to skipped if not already done or skipped
@@ -703,6 +706,9 @@ const getQuestions = async (index) => {
       attachments: item.attachments,
       loading: false // NEW: Remove loading flag
     };
+
+    // Initialize image error handling states
+    initializeImageStates(item.attachments);
 
     lastLoadedIndex.value = index;
     console.log('✅ Successfully loaded questions for index:', index);
@@ -1682,6 +1688,83 @@ const finishExam = async () => {
 const modalImage = ref(false);
 const modalImageContent = ref(null);
 const showScenarioModal = ref(false);
+
+// Image error handling states
+const imageLoadingStates = ref({});
+const imageErrorStates = ref({});
+
+// Initialize image states when question data loads
+const initializeImageStates = (attachments) => {
+  if (!attachments || !Array.isArray(attachments)) return;
+
+  attachments.forEach(file => {
+    if (file.id) {
+      imageLoadingStates.value[file.id] = true;
+      imageErrorStates.value[file.id] = false;
+    }
+  });
+};
+
+// Handle successful image load
+const handleImageLoad = (file) => {
+  if (file.id) {
+    imageLoadingStates.value[file.id] = false;
+    imageErrorStates.value[file.id] = false;
+    console.log('✅ Image loaded successfully:', file.id);
+  }
+};
+
+// Handle image loading error
+const handleImageError = (event, file) => {
+  if (file.id) {
+    imageLoadingStates.value[file.id] = false;
+    imageErrorStates.value[file.id] = true;
+
+    // Log error for debugging
+    console.error('❌ Image failed to load:', {
+      id: file.id,
+      url: file.url,
+      description: file.description,
+      error: event.target?.error
+    });
+
+    // Send error notification to support/debug
+    notification({
+      type: 'error',
+      title: 'Image Loading Error',
+      message: `Failed to load image: ${file.description || 'Question image'}`,
+      timeout: 5000
+    });
+  }
+};
+
+// Retry loading image
+const retryImageLoad = (file) => {
+  if (file.id) {
+    imageErrorStates.value[file.id] = false;
+    imageLoadingStates.value[file.id] = true;
+
+    // Force reload by adding timestamp
+    const img = new Image();
+    const retryUrl = `${file.url}?retry=${Date.now()}`;
+
+    img.onload = () => {
+      handleImageLoad(file);
+      // Update the DOM image src
+      const domImg = document.querySelector(`img[src*="${file.url}"]`);
+      if (domImg) {
+        domImg.src = retryUrl;
+      }
+    };
+
+    img.onerror = () => {
+      handleImageError({ target: img }, file);
+    };
+
+    img.src = retryUrl;
+  }
+};
+
 const zoomImage = (url, alt) => {
   modalImage.value = true;
   modalImageContent.value = {url, alt};
@@ -1735,7 +1818,35 @@ const markAsLater = (e, hash) => {
         <div class="flex flex-col items-center gap-3 my-5">
           <div v-for="file in questionData.attachments" v-if="questionData.attachments.length >= 1" class="w-full flex gap-2 max-w-xl">
             <div class="flex-auto flex justify-center items-center">
-              <img :src="file.url" :alt="file.description" class="rounded-lg cursor-pointer hover:shadow-md" @click="() => zoomImage(file.url)">
+              <!-- Image with error handling -->
+              <div class="relative">
+                <img
+                  :src="file.url"
+                  :alt="file.description"
+                  class="rounded-lg cursor-pointer hover:shadow-md max-w-full h-auto"
+                  @click="() => zoomImage(file.url)"
+                  @error="(e) => handleImageError(e, file)"
+                  @load="() => handleImageLoad(file)"
+                />
+                <!-- Loading state -->
+                <div v-if="imageLoadingStates[file.id]" class="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+                <!-- Error state -->
+                <div v-if="imageErrorStates[file.id]" class="absolute inset-0 flex flex-col items-center justify-center bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                  <svg class="w-12 h-12 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <p class="text-red-600 text-sm text-center font-medium">Image not available</p>
+                  <p class="text-red-500 text-xs text-center mt-1">{{ file.description || 'Question image' }}</p>
+                  <button
+                    @click="() => retryImageLoad(file)"
+                    class="mt-2 px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
