@@ -901,7 +901,7 @@ class MainController extends Controller
             // Use existing attempt logic from the main flow
             $attempt = Attempt::withoutGlobalScope(\App\Scopes\ClientScope::class)
                 ->where('delivery_id', $delivery->id)
-                ->where('taker_id', $taker->id)
+                ->where('attempted_by', $taker->id)
                 ->with(['questions' => function ($query) {
                     $query->withPivot(['answer_hash', 'answer', 'is_correct', 'score']);
                 }])
