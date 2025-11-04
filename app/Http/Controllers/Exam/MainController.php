@@ -1018,7 +1018,168 @@ class MainController extends Controller
 
     private function calculateScore($attempt)
     {
-        $this->dispatch(new CalculateScore($attempt));
+        try {
+            // 🔒 CRITICAL FIX: Calculate score immediately without queue for real-time updates
+            // Queue may not be working properly, so calculate synchronously
+
+            // Check if Rust service is available
+            $useRustService = env('USE_RUST_SCORING', true);
+
+            if ($useRustService) {
+                try {
+                    // Use Rust service for scoring
+                    $rustService = app(\App\Services\RustService::class);
+                    $result = $rustService->calculateScoreForAttempt($attempt->id);
+
+                    if (!isset($result['error'])) {
+                        // Successfully calculated using Rust
+                        event(new ScoringEvent($attempt->fresh()));
+
+                        \Log::info('Score calculated using Rust service (synchronous)', [
+                            'attempt_id' => $attempt->id,
+                            'score' => $result['score'] ?? 0,
+                            'processing_time_ms' => $result['processing_time_ms'] ?? 0
+                        ]);
+
+                        return;
+                    }
+
+                    // Fall back to PHP if Rust fails
+                    \Log::warning('Rust scoring failed, falling back to PHP (synchronous)', [
+                        'attempt_id' => $attempt->id,
+                        'error' => $result['error'] ?? 'Unknown error'
+                    ]);
+                } catch (\Exception $e) {
+                    // Fall back to PHP if Rust service is unavailable
+                    \Log::warning('Rust service unavailable, using PHP scoring (synchronous)', [
+                        'attempt_id' => $attempt->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            // Original PHP implementation (fallback) - synchronous version
+            // why distinct? because somehow, one question can be answered twice (bug?)
+            $attemptQuestionsQuery = $attempt->attemptQuestions()->distinct('question_id');
+
+            if (0 == $attemptQuestionsQuery->count()) {
+                $attempt->score = 0;
+                $attempt->progress = 0;
+                $attempt->save();
+
+                event(new ScoringEvent($attempt));
+                return;
+            }
+
+            // Get total questions from snapshot if available, otherwise from current exam
+            $delivery = $attempt->delivery;
+            $totalQuestions = 0;
+            $itemIds = [];
+
+            if ($delivery && $delivery->snapshot) {
+                // Use snapshot for accurate question count
+                $totalQuestions = $delivery->snapshot->total_questions;
+                // Get item IDs from snapshot
+                $itemIds = collect($delivery->snapshot->exam_structure['items'] ?? [])->pluck('id');
+            } else {
+                // Fallback to current exam structure (legacy behavior)
+                $itemQuery = Item::query()
+                    ->with('questions')
+                    ->whereHas(
+                        'exams',
+                        fn (Builder $builder) => $builder->where('id', $attempt->exam_id)
+                    );
+                $itemIds = $itemQuery->pluck('id');
+                $totalQuestions = Question::query()->whereIn('item_id', $itemIds)->count();
+            }
+
+            // Always query items from database for scoring logic
+            $itemQuery = Item::query()
+                ->with('questions')
+                ->whereHas(
+                    'exams',
+                    fn (Builder $builder) => $builder->where('id', $attempt->exam_id)
+                );
+            $items = $itemQuery->cursor();
+            $totalScore = 0;
+            $totalItems = 0;
+
+            foreach ($items as $item) {
+                $questions = $item->questions;
+                $is_mcq = false;
+                $is_interview = false;
+
+                foreach ($questions as $question) {
+                    /** @var AttemptQuestion|null $attemptQuestion */
+                    // 🔒 CRITICAL FIX: Query directly from attempt_question table, not pivot
+                    $attemptQuestion = AttemptQuestion::where('attempt_id', $attempt->id)
+                        ->where('question_id', $question->id)
+                        ->first();
+
+                    if (! $attemptQuestion) {
+                        ++$totalItems;
+                        continue;
+                    }
+
+                    if ('multiple-choice' == $question?->type?->name) {
+                        $is_mcq = true;
+
+                        // 🔒 CRITICAL FIX: Use actual score from attempt_question, not fixed 100
+                        $score = $attemptQuestion->score ?? 0;
+
+                        // For safety, ensure score is properly calculated for MCQ
+                        if ($score == 0 && $attemptQuestion->is_correct) {
+                            $score = $question->score ?? 0;
+                            $attemptQuestion->score = $score;
+                            $attemptQuestion->save();
+                        }
+
+                        $totalScore += $score;
+                    } elseif ('essay' == $question?->type?->name) {
+                        // manually updated by users; use score from attempt_question
+                        $totalScore += $attemptQuestion->score ?? 0;
+                    } elseif ('interview' == $question?->type?->name) {
+                        $is_interview = true;
+
+                        // manually updated by users; use score from attempt_question
+                        $totalScore += $attemptQuestion->score ?? 0;
+                    }
+
+                    ++$totalItems;
+                }
+
+                if (! $is_mcq && $is_interview) {
+                    // skip
+                } elseif (! $is_mcq && $item->is_vignette) { // if not mcq and it's vignette.
+                    $totalItems -= ($questions->count() - 1);
+                }
+            }
+
+            $attempt->score = $totalScore / $totalItems;
+
+            // Calculate progress and cap at 100% to prevent issues with orphaned questions
+            $calculatedProgress = ceil($attemptQuestionsQuery->count() * 100 / $totalQuestions);
+            $attempt->progress = min($calculatedProgress, 100);
+
+            $attempt->save();
+
+            event(new ScoringEvent($attempt));
+
+            \Log::info('Score calculated successfully (synchronous)', [
+                'attempt_id' => $attempt->id,
+                'final_score' => $attempt->score,
+                'final_progress' => $attempt->progress,
+                'total_questions' => $totalQuestions,
+                'answered_questions' => $attemptQuestionsQuery->count()
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error calculating score (synchronous)', [
+                'attempt_id' => $attempt->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
     /**
