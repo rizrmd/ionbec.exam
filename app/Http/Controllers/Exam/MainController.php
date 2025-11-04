@@ -162,39 +162,47 @@ class MainController extends Controller
             return redirect()->route('exam.finished')->with('error', 'Exam not found');
         }
 
-        // Try Rust service for fast data loading, fallback to PHP
+        // UNIFIED APPROACH: Force use Rust API for consistency to resolve green indicator issues
+        // This prevents conflicts between snapshot data (no hashes), database data (different hashes), and Rust API (complete hashes)
         $rustService = new RustService();
         $examData = $rustService->loadExamData(
-            $exam->id, 
-            $delivery->id, 
+            $exam->id,
+            $delivery->id,
             $taker ? $taker->id : null
         );
-        
-        // Check if this is DEMO by checking taker email
-        $isDemoSession = $taker && $taker->email === 'demo@example.com';
-        
-        if (($examData['success'] ?? false) && $isDemoSession) {
-            // Use Rust-processed data with complete questions for DEMO
+
+        \Log::info('UNIFIED DATA SOURCE: Using Rust API to resolve hash conflicts', [
+            'exam_id' => $exam->id,
+            'delivery_id' => $delivery->id,
+            'rust_success' => $examData['success'] ?? false,
+            'rust_items_count' => isset($examData['items']) ? count($examData['items']) : 0
+        ]);
+
+        if (($examData['success'] ?? false) && isset($examData['items'])) {
+            // UNIFIED: Always use Rust API data for both DEMO and normal sessions
             $items = collect($examData['items']);
-            \Log::info('DEMO: Using complete Rust data with questions', ['items_count' => $items->count()]);
-            
-            // Debug first question to check structure
+            \Log::info('RUST API: Using unified data source', ['items_count' => $items->count()]);
+
+            // Debug first item structure to verify hashes are present
             if ($items->count() > 0) {
                 $firstItem = $items->first();
                 $firstQuestion = $firstItem['questions'][0] ?? null;
-                \Log::info('DEMO: First question debug', [
-                    'question_type' => $firstQuestion['type'] ?? 'unknown',
+                \Log::info('RUST API: Item structure verification', [
+                    'item_hash' => $firstItem['hash'] ?? 'MISSING',
+                    'item_name' => $firstItem['name'] ?? 'NO NAME',
+                    'question_hash' => $firstQuestion['hash'] ?? 'MISSING',
                     'has_answers' => isset($firstQuestion['answers']) ? count($firstQuestion['answers']) : 0,
-                    'question_id' => $firstQuestion['id'] ?? 'unknown',
-                    'question_keys' => $firstQuestion ? array_keys($firstQuestion) : [],
-                    'full_question' => $firstQuestion
+                    'rust_api_working' => true
                 ]);
             }
-        } else if ($examData['success'] ?? false) {
-            // Use Rust-processed data for normal exams (lazy loading)
-            $items = collect($examData['items']);
         } else {
-            // Check if delivery has snapshot first
+            \Log::error('RUST API FAILED: Critical issue - Rust service unavailable', [
+                'exam_id' => $exam->id,
+                'delivery_id' => $delivery->id,
+                'rust_response' => $examData
+            ]);
+
+            // EMERGENCY FALLBACK: Use snapshot if Rust fails completely
             $snapshot = $delivery->snapshot;
 
             if ($snapshot) {
@@ -451,7 +459,67 @@ class MainController extends Controller
             ], 400);
         }
 
-        \Log::info('Attempting to find item', [
+        // UNIFIED APPROACH: Try Rust API first to maintain hash consistency
+        $rustService = new RustService();
+        $examData = $rustService->loadExamData(
+            $dataSession['exam']['id'] ?? null,
+            $dataSession['delivery']['id'] ?? null,
+            $dataSession['taker']['id'] ?? null
+        );
+
+        \Log::info('getQuestions: Rust API fallback attempt', [
+            'hash' => $actualHash,
+            'rust_success' => $examData['success'] ?? false,
+            'rust_items_count' => isset($examData['items']) ? count($examData['items']) : 0
+        ]);
+
+        if (($examData['success'] ?? false) && isset($examData['items'])) {
+            // Find item in Rust data by hash
+            $rustItem = null;
+            $rustQuestions = [];
+
+            foreach ($examData['items'] as $item) {
+                if (($item['hash'] ?? '') === $actualHash) {
+                    $rustItem = $item;
+                    $rustQuestions = $item['questions'] ?? [];
+                    break;
+                }
+            }
+
+            if ($rustItem) {
+                \Log::info('getQuestions: Found item in Rust API', [
+                    'hash' => $actualHash,
+                    'item_name' => $rustItem['name'] ?? 'No name',
+                    'questions_count' => count($rustQuestions)
+                ]);
+
+                // Get attempt data for this user
+                $attempt = $this->getAttemptForTaker($dataSession);
+
+                // Add item_hash to questions for green indicator consistency
+                foreach ($rustQuestions as &$question) {
+                    $question['item_hash'] = $actualHash;
+                }
+
+                return response()->json([
+                    'questions' => $rustQuestions,
+                    'attempt' => $attempt,
+                    'using_rust_api' => true
+                ]);
+            } else {
+                \Log::warning('getQuestions: Item not found in Rust API, falling back to database', [
+                    'hash' => $actualHash
+                ]);
+            }
+        } else {
+            \Log::warning('getQuestions: Rust API failed, falling back to database', [
+                'hash' => $actualHash,
+                'rust_error' => $examData['error'] ?? 'Unknown error'
+            ]);
+        }
+
+        // FALLBACK: Try database if Rust API fails
+        \Log::info('getQuestions: Attempting database fallback', [
             'hash' => $actualHash,
             'using_without_globalscope' => true
         ]);
@@ -461,15 +529,19 @@ class MainController extends Controller
             ->first();
 
         if (!$item) {
-            \Log::error('Item not found', [
+            \Log::error('getQuestions: Item not found in database either', [
                 'hash' => $actualHash,
-                'original_item_hash' => $item_hash
+                'original_item_hash' => $item_hash,
+                'rust_api_tried' => true,
+                'database_tried' => true
             ]);
 
             return response()->json([
-                'error' => 'Item not found',
+                'error' => 'Item not found in Rust API or database',
                 'questions' => [],
-                'attempt' => null
+                'attempt' => null,
+                'rust_api_failed' => true,
+                'database_failed' => true
             ], 404);
         }
 
@@ -760,5 +832,50 @@ class MainController extends Controller
     private function calculateScore($attempt)
     {
         $this->dispatch(new CalculateScore($attempt));
+    }
+
+    /**
+     * Helper method to get attempt data for taker session
+     */
+    private function getAttemptForTaker($dataSession)
+    {
+        try {
+            $taker = $dataSession['taker'] ?? null;
+            $delivery = $dataSession['delivery'] ?? null;
+
+            if (!$taker || !$delivery) {
+                return null;
+            }
+
+            // Use existing attempt logic from the main flow
+            $attempt = Attempt::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->where('delivery_id', $delivery->id)
+                ->where('taker_id', $taker->id)
+                ->with(['questions' => function ($query) {
+                    $query->withPivot(['answer_hash', 'answer', 'is_correct', 'score']);
+                }])
+                ->first();
+
+            if ($attempt) {
+                \Log::info('getAttemptForTaker: Found existing attempt', [
+                    'attempt_id' => $attempt->id,
+                    'delivery_id' => $delivery->id,
+                    'taker_id' => $taker->id
+                ]);
+            } else {
+                \Log::warning('getAttemptForTaker: No attempt found', [
+                    'delivery_id' => $delivery->id,
+                    'taker_id' => $taker->id
+                ]);
+            }
+
+            return $attempt;
+        } catch (\Exception $e) {
+            \Log::error('getAttemptForTaker: Error getting attempt', [
+                'error' => $e->getMessage(),
+                'session_data' => array_keys($dataSession)
+            ]);
+            return null;
+        }
     }
 }
