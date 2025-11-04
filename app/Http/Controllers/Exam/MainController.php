@@ -9,6 +9,7 @@ use App\Models\Exams\Item;
 use App\Jobs\CalculateScore;
 use App\Models\Exams\Answer;
 use App\Models\Takers\Taker;
+use App\Services\ExamTimerService;
 use Illuminate\Http\Request;
 use App\Models\Accounts\User;
 use App\Models\Exams\Question;
@@ -294,23 +295,8 @@ class MainController extends Controller
             }
         }
 
-        // Calculate remaining time in seconds (timezone agnostic)
-        $remainingSeconds = 0;
-        if ($delivery->automatic_start) {
-            // Handle DEMO delivery objects where scheduled_at might be a string
-            $scheduledAt = is_string($delivery->scheduled_at) 
-                ? Carbon::parse($delivery->scheduled_at) 
-                : $delivery->scheduled_at;
-            
-            $endTime = $scheduledAt->copy()->addMinutes($delivery->duration);
-            $remainingSeconds = max(0, $endTime->diffInSeconds(Carbon::now()));
-        } else if ($isDemoSession && $delivery->duration) {
-            // For DEMO sessions without automatic_start, give them the full duration
-            \Log::info('DEMO: Setting full duration for non-automatic start', [
-                'duration_minutes' => $delivery->duration
-            ]);
-            $remainingSeconds = $delivery->duration * 60; // Convert minutes to seconds
-        }
+        // 🔒 UNIFIED TIMER: Use single timer calculation method
+        $remainingSeconds = app(ExamTimerService::class)->calculateRemainingSeconds($delivery, $attempt);
 
         // 🔒 NEW: Enhanced data validation and structure fix
         \Log::info('MainController: Preparing frontend data structure', [
@@ -388,18 +374,6 @@ class MainController extends Controller
                 });
             }
             
-            // For non-automatic start with existing attempt, calculate remaining time from attempt start
-            // This overrides the default duration set for new DEMO sessions
-            if (!$delivery->automatic_start && !$attempt->wasRecentlyCreated) {
-                $endTime = $attempt->started_at->copy()->addMinutes($delivery->duration);
-                $remainingSeconds = max(0, $endTime->diffInSeconds(Carbon::now()));
-                $data['remainingSeconds'] = $remainingSeconds;
-                \Log::info('Calculated remaining time from existing attempt', [
-                    'attempt_id' => $attempt->id,
-                    'started_at' => $attempt->started_at,
-                    'remaining_seconds' => $remainingSeconds
-                ]);
-            }
         }
 
         // 🔒 NEW: Final validation of data structure before sending to frontend
@@ -932,6 +906,21 @@ class MainController extends Controller
 
         $answerResults = [];
         $attempt = Attempt::byHash($request->attempt_hash);
+        
+        // 🔒 CRITICAL SECURITY: Check if attempt has expired
+        if (app(ExamTimerService::class)->isAttemptExpired($attempt)) {
+            \Log::warning('Attempt rejected - exam time expired', [
+                'attempt_id' => $attempt->id,
+                'attempt_hash' => $request->attempt_hash,
+                'ended_at' => $attempt->ended_at,
+                'current_time' => Carbon::now()->toDateTimeString()
+            ]);
+            
+            return response()->json([
+                'error' => 'Exam time expired',
+                'expired' => true
+            ], 403);
+        }
         if (count($request->answers_value) >= 1) {
             foreach ($request->answers_value as $questionHash => $answerValue) {
                 $question = Question::byHash($questionHash);
@@ -1003,6 +992,46 @@ class MainController extends Controller
                 'session_data' => array_keys($dataSession)
             ]);
             return null;
+        }
+    }
+
+    /**
+     * Timer synchronization endpoint for frontend
+     */
+    #[Get('/exam/timer/sync', name: 'exam.timer.sync')]
+    public function syncTimer(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $request->validate([
+                'attempt_hash' => ['required', new ExistsByHash(Attempt::class)],
+            ]);
+
+            $attempt = Attempt::byHash($request->attempt_hash);
+            $remainingSeconds = app(ExamTimerService::class)->calculateRemainingSeconds($attempt->delivery, $attempt);
+            $isExpired = app(ExamTimerService::class)->isAttemptExpired($attempt);
+
+            \Log::info('Timer sync request', [
+                'attempt_id' => $attempt->id,
+                'remaining_seconds' => $remainingSeconds,
+                'expired' => $isExpired
+            ]);
+
+            return response()->json([
+                'remaining_seconds' => $remainingSeconds,
+                'expired' => $isExpired,
+                'server_time' => Carbon::now()->timestamp
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Timer sync error', [
+                'error' => $e->getMessage(),
+                'attempt_hash' => $request->attempt_hash ?? null
+            ]);
+
+            return response()->json([
+                'error' => 'Sync failed',
+                'expired' => true // Safety fallback
+            ], 500);
         }
     }
 }
