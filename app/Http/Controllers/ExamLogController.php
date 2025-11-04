@@ -216,4 +216,61 @@ class ExamLogController extends Controller
                 ->with('error', 'Failed to delete log entry.');
         }
     }
+
+    /**
+     * DEBUG: Debug admin access without middleware
+     */
+    public function debugAdmin()
+    {
+        $debugInfo = [
+            'authenticated' => auth()->check(),
+            'user_id' => auth()->id(),
+            'user_email' => auth()->check() ? auth()->user()->email : 'Not authenticated',
+            'user_name' => auth()->check() ? auth()->user()->name : 'Not authenticated',
+            'is_admin_property' => auth()->check() ? (bool)auth()->user()->is_admin : 'Not authenticated',
+            'admin_role_property' => auth()->check() ? (auth()->user()->admin_role ?? 'NULL') : 'Not authenticated',
+            'is_admin_method' => auth()->check() ? auth()->user()->isAdmin() : 'Not authenticated',
+            'can_manage_logs' => auth()->check() ? auth()->user()->canManageLogs() : 'Not authenticated',
+            'has_full_admin_access' => auth()->check() ? auth()->user()->hasFullAdminAccess() : 'Not authenticated',
+            'request_url' => request()->fullUrl(),
+            'request_method' => request()->method(),
+            'request_ip' => request()->ip(),
+            'session_id' => session()->getId(),
+            'laravel_version' => app()->version(),
+            'php_version' => PHP_VERSION,
+            'timestamp' => now()->toDateTimeString(),
+        ];
+
+        // Check if admin user exists
+        $adminUser = \App\Models\Accounts\User::where('email', 'admin@localhost.com')->first();
+        $debugInfo['admin_user_exists'] = $adminUser ? true : false;
+
+        if ($adminUser) {
+            $debugInfo['admin_user_info'] = [
+                'id' => $adminUser->id,
+                'name' => $adminUser->name,
+                'email' => $adminUser->email,
+                'is_admin' => (bool)$adminUser->is_admin,
+                'admin_role' => $adminUser->admin_role ?? 'NULL',
+                'email_verified_at' => $adminUser->email_verified_at?->toDateTimeString() ?? 'NULL',
+                'model_is_admin' => $adminUser->isAdmin(),
+                'model_can_manage_logs' => $adminUser->canManageLogs(),
+            ];
+        }
+
+        // Check middleware registration
+        $debugInfo['middleware_registered'] = app()->make('router')->getRoutes()->getRoutes();
+
+        return response()->json([
+            'debug_info' => $debugInfo,
+            'message' => 'Debug information for admin access troubleshooting',
+            'next_steps' => [
+                '1. Check if user is authenticated',
+                '2. Check if is_admin property is TRUE',
+                '3. Check if isAdmin() method returns TRUE',
+                '4. Run SQL: UPDATE users SET is_admin = true WHERE email = "admin@localhost.com"',
+                '5. Clear browser cache and Laravel cache'
+            ]
+        ]);
+    }
 }

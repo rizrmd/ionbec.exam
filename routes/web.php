@@ -150,3 +150,6 @@ Route::middleware(['auth', 'admin.only'])->prefix('admin')->name('admin.')->grou
     Route::get('/exam-logs/{log}', [App\Http\Controllers\ExamLogController::class, 'show'])->name('exam-logs.show');
     Route::delete('/exam-logs/{log}', [App\Http\Controllers\ExamLogController::class, 'destroy'])->name('exam-logs.delete');
 });
+
+// DEBUG: Temporary route without middleware for testing
+Route::get('/debug-admin', [App\Http\Controllers\ExamLogController::class, 'debugAdmin'])->name('debug.admin');
