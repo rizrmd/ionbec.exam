@@ -774,20 +774,28 @@ const startTimer = (duration) => {
   let timer = duration, minutes, seconds;
   if (!admin.value) {
     setInterval(function () {
-      minutes = parseInt(timer / 60, 10);
-      seconds = parseInt(timer % 60, 10);
+      try {
+        minutes = parseInt(timer / 60, 10);
+        seconds = parseInt(timer % 60, 10);
 
-      minutes = minutes < 10 ? "0" + minutes : minutes;
-      seconds = seconds < 10 ? "0" + seconds : seconds;
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
 
-      timerCount.value = minutes + ":" + seconds;
+        timerCount.value = minutes + ":" + seconds;
 
-      if (--timer < 0) {
-        timer = duration;
-        localStorage.removeItem(getLocalStorageKey('exam-state'))
-        Inertia.visit(route('exam.finished'))
+        if (--timer < 0) {
+          timer = duration;
+          // Safety check for localStorage key generation
+          try {
+            localStorage.removeItem(getLocalStorageKey('exam-state'));
+          } catch (e) {
+            console.warn('Timer: Failed to remove localStorage key', e);
+          }
+          Inertia.visit(route('exam.finished'));
+        }
+      } catch (error) {
+        console.error('Timer error:', error);
       }
-
     }, 1000);
   }
 }
@@ -819,13 +827,22 @@ onMounted(() => {
     startTimer(remainingSeconds.value)
   } else {
     // No time remaining, redirect to finished
-    localStorage.removeItem(getLocalStorageKey('exam-state'))
-    Inertia.visit(route('exam.finished'))
+    try {
+      localStorage.removeItem(getLocalStorageKey('exam-state'));
+    } catch (e) {
+      console.warn('onMounted: Failed to remove localStorage key', e);
+    }
+    Inertia.visit(route('exam.finished'));
     return
   }
 
   // CRITICAL: First load localStorage to preserve any existing state
-  const examState = JSON.parse(localStorage.getItem(getLocalStorageKey('exam-state')));
+  let examState = null;
+  try {
+    examState = JSON.parse(localStorage.getItem(getLocalStorageKey('exam-state')));
+  } catch (e) {
+    console.warn('onMounted: Failed to parse localStorage state', e);
+  }
   if (examState) {
     // Load all state from localStorage first
     skippedQuests.value = examState.skipped ?? []
@@ -835,7 +852,12 @@ onMounted(() => {
 
   // CRITICAL FIX: Load answer data from localStorage first
   console.log('DEBUG: onMounted - Loading from localStorage')
-  const savedExamState = JSON.parse(localStorage.getItem(getLocalStorageKey('exam-state')) || '{}');
+  let savedExamState = {};
+  try {
+    savedExamState = JSON.parse(localStorage.getItem(getLocalStorageKey('exam-state')) || '{}');
+  } catch (e) {
+    console.warn('onMounted: Failed to parse saved exam state', e);
+  }
   console.log('DEBUG: localStorage answerData:', savedExamState.answerData || 'NULL')
 
   // Populate answerVal from localStorage if available
