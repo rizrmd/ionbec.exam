@@ -28,20 +28,31 @@ class MainController extends Controller
     public function index(): \Illuminate\Http\RedirectResponse|\Inertia\Response
     {
         $dataSession = Session::get('exam');
-        
-        \Log::info('MainController: Session check', [
-            'has_session' => $dataSession ? true : false,
+
+        // 🔒 NEW: Enhanced session validation
+        if (!$dataSession || !is_array($dataSession)) {
+            \Log::error('MainController: Invalid session structure', [
+                'session_exists' => isset($dataSession),
+                'session_type' => gettype($dataSession),
+                'session_data' => $dataSession
+            ]);
+            return redirect('/')->with('error', 'Invalid session data. Please login again.');
+        }
+
+        \Log::info('MainController: Session validation', [
+            'has_session' => true,
+            'session_keys' => array_keys($dataSession),
             'has_delivery' => isset($dataSession['delivery']),
             'delivery_type' => isset($dataSession['delivery']) ? gettype($dataSession['delivery']) : 'not_set',
             'delivery_class' => isset($dataSession['delivery']) && is_object($dataSession['delivery']) ? get_class($dataSession['delivery']) : 'not_object'
         ]);
-        
+
         // Check if session exists and has delivery
-        if (!$dataSession || !isset($dataSession['delivery']) || !$dataSession['delivery']) {
-            \Log::error('MainController: No session or delivery', [
-                'dataSession' => $dataSession
+        if (!isset($dataSession['delivery']) || !$dataSession['delivery']) {
+            \Log::error('MainController: No delivery in session', [
+                'session_keys' => array_keys($dataSession)
             ]);
-            return redirect('/')->with('error', 'Session expired. Please login again.');
+            return redirect('/')->with('error', 'Delivery not found in session. Please login again.');
         }
         
         // Get delivery ID handling both Eloquent and stdClass objects
@@ -301,12 +312,24 @@ class MainController extends Controller
             $remainingSeconds = $delivery->duration * 60; // Convert minutes to seconds
         }
 
+        // 🔒 NEW: Enhanced data validation and structure fix
+        \Log::info('MainController: Preparing frontend data structure', [
+            'delivery_id' => $delivery->id ?? null,
+            'exam_id' => $exam->id ?? null,
+            'taker_id' => $taker->id ?? null,
+            'items_count' => $items ? $items->count() : 0
+        ]);
+
         $data = [
             'delivery' => $delivery,
             'taker' => $taker,
             'exam' => $exam,
             'examItems' => $items,
             'remainingSeconds' => $remainingSeconds,
+            // 🔒 CRITICAL FIX: Add explicit IDs for frontend context
+            'examId' => $exam->id ?? null,
+            'deliveryId' => $delivery->id ?? null,
+            'takerId' => $taker->id ?? null,
         ];
 
         if ($dataSession['admin']) {
@@ -379,6 +402,30 @@ class MainController extends Controller
             }
         }
 
+        // 🔒 NEW: Final validation of data structure before sending to frontend
+        \Log::info('MainController: Final data validation before frontend render', [
+            'exam_id' => $data['examId'],
+            'delivery_id' => $data['deliveryId'],
+            'taker_id' => $data['takerId'],
+            'exam_items_valid' => $items ? $items->count() : 0,
+            'attempt_questions_count' => isset($data['attemptQuestions']) ? $data['attemptQuestions']->count() : 0,
+            'data_structure_valid' => !empty($data['examId']) && !empty($data['deliveryId'])
+        ]);
+
+        // Validate items structure before sending to frontend
+        if ($items) {
+            $items->each(function ($item, $index) {
+                $itemHash = $item->hash ?? $item['hash'] ?? null;
+                $itemName = $item->name ?? $item['name'] ?? 'ITEM_' . $index;
+                \Log::info('Item validation before frontend', [
+                    'index' => $index,
+                    'item_hash' => $itemHash,
+                    'item_name' => $itemName,
+                    'has_questions' => isset($item->questions) || isset($item['questions'])
+                ]);
+            });
+        }
+
         \Log::info('MainController: Rendering exam interface', [
             'has_delivery' => isset($data['delivery']),
             'has_taker' => isset($data['taker']),
@@ -387,7 +434,7 @@ class MainController extends Controller
             'has_attempt' => isset($data['attempt']),
             'remaining_seconds' => $data['remainingSeconds'] ?? 0
         ]);
-        
+
         return Inertia::render('Exam/Main', $data);
     }
 
@@ -612,6 +659,7 @@ class MainController extends Controller
         \Log::info('Questions query result', [
             'questions_count' => $questions->count(),
             'item_id' => $item->id,
+            'item_is_vignette' => $item->is_vignette,
             'first_question' => $questions->first() ? [
                 'id' => $questions->first()->id,
                 'question_text' => substr(strip_tags($questions->first()->question), 0, 100),
@@ -619,6 +667,34 @@ class MainController extends Controller
                 'answers_count' => $questions->first()->answers ? $questions->first()->answers->count() : 0
             ] : null
         ]);
+
+        // DEBUG: Log all questions for vignette items
+        if ($item->is_vignette) {
+            \Log::info('VIGNETTE DEBUG: All questions for this item', [
+                'item_id' => $item->id,
+                'item_hash' => $item->hash,
+                'total_questions_found' => $questions->count(),
+                'questions_list' => $questions->map(function($q) {
+                    return [
+                        'id' => $q->id,
+                        'hash' => $q->hash,
+                        'question_preview' => substr(strip_tags($q->question), 0, 100),
+                        'item_hash' => $q->item_hash
+                    ];
+                })->toArray()
+            ]);
+
+            // Check if there should be more questions in database
+            $allQuestionsCount = Question::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->where('item_id', $item->id)
+                ->count();
+
+            \Log::info('VIGNETTE DEBUG: Total questions in database for this item', [
+                'item_id' => $item->id,
+                'total_questions_in_db' => $allQuestionsCount,
+                'loaded_questions_count' => $questions->count()
+            ]);
+        }
 
         $attempt = null;
 

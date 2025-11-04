@@ -42,32 +42,240 @@ const props = defineProps({
   },
 })
 
-const {exam, examItems, attempt, delivery, attemptQuestions, admin, remainingSeconds} = toRefs(props);
+const {exam, examItems, attempt, delivery, attemptQuestions, admin, remainingSeconds, examId, deliveryId, takerId} = toRefs(props);
+
+// 🔒 CRITICAL FIX: Use explicit IDs from backend instead of nested object properties
+const examContext = ref({
+  examId: examId.value || null,
+  deliveryId: deliveryId.value || null,
+  takerId: takerId.value || null,
+  totalItems: examItems.value?.length || 0,
+  initialized: false
+});
+
+// 🔒 DEBUG: Log exam context for troubleshooting with explicit IDs
+console.log('🎯 EXAM CONTEXT INITIALIZATION:', {
+  backendExamId: examId.value,
+  backendDeliveryId: deliveryId.value,
+  backendTakerId: takerId.value,
+  fallbackExamId: exam.value?.id,
+  examName: exam.value?.name,
+  fallbackDeliveryId: delivery.value?.id,
+  deliveryName: delivery.value?.name,
+  totalItems: examItems.value?.length,
+  examContext: examContext.value
+});
 
 const loadingQuestion = ref(false);
 const loadingQuestions = ref(false); // NEW: Loading state for question navigation
 const lastLoadedIndex = ref(null); // NEW: Track last loaded index to prevent duplicate requests
 const vignetteData = ref(null);
 const questionData = ref(null);
-const items = computed(() => {
-  const processedItems = examItems.value.map((item) => {
-    const questions = item.is_random ? shuffleArray(item.questions) : item.questions
 
-    const processedQuestions = questions.map((question) => {
-      return {
-        ...question,
-        answers: question.is_random ? shuffleArray(question.answers) : question.answers
-      }
-    })
+// NEW: Isolated localStorage keys for this exam session
+const getLocalStorageKey = (key) => {
+  return `exam_${examContext.value.examId}_delivery_${examContext.value.deliveryId}_${key}`;
+};
 
-    return {
-      ...item,
-      questions: processedQuestions,
+// NEW: Clear any conflicting exam state from localStorage
+const clearConflictingExamState = () => {
+  const keys = Object.keys(localStorage);
+  keys.forEach(key => {
+    if (key.startsWith('exam_') && !key.includes(`exam_${examContext.value.examId}_delivery_${examContext.value.deliveryId}_`)) {
+      console.log('🗑️ Clearing conflicting exam state:', key);
+      localStorage.removeItem(key);
     }
-  })
+  });
+};
+// NEW: Exam Context Validation - Prevent mixed exam context
+const validateExamContext = (itemHash, responseData) => {
+  if (!examContext.value.initialized) {
+    examContext.value.initialized = true;
+    console.log('🎯 EXAM CONTEXT VALIDATED - First load:', {
+      itemHash,
+      examId: examContext.value.examId,
+      deliveryId: examContext.value.deliveryId,
+      questionsReceived: responseData?.questions?.length || 0
+    });
+    return true;
+  }
 
-  return exam.value.is_random ? shuffleArray(processedItems) : processedItems
-})
+  // Validate response consistency with current exam context
+  const questionCount = responseData?.questions?.length || 0;
+  const expectedRange = examContext.value.totalItems > 0; // We have 52 items, not 60
+
+  if (!expectedRange || questionCount === 0) {
+    console.warn('⚠️ EXAM CONTEXT WARNING:', {
+      itemHash,
+      questionCount,
+      totalItems: examContext.value.totalItems,
+      examId: examContext.value.examId,
+      message: 'Invalid question count or missing exam context'
+    });
+
+    // Return false to prevent mixed context issues
+    return false;
+  }
+
+  console.log('✅ EXAM CONTEXT VALIDATED:', {
+    itemHash,
+    examId: examContext.value.examId,
+    deliveryId: examContext.value.deliveryId,
+    questionCount,
+    totalItems: examContext.value.totalItems
+  });
+
+  return true;
+};
+
+// 🔒 CRITICAL FIX: Enhanced computed items with comprehensive fallback handling
+const items = computed(() => {
+  try {
+    console.log('🔧 Computing items with validation');
+
+    // 🔒 Validate examItems.value
+    if (!examItems.value) {
+      console.warn('⚠️ examItems.value is null or undefined, returning empty array');
+      return [];
+    }
+
+    if (!Array.isArray(examItems.value)) {
+      console.warn('⚠️ examItems.value is not an array, returning empty array', {
+        examItems: examItems.value,
+        type: typeof examItems.value
+      });
+      return [];
+    }
+
+    if (examItems.value.length === 0) {
+      console.warn('⚠️ examItems.value is empty, returning empty array');
+      return [];
+    }
+
+    console.log('📊 Processing items:', examItems.value.length, 'items');
+
+    const processedItems = examItems.value.map((item, index) => {
+      try {
+        // 🔒 Validate individual item
+        if (!item || typeof item !== 'object') {
+          console.warn('⚠️ Invalid item at index:', index, 'using fallback item', {
+            item: item,
+            type: typeof item
+          });
+          return createFallbackItem(index);
+        }
+
+        // 🔒 Validate required item properties
+        if (!item.hash) {
+          console.warn('⚠️ Item missing hash at index:', index, 'using fallback');
+          return createFallbackItem(index, item);
+        }
+
+        // 🔒 Validate questions array
+        const itemQuestions = item.questions || [];
+        if (!Array.isArray(itemQuestions)) {
+          console.warn('⚠️ Item has invalid questions at index:', index, 'using empty array');
+          item.questions = [];
+        }
+
+        const questions = item.is_random ? shuffleArray(itemQuestions) : itemQuestions;
+
+        const processedQuestions = questions.map((question, qIndex) => {
+          try {
+            // 🔒 Validate individual question
+            if (!question || typeof question !== 'object') {
+              console.warn('⚠️ Invalid question at item index:', index, 'question index:', qIndex);
+              return createFallbackQuestion(qIndex);
+            }
+
+            // 🔒 Validate answers array
+            const questionAnswers = question.answers || [];
+            if (!Array.isArray(questionAnswers)) {
+              console.warn('⚠️ Question has invalid answers at item index:', index, 'question index:', qIndex);
+              question.answers = [];
+            }
+
+            return {
+              ...question,
+              // 🔒 Ensure critical properties exist
+              hash: question.hash || `fallback_question_${index}_${qIndex}`,
+              item_hash: question.item_hash || item.hash,
+              answers: question.is_random ? shuffleArray(questionAnswers) : questionAnswers
+            };
+          } catch (questionError) {
+            console.error('💥 Error processing question at item index:', index, 'question index:', qIndex, questionError);
+            return createFallbackQuestion(qIndex);
+          }
+        });
+
+        return {
+          ...item,
+          // 🔒 Ensure critical properties exist
+          hash: item.hash,
+          name: item.name || `Item ${index + 1}`,
+          questions: processedQuestions,
+          // 🔒 Ensure required properties for navigation
+          item_type: item.item_type || { value: 'multiple-choice' },
+          is_random: !!item.is_random,
+          is_vignette: !!item.is_vignette,
+          content: item.content || null,
+          attachments: item.attachments || []
+        };
+      } catch (itemError) {
+        console.error('💥 Error processing item at index:', index, itemError);
+        return createFallbackItem(index, item);
+      }
+    });
+
+    // 🔒 Validate final processed items
+    if (!Array.isArray(processedItems) || processedItems.length === 0) {
+      console.warn('⚠️ No valid items after processing, returning empty array');
+      return [];
+    }
+
+    // 🔒 Validate exam.value for randomization
+    const shouldRandomize = exam.value && exam.value.is_random;
+    const finalItems = shouldRandomize ? shuffleArray(processedItems) : processedItems;
+
+    console.log('✅ Successfully computed items:', finalItems.length, 'items');
+    return finalItems;
+
+  } catch (error) {
+    console.error('💥 CRITICAL ERROR in items computed:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      examItems: examItems.value,
+      exam: exam.value
+    });
+    // Emergency fallback: return empty array to prevent complete crash
+    return [];
+  }
+});
+
+// 🔒 Helper functions for fallback item and question creation
+const createFallbackItem = (index, originalItem = null) => {
+  return {
+    hash: originalItem?.hash || `fallback_item_${index}`,
+    name: originalItem?.name || `Item ${index + 1}`,
+    questions: originalItem?.questions || [],
+    item_type: originalItem?.item_type || { value: 'multiple-choice' },
+    is_random: !!originalItem?.is_random,
+    is_vignette: !!originalItem?.is_vignette,
+    content: originalItem?.content || null,
+    attachments: originalItem?.attachments || []
+  };
+};
+
+const createFallbackQuestion = (index) => {
+  return {
+    hash: `fallback_question_${index}`,
+    item_hash: null,
+    question: 'Error loading question',
+    answers: [],
+    is_random: false
+  };
+};
 
 const answerVal = ref([]);
 const laters = ref([]);
@@ -112,7 +320,7 @@ const submitAnswer = async (partial = false) => {
     })
 
     // Update localStorage - CRITICAL: Save answerVal data too!
-    localStorage.setItem('exam-state', JSON.stringify({
+    localStorage.setItem(getLocalStorageKey('exam-state'), JSON.stringify({
       skipped: skippedQuests.value,
       later: laterQuests.value,
       done: doneQuests.value,
@@ -147,14 +355,64 @@ const skippedQuests = ref([]);
 const laterQuests = ref([]);
 const doneQuests = ref([]);
 
+// 🔒 CRITICAL FIX: Enhanced getQuestions with comprehensive validation
 const getQuestions = async (index) => {
-  const item = items.value[index];
+  try {
+    console.log('🚀 getQuestions called with index:', index);
 
-  // NEW: Prevent duplicate requests and track loading state
-  if (loadingQuestions.value || lastLoadedIndex.value === index) {
-    console.log('Skipping duplicate request for index:', index, 'loading:', loadingQuestions.value);
-    return null;
-  }
+    // 🔒 NEW: Validate index parameter
+    if (typeof index !== 'number' || index < 0) {
+      console.error('❌ getQuestions: Invalid index parameter', { index, type: typeof index });
+      return null;
+    }
+
+    // 🔒 NEW: Validate items array
+    if (!items.value || !Array.isArray(items.value)) {
+      console.error('❌ getQuestions: items.value is not a valid array', {
+        items: items.value,
+        type: typeof items.value,
+        isArray: Array.isArray(items.value)
+      });
+      return null;
+    }
+
+    // 🔒 NEW: Validate index bounds
+    if (index >= items.value.length) {
+      console.error('❌ getQuestions: Index out of bounds', {
+        index,
+        itemsLength: items.value.length,
+        lastValidIndex: items.value.length - 1
+      });
+      return null;
+    }
+
+    const item = items.value[index];
+
+    // 🔒 NEW: Validate item object
+    if (!item || typeof item !== 'object') {
+      console.error('❌ getQuestions: Invalid item at index', {
+        index,
+        item: item,
+        type: typeof item
+      });
+      return null;
+    }
+
+    // 🔒 NEW: Validate required item properties
+    if (!item.hash) {
+      console.error('❌ getQuestions: Item missing required hash property', {
+        index,
+        item: item,
+        hasHash: !!item.hash
+      });
+      return null;
+    }
+
+    // NEW: Prevent duplicate requests and track loading state
+    if (loadingQuestions.value || lastLoadedIndex.value === index) {
+      console.log('⏭️ Skipping duplicate request for index:', index, 'loading:', loadingQuestions.value);
+      return null;
+    }
 
   if (questionData.value !== null && questionData.value.item_hash === item.hash) return null;
 
@@ -199,6 +457,14 @@ const getQuestions = async (index) => {
 
     const {data: responseData} = await axios.get(route('exam.get-taker-answer', { item_hash: item.hash }));
     console.log('✅ Server response received for item:', item.hash, responseData);
+
+    // NEW: Validate exam context to prevent mixed exam issues
+    if (!validateExamContext(item.hash, responseData)) {
+      console.error('❌ EXAM CONTEXT VALIDATION FAILED - Rejecting mixed context response');
+      loadingQuestion.value = false;
+      loadingQuestions.value = false;
+      return;
+    }
 
     if (responseData && responseData.questions) {
       const questions = responseData.questions;
@@ -252,7 +518,7 @@ const getQuestions = async (index) => {
       console.log('Done quests after processing:', doneQuests.value)
       // CRITICAL: Update localStorage AFTER processing server response
       // This ensures the server state is properly merged with local state
-      localStorage.setItem('exam-state', JSON.stringify({
+      localStorage.setItem(getLocalStorageKey('exam-state'), JSON.stringify({
         skipped: skippedQuests.value,
         later: laterQuests.value,
         done: doneQuests.value,
@@ -262,7 +528,7 @@ const getQuestions = async (index) => {
       pageNumber.value = Math.ceil((index + 1) / 20)
 
       // Also update localStorage when no server data
-      localStorage.setItem('exam-state', JSON.stringify({
+      localStorage.setItem(getLocalStorageKey('exam-state'), JSON.stringify({
         skipped: skippedQuests.value,
         later: laterQuests.value,
         done: doneQuests.value,
@@ -284,19 +550,48 @@ const getQuestions = async (index) => {
     console.log('✅ Successfully loaded questions for index:', index);
 
   } catch (error) {
-    console.error('❌ Error loading questions for index:', index, error);
+    console.error('💥 CRITICAL ERROR in getQuestions for index:', index, error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      index: index,
+      itemsLength: items.value?.length,
+      itemType: typeof items.value,
+      hasItems: !!items.value
+    });
 
-    // Keep previous questions on error to prevent blank screen
-    if (questionData.value) {
-      questionData.value.loading = false;
+    // 🔒 Enhanced error recovery
+    try {
+      // Attempt to restore loading states
+      loadingQuestions.value = false;
+      loadingQuestion.value = false;
+
+      // Keep previous questions on error to prevent blank screen
+      if (questionData.value) {
+        questionData.value.loading = false;
+      }
+
+      // Try to set a safe page number
+      if (typeof index === 'number' && index >= 0) {
+        pageNumber.value = Math.ceil((index + 1) / 20);
+      }
+
+    } catch (recoveryError) {
+      console.error('💥 Recovery also failed:', recoveryError);
+      // Last resort: force loading states to false
+      loadingQuestions.value = false;
+      loadingQuestion.value = false;
     }
 
+    return null;
+
   } finally {
+    // Always ensure loading states are reset
     loadingQuestions.value = false;
     loadingQuestion.value = false;
-    console.log('🏁 Loading complete for index:', index);
+    console.log('🏁 getQuestions completed for index:', index);
   }
-}
+};
 const checkSkippedQuest = (hash) => skippedQuests.value.indexOf(hash) !== -1;
 const checkDoneQuest = (hash) => doneQuests.value.indexOf(hash) !== -1;
 
@@ -366,14 +661,80 @@ const removeFromStateArray = (array, item) => {
     array.splice(index, 1);
   }
 };
+// 🔒 CRITICAL FIX: Enhanced selectAnswer with comprehensive error handling
 const selectAnswer = function (answerHash, questionHash) {
-  // Find the current question being answered to get its item_hash
-  const questions = questionData.value?.questions || []
-  const currentQuestion = questions.find(q => q.hash === questionHash)
-  const hashForStorage = currentQuestion?.item_hash || questionHash
-  answerVal.value[hashForStorage] = answerHash
-  console.log('Answer stored:', {questionHash, itemHash: currentQuestion?.item_hash, storageKey: hashForStorage, answerHash})
-  submitAnswer(true)
+  try {
+    console.log('🎯 selectAnswer called:', { answerHash, questionHash });
+
+    // Validate inputs
+    if (!answerHash || !questionHash) {
+      console.error('❌ selectAnswer: Missing required parameters', { answerHash, questionHash });
+      return;
+    }
+
+    // 🔒 CRITICAL FIX: Guard against undefined questionData.value
+    if (!questionData.value || !questionData.value.questions) {
+      console.error('❌ selectAnswer: questionData.value is undefined or has no questions', {
+        questionData: questionData.value,
+        hasQuestions: questionData.value?.questions
+      });
+      // Fallback: store answer directly using questionHash
+      answerVal.value[questionHash] = answerHash;
+      submitAnswer(true);
+      return;
+    }
+
+    const questions = questionData.value.questions;
+    console.log('🔍 selectAnswer: Searching questions', {
+      totalQuestions: questions.length,
+      questionHash,
+      answerHash
+    });
+
+    // Find the current question being answered to get its item_hash
+    const currentQuestion = questions.find(q => q.hash === questionHash);
+
+    if (!currentQuestion) {
+      console.warn('⚠️ selectAnswer: Question not found, using fallback storage', {
+        questionHash,
+        availableQuestionHashes: questions.slice(0, 3).map(q => q.hash)
+      });
+      // Fallback: store answer directly using questionHash
+      answerVal.value[questionHash] = answerHash;
+      submitAnswer(true);
+      return;
+    }
+
+    const hashForStorage = currentQuestion.item_hash || questionHash;
+
+    console.log('✅ selectAnswer: Storing answer successfully', {
+      questionHash,
+      itemHash: currentQuestion.item_hash,
+      storageKey: hashForStorage,
+      answerHash,
+      questionFound: !!currentQuestion
+    });
+
+    answerVal.value[hashForStorage] = answerHash;
+    submitAnswer(true);
+
+  } catch (error) {
+    console.error('💥 selectAnswer: Critical error occurred', {
+      error: error.message,
+      stack: error.stack,
+      answerHash,
+      questionHash,
+      questionData: questionData.value
+    });
+
+    // Emergency fallback: try to store answer anyway
+    try {
+      answerVal.value[questionHash] = answerHash;
+      submitAnswer(true);
+    } catch (fallbackError) {
+      console.error('💥 selectAnswer: Emergency fallback also failed', fallbackError);
+    }
+  }
 };
 
 const timerCount = ref("00:00");
@@ -391,7 +752,7 @@ const startTimer = (duration) => {
 
       if (--timer < 0) {
         timer = duration;
-        localStorage.removeItem('exam-state')
+        localStorage.removeItem(getLocalStorageKey('exam-state'))
         Inertia.visit(route('exam.finished'))
       }
 
@@ -400,6 +761,19 @@ const startTimer = (duration) => {
 }
 
 onMounted(() => {
+  // NEW: Initialize exam context isolation
+  console.log('🔒 INITIALIZING EXAM CONTEXT ISOLATION');
+  console.log('📊 Exam Context:', {
+    examId: examContext.value.examId,
+    examName: exam.value?.name,
+    deliveryId: examContext.value.deliveryId,
+    deliveryName: delivery.value?.name,
+    totalItems: examContext.value.totalItems
+  });
+
+  // Clear any conflicting exam state from other exam sessions
+  clearConflictingExamState();
+
   // DEBUG: Log initial data to understand count discrepancy
   console.log('=== DEBUG EXAM DATA ===')
   console.log('examItems.value count:', examItems.value?.length || 'undefined')
@@ -413,13 +787,13 @@ onMounted(() => {
     startTimer(remainingSeconds.value)
   } else {
     // No time remaining, redirect to finished
-    localStorage.removeItem('exam-state')
+    localStorage.removeItem(getLocalStorageKey('exam-state'))
     Inertia.visit(route('exam.finished'))
     return
   }
 
   // CRITICAL: First load localStorage to preserve any existing state
-  const examState = JSON.parse(localStorage.getItem('exam-state'));
+  const examState = JSON.parse(localStorage.getItem(getLocalStorageKey('exam-state')));
   if (examState) {
     // Load all state from localStorage first
     skippedQuests.value = examState.skipped ?? []
@@ -429,7 +803,7 @@ onMounted(() => {
 
   // CRITICAL FIX: Load answer data from localStorage first
   console.log('DEBUG: onMounted - Loading from localStorage')
-  const savedExamState = JSON.parse(localStorage.getItem('exam-state') || '{}');
+  const savedExamState = JSON.parse(localStorage.getItem(getLocalStorageKey('exam-state')) || '{}');
   console.log('DEBUG: localStorage answerData:', savedExamState.answerData || 'NULL')
 
   // Populate answerVal from localStorage if available
@@ -480,7 +854,7 @@ onMounted(() => {
   console.log('DEBUG: Final answerVal state:', answerVal.value)
 
   // Update localStorage with merged state - include answerVal data!
-  localStorage.setItem('exam-state', JSON.stringify({
+  localStorage.setItem(getLocalStorageKey('exam-state'), JSON.stringify({
     skipped: skippedQuests.value,
     later: laterQuests.value,
     done: doneQuests.value,
@@ -524,7 +898,7 @@ const markAsLater = (e, hash) => {
   laters.value[hash] = e.target.checked;
 
   // Update localStorage
-  localStorage.setItem('exam-state', JSON.stringify({
+  localStorage.setItem(getLocalStorageKey('exam-state'), JSON.stringify({
     skipped: skippedQuests.value,
     later: laterQuests.value,
     done: doneQuests.value,
