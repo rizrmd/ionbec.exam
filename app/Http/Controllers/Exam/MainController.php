@@ -325,6 +325,28 @@ class MainController extends Controller
 
             $data['attempt'] = $attempt;
             $data['attemptQuestions'] = $attempt->questions;
+
+            // CRITICAL FIX: Add item_hash to initial attemptQuestions for onMounted matching
+            if ($data['attemptQuestions'] && $data['attemptQuestions']->count() > 0) {
+                $data['attemptQuestions']->each(function ($question) use ($data) {
+                    // Find corresponding item to get its hash
+                    $matchingItem = $data['items']->first(function ($item) use ($question) {
+                        return $item->questions->contains(function ($q) use ($question) {
+                            return $q->id === $question->id;
+                        });
+                    });
+
+                    if ($matchingItem) {
+                        $question->item_hash = $matchingItem->hash;
+                        \Log::info('Added item hash to initial attempt question', [
+                            'question_id' => $question->id,
+                            'question_hash' => $question->hash,
+                            'item_hash' => $question->item_hash,
+                            'answer_hash' => $question->pivot->answer_hash ?? 'N/A'
+                        ]);
+                    }
+                });
+            }
             
             // For non-automatic start with existing attempt, calculate remaining time from attempt start
             // This overrides the default duration set for new DEMO sessions
