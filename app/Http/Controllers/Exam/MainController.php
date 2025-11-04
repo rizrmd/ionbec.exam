@@ -18,6 +18,7 @@ use App\Models\Attempts\Attempt;
 use Dentro\Yalr\Attributes\Post;
 use App\Models\Deliveries\Delivery;
 use App\Http\Controllers\Controller;
+use App\Events\ScoringEvent;
 use Illuminate\Support\Facades\Session;
 use App\Models\Attempts\AttemptQuestion;
 use Veelasky\LaravelHashId\Rules\ExistsByHash;
