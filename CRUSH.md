@@ -137,6 +137,7 @@ npm run watch
 - Custom Ziggy helper in `resources/js/Libs/ziggy.js` forces relative URLs
 - Prevents localhost:8000 URLs in production
 - Always verify route generation in browser console
+- See `CLAUDE.md` and `AGENTS.md` for detailed deployment procedures
 
 ## Testing Strategy
 
@@ -160,6 +161,14 @@ cargo build --release
 - CSV batch processing
 - Scoring algorithms
 
+## Agent Memory Files
+
+**Important**: Check these files for agent-specific instructions:
+- `CLAUDE.md` - Claude AI specific instructions and deployment guides
+- `AGENTS.md` - General agent instructions and context
+
+Both files contain critical deployment information and context that may not be duplicated in this file.
+
 ## Deployment
 
 **Production Server:** cf.avolut.com
@@ -178,6 +187,10 @@ ssh root@cf.avolut.com "docker exec app-okksscs4w0s8oc0go0k4cg8k bash -c 'cd /va
 # Clear caches
 ssh root@cf.avolut.com "docker exec app-okksscs4w0s8oc0go0k4cg8k bash -c 'cd /var/www && php artisan cache:clear && php artisan config:clear && php artisan view:clear && php artisan route:clear'"
 ```
+
+**Database Access:**
+- PostgreSQL: Use `psql` with credentials from `.env`
+- MySQL: Use local MySQL for legacy queries
 
 ## Code Conventions
 
