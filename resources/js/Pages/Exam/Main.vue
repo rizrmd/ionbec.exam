@@ -86,7 +86,9 @@ const questionData = ref(null);
 
 // NEW: Isolated localStorage keys for this exam session
 const getLocalStorageKey = (key) => {
-  return `exam_${examContext.value.examId}_delivery_${examContext.value.deliveryId}_${key}`;
+  const examId = examContext.value?.examId || 'unknown';
+  const deliveryId = examContext.value?.deliveryId || 'unknown';
+  return `exam_${examId}_delivery_${deliveryId}_${key}`;
 };
 
 // NEW: Clear any conflicting exam state from localStorage
