@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Deliveries\Delivery;
-use App\Models\Attempt;
+use App\Models\Attempts\Attempt;
 use Carbon\Carbon;
 
 class ExamTimerService
