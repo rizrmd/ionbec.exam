@@ -384,11 +384,11 @@ onMounted(() => {
   console.log('DEBUG: localStorage answerData:', savedExamState.answerData || 'NULL')
 
   // Populate answerVal from localStorage if available
-  if (examState.answerData && typeof examState.answerData === 'object') {
-    Object.keys(examState.answerData).forEach(key => {
-      if (examState.answerData[key]) {
-        answerVal.value[key] = examState.answerData[key]
-        console.log('✅ Restored answerVal from localStorage:', {key, value: examState.answerData[key]})
+  if (savedExamState.answerData && typeof savedExamState.answerData === 'object') {
+    Object.keys(savedExamState.answerData).forEach(key => {
+      if (savedExamState.answerData[key]) {
+        answerVal.value[key] = savedExamState.answerData[key]
+        console.log('✅ Restored answerVal from localStorage:', {key, value: savedExamState.answerData[key]})
       }
     })
   }
