@@ -419,8 +419,13 @@ const getQuestions = async (index) => {
   loadingQuestions.value = true;
   console.log('🔄 Loading questions for index:', index, 'item:', item.hash);
 
+  // 🔒 NEW: Submit answer with error handling
   try {
     await submitAnswer(true) // Use partial=true to avoid resetting answerVal during navigation
+  } catch (submitError) {
+    console.error('❌ Error submitting answer during navigation:', submitError);
+    // Continue with question loading even if submit fails
+  }
 
     // NEW: Preserve existing questions during loading to prevent blank screen
     const previousQuestions = questionData.value?.questions || [];
