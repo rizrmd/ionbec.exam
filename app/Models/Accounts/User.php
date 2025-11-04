@@ -37,7 +37,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'username', 'name', 'email', 'password', 'client_id',
+        'username', 'name', 'email', 'password', 'client_id', 'is_admin', 'admin_role',
     ];
 
     /**
@@ -118,4 +118,45 @@ class User extends Authenticatable
     {
         return $this->hasRole('root');
     }
+
+    /**
+     * Check if user is administrator
+     */
+    public function isAdmin(): bool
+    {
+        return $this->is_admin === true;
+    }
+
+    /**
+     * Get user's admin role
+     */
+    public function getAdminRole(): string
+    {
+        return $this->admin_role ?? 'viewer';
+    }
+
+    /**
+     * Check if user can manage logs
+     */
+    public function canManageLogs(): bool
+    {
+        return in_array($this->getAdminRole(), ['manager', 'super_admin']);
+    }
+
+    /**
+     * Check if user has full admin access
+     */
+    public function hasFullAdminAccess(): bool
+    {
+        return $this->getAdminRole() === 'super_admin';
+    }
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'is_admin' => 'boolean',
+    ];
 }

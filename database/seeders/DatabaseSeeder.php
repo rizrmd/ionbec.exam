@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
         $this->call(SecondTrialDataSeeder::class);
         $this->call(WednesdayTrialDataSeeder::class);
         $this->call(InstituteTestSeeder::class);
+        $this->call(AdminUserSeeder::class);
 
         DB::statement('UPDATE deliveries SET display_name = name');
         $this->call(GenerateTakerCodeSeeder::class);

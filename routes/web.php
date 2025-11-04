@@ -137,3 +137,16 @@ Route::fallback(function () {
 // API Routes
 Route::get('/api/questions/{questionHash}/attempts', [App\Http\Controllers\Api\QuestionAttemptController::class, 'getAttempts'])
     ->name('api.questions.attempts');
+
+// Exam Logging API - For frontend tab detection
+Route::middleware(['throttle:60,1'])->group(function () {
+    Route::post('/api/exam/log-multiple-tabs', [App\Http\Controllers\ExamLogController::class, 'store']);
+});
+
+// Admin Routes - Protected by AdminOnly middleware
+Route::middleware(['auth', 'admin.only'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/exam-logs', [App\Http\Controllers\ExamLogController::class, 'index'])->name('exam-logs');
+    Route::get('/exam-logs/export', [App\Http\Controllers\ExamLogController::class, 'export'])->name('exam-logs.export');
+    Route::get('/exam-logs/{log}', [App\Http\Controllers\ExamLogController::class, 'show'])->name('exam-logs.show');
+    Route::delete('/exam-logs/{log}', [App\Http\Controllers\ExamLogController::class, 'destroy'])->name('exam-logs.delete');
+});

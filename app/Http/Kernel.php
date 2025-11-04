@@ -75,6 +75,7 @@ class Kernel extends HttpKernel
         'auth' => Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'auth-taker' => Middleware\AuthenticateTaker::class,
+        'admin.only' => Middleware\AdminOnly::class,
         'allowed' => Middleware\AllowedRoleMiddleware::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
         'can' => \Illuminate\Auth\Middleware\Authorize::class,

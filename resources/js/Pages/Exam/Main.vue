@@ -14,6 +14,7 @@ import {notification} from "@/Store/notification";
 import {Inertia} from "@inertiajs/inertia";
 import Modal from "@/Jetstream/Modal.vue";
 import axios from "axios";
+import SimpleTabLogger from "@/SimpleTabLogger.js";
 
 const props = defineProps({
   taker: {
@@ -1238,6 +1239,41 @@ onMounted(() => {
     deliveryName: delivery.value?.name,
     totalItems: examContext.value.totalItems
   });
+
+  // 🔒 NEW: Initialize Simple Tab Logger for multiple screen detection
+  console.log('🖥️ INITIALIZING TAB LOGGER');
+  try {
+    // Initialize tab logger only if attempt exists
+    if (attempt.value && attempt.value.id) {
+      // Make attempt ID available globally for the logger
+      window.attemptId = attempt.value.id;
+
+      // Initialize the tab logger
+      const tabLogger = SimpleTabLogger.init(attempt.value.id, {
+        checkInterval: 5000, // 5 seconds
+        heartbeatInterval: 30000, // 30 seconds
+        logEndpoint: '/api/exam/log-multiple-tabs'
+      });
+
+      if (tabLogger) {
+        console.log('✅ Tab Logger: Successfully initialized');
+        console.log('📋 Tab Logger Info:', {
+          attemptId: attempt.value.id,
+          sessionKey: tabLogger.getSessionKey(),
+          tabId: tabLogger.getTabId()
+        });
+
+        // Store reference globally for debugging
+        window.tabLogger = tabLogger;
+      } else {
+        console.warn('⚠️ Tab Logger: Failed to initialize');
+      }
+    } else {
+      console.log('ℹ️ Tab Logger: No attempt found, skipping initialization');
+    }
+  } catch (error) {
+    console.error('❌ Tab Logger: Initialization failed', error);
+  }
 
   // Clear any conflicting exam state from other exam sessions
   clearConflictingExamState();
