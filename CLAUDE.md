@@ -36,3 +36,4 @@ ssh root@cf.avolut.com "docker exec app-okksscs4w0s8oc0go0k4cg8k bash -c 'cd /va
 - Nginx serves from port 3000 internally
 - Always test with console logs to verify route helper is working
 - Check Ziggy config shows correct domain, not localhost
+- VERY IMPORTANT: do not run database seed, do not truncate any table.

@@ -27,6 +27,15 @@ class HandleInertiaRequests extends Middleware
                 'style' => $request->session()->get('_executed', false) ? 'success' : 'danger',
                 'banner' => $request->session()->get('_message'),
             ],
+            // Share standard Laravel flash messages
+            'flash' => static fn () => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'warning' => $request->session()->get('warning'),
+                'info' => $request->session()->get('info'),
+            ],
+            // Also share errors for validation
+            'errors' => static fn () => $request->session()->get('errors', new \Illuminate\Support\MessageBag),
         ]);
     }
 }

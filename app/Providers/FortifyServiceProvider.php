@@ -40,7 +40,7 @@ class FortifyServiceProvider extends ServiceProvider
         // Configure Inertia views for authentication
         Fortify::loginView(function () {
             $client = request()->attributes->get('client');
-            
+
             return \Inertia\Inertia::render('Auth/Login', [
                 'canResetPassword' => \Illuminate\Support\Facades\Route::has('password.request'),
                 'status' => session('status'),
@@ -56,22 +56,22 @@ class FortifyServiceProvider extends ServiceProvider
             $username = $request->input('username');
             $password = $request->input('password');
             $domain = $request->getHost();
-            
+
             Log::info('Login attempt', [
                 'username' => $username,
                 'domain' => $domain,
                 'ip' => $request->ip()
             ]);
-            
+
             // For client domains, find the correct user based on client_id
             $client = \App\Models\Client::findByDomain($domain);
-            
+
             if ($client) {
                 Log::info('Client domain detected', [
                     'domain' => $domain,
                     'client_id' => $client->id
                 ]);
-                
+
                 // Find user with matching username OR email AND client_id
                 $user = \App\Models\Accounts\User::withoutGlobalScopes()
                     ->where(function($query) use ($username) {
@@ -82,7 +82,7 @@ class FortifyServiceProvider extends ServiceProvider
                     ->first();
             } else {
                 Log::info('No client found for domain', ['domain' => $domain]);
-                
+
                 // For non-client domains, find user without client_id (global admin)
                 $user = \App\Models\Accounts\User::withoutGlobalScopes()
                     ->where(function($query) use ($username) {
@@ -92,16 +92,19 @@ class FortifyServiceProvider extends ServiceProvider
                     ->whereNull('client_id')
                     ->first();
             }
-            
+
             if (!$user) {
                 Log::warning('Login failed - user not found', [
                     'username' => $username,
                     'domain' => $domain,
                     'expected_client_id' => $client?->id
                 ]);
-                return null;
+
+                // Use session flash message for user not found
+                session()->flash('error', 'These credentials do not match our records.');
+                return false;
             }
-            
+
             if (!\Hash::check($password, $user->password)) {
                 Log::warning('Login failed - wrong password', [
                     'username' => $username,
@@ -109,9 +112,12 @@ class FortifyServiceProvider extends ServiceProvider
                     'user_client_id' => $user->client_id,
                     'domain' => $domain
                 ]);
-                return null;
+
+                // Use session flash message for wrong password
+                session()->flash('error', 'These credentials do not match our records.');
+                return false;
             }
-            
+
             Log::info('Login successful', [
                 'username' => $username,
                 'user_id' => $user->id,
@@ -120,7 +126,7 @@ class FortifyServiceProvider extends ServiceProvider
                 'is_client_domain' => $client !== null,
                 'client_id' => $client?->id,
             ]);
-            
+
             return $user;
         });
     }
