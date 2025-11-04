@@ -48,10 +48,10 @@ const loadingQuestion = ref(false);
 const vignetteData = ref(null);
 const questionData = ref(null);
 const items = computed(() => {
-  examItems.value.map((item) => {
+  const processedItems = examItems.value.map((item) => {
     const questions = item.is_random ? shuffleArray(item.questions) : item.questions
 
-    questions.map((question) => {
+    const processedQuestions = questions.map((question) => {
       return {
         ...question,
         answers: question.is_random ? shuffleArray(question.answers) : question.answers
@@ -60,11 +60,11 @@ const items = computed(() => {
 
     return {
       ...item,
-      questions: questions,
+      questions: processedQuestions,
     }
   })
 
-  return exam.value.is_random ? shuffleArray(examItems.value) : examItems.value
+  return exam.value.is_random ? shuffleArray(processedItems) : processedItems
 })
 
 const answerVal = ref([]);
@@ -258,6 +258,52 @@ const getQuestions = async (index) => {
 const checkSkippedQuest = (hash) => skippedQuests.value.indexOf(hash) !== -1;
 const checkDoneQuest = (hash) => doneQuests.value.indexOf(hash) !== -1;
 
+// CRITICAL FIX: Smart answer lookup with multiple hash fallbacks
+const getAnswerForQuestion = (question) => {
+  const possibleKeys = [
+    question.item_hash,
+    question.hash,
+    // Additional fallbacks for hash inconsistency
+    question.item_hash ? question.item_hash : null,
+    question.hash ? question.hash : null,
+  ].filter(Boolean);
+
+  console.log('🔍 getAnswerForQuestion DEBUG:', {
+    questionHash: question.hash,
+    itemHash: question.item_hash,
+    possibleKeys,
+    answerValKeys: Object.keys(answerVal.value),
+    searchingFor: possibleKeys
+  });
+
+  // Try all possible keys to find the stored answer
+  for (const key of possibleKeys) {
+    if (answerVal.value[key]) {
+      console.log('✅ Found answer with key:', key, 'value:', answerVal.value[key]);
+      return answerVal.value[key];
+    }
+  }
+
+  console.log('❌ No answer found for any key');
+  return null;
+};
+
+// CRITICAL FIX: Smart answer selection with hash matching
+const isAnswerSelected = (answerHash, question) => {
+  const storedAnswer = getAnswerForQuestion(question);
+  const isSelected = storedAnswer === answerHash;
+
+  console.log('🎯 isAnswerSelected DEBUG:', {
+    answerHash,
+    questionHash: question.hash,
+    itemHash: question.item_hash,
+    storedAnswer,
+    isSelected
+  });
+
+  return isSelected;
+};
+
 // Helper function to add item to array without duplicates
 const addToStateArray = (array, item) => {
   if (!array.includes(item)) {
@@ -305,6 +351,14 @@ const startTimer = (duration) => {
 }
 
 onMounted(() => {
+  // DEBUG: Log initial data to understand count discrepancy
+  console.log('=== DEBUG EXAM DATA ===')
+  console.log('examItems.value count:', examItems.value?.length || 'undefined')
+  console.log('examItems.value:', examItems.value)
+  console.log('items computed count:', items.value?.length || 'undefined')
+  console.log('items computed:', items.value)
+  console.log('=======================')
+
   // Use server-provided remaining seconds (timezone agnostic)
   if (remainingSeconds.value > 0) {
     startTimer(remainingSeconds.value)
@@ -485,12 +539,17 @@ const markAsLater = (e, hash) => {
               <div class="whitespace-pre-wrap mb-4" v-html="question.question"></div>
               <div v-if="!loadingQuestion">
                 <div class="flex flex-col gap-2 mt-6 w-auto" v-if="question.type !== null && question.type?.name === 'multiple-choice'">
-                  <button v-for="(answer, ansIndex) in question.answers" :key="ansIndex" @click="selectAnswer(answer.hash, question.hash)" :class="['flex text-left px-3 py-2 bg-gray-100 rounded-md', answerVal[question.item_hash || question.hash] === answer.hash ? 'bg-green-600 text-white' : 'hover:bg-green-200 hover:text-green-600']" @click.once="console.log('Click check:', {questionHash: question.hash, itemHash: question.item_hash, answerHash: answer.hash, storedValue: answerVal[question.item_hash || question.hash]})">
+                  <button v-for="(answer, ansIndex) in question.answers" :key="ansIndex" @click="selectAnswer(answer.hash, question.hash)" :class="['flex text-left px-3 py-2 bg-gray-100 rounded-md', isAnswerSelected(answer.hash, question) ? 'bg-green-600 text-white' : 'hover:bg-green-200 hover:text-green-600']" @click.once="console.log('Click check:', {questionHash: question.hash, itemHash: question.item_hash, answerHash: answer.hash, storedValue: getAnswerForQuestion(question)})">
                     <span class="mr-3 font-bold uppercase">{{ answerIndex[ansIndex] }}</span> <span v-html="answer.answer"></span>
                   </button>
                   <!-- DEBUG: Show answerVal state for this question -->
-                  <div class="text-xs text-gray-500 mt-2" v-if="question.item_hash || question.hash">
-                    DEBUG: answerVal for {{ question.item_hash || question.hash }}: {{ answerVal[question.item_hash || question.hash] }}
+                  <div class="text-xs text-gray-500 mt-2 p-2 bg-yellow-50 rounded" v-if="question.item_hash || question.hash">
+                    <div><strong>🔍 HASH DEBUG:</strong></div>
+                    <div>Question Hash: {{ question.hash }}</div>
+                    <div>Item Hash: {{ question.item_hash || 'NULL' }}</div>
+                    <div>Direct Lookup: {{ answerVal[question.item_hash || question.hash] || 'NULL' }}</div>
+                    <div>Smart Lookup: {{ getAnswerForQuestion(question) || 'NULL' }}</div>
+                    <div>All answerVal keys: {{ Object.keys(answerVal.value).slice(0, 5).join(', ') }}{{ Object.keys(answerVal.value).length > 5 ? '...' : '' }}</div>
                   </div>
                 </div>
                 <div class="mt-4" v-else>
