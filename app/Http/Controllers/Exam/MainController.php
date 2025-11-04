@@ -466,12 +466,56 @@ class MainController extends Controller
             ], 400);
         }
 
+        // CRITICAL FIX: Extract session data the same way as index() method
+        // Use proper session structure extraction
+        $examId = null;
+        $deliveryId = null;
+        $takerId = null;
+
+        // Extract delivery ID with same logic as index()
+        if (isset($dataSession['delivery'])) {
+            $delivery = $dataSession['delivery'];
+            if (is_object($delivery) && method_exists($delivery, 'getId')) {
+                $deliveryId = $delivery->getId();
+            } elseif (is_object($delivery) && isset($delivery->id)) {
+                $deliveryId = $delivery->id;
+            } elseif (is_array($delivery) && isset($delivery['id'])) {
+                $deliveryId = $delivery['id'];
+            }
+        }
+
+        // Extract taker ID with same logic as index()
+        if (isset($dataSession['taker'])) {
+            $taker = $dataSession['taker'];
+            if (is_object($taker) && method_exists($taker, 'getId')) {
+                $takerId = $taker->getId();
+            } elseif (is_object($taker) && isset($taker->id)) {
+                $takerId = $taker->id;
+            } elseif (is_array($taker) && isset($taker['id'])) {
+                $takerId = $taker['id'];
+            }
+        }
+
+        // Extract exam ID - get from delivery relationship
+        if ($deliveryId) {
+            $delivery = \App\Models\Deliveries\Delivery::find($deliveryId);
+            if ($delivery) {
+                $examId = $delivery->exam_id;
+            }
+        }
+
+        \Log::info('getQuestions: Session extraction', [
+            'delivery_id' => $deliveryId,
+            'exam_id' => $examId,
+            'taker_id' => $takerId
+        ]);
+
         // UNIFIED APPROACH: Try Rust API first to maintain hash consistency
         $rustService = new RustService();
         $examData = $rustService->loadExamData(
-            $dataSession['exam']['id'] ?? null,
-            $dataSession['delivery']['id'] ?? null,
-            $dataSession['taker']['id'] ?? null
+            $examId,
+            $deliveryId,
+            $takerId
         );
 
         \Log::info('getQuestions: Rust API fallback attempt', [
