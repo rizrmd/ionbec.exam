@@ -260,6 +260,12 @@ const checkDoneQuest = (hash) => doneQuests.value.indexOf(hash) !== -1;
 
 // CRITICAL FIX: Smart answer lookup with multiple hash fallbacks
 const getAnswerForQuestion = (question) => {
+  // Guard against undefined question
+  if (!question || typeof question !== 'object') {
+    console.log('❌ Invalid question object:', question);
+    return null;
+  }
+
   const possibleKeys = [
     question.item_hash,
     question.hash,
@@ -320,7 +326,8 @@ const removeFromStateArray = (array, item) => {
 };
 const selectAnswer = function (answerHash, questionHash) {
   // Find the current question being answered to get its item_hash
-  const currentQuestion = questionData.value.questions.find(q => q.hash === questionHash)
+  const questions = questionData.value?.questions || []
+  const currentQuestion = questions.find(q => q.hash === questionHash)
   const hashForStorage = currentQuestion?.item_hash || questionHash
   answerVal.value[hashForStorage] = answerHash
   console.log('Answer stored:', {questionHash, itemHash: currentQuestion?.item_hash, storageKey: hashForStorage, answerHash})
