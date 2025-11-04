@@ -13,6 +13,7 @@ import ExamNavigation from "@/Layouts/Partials/Exam/ExamNavigation.vue";
 import {notification} from "@/Store/notification";
 import {Inertia} from "@inertiajs/inertia";
 import Modal from "@/Jetstream/Modal.vue";
+import axios from "axios";
 
 const props = defineProps({
   taker: {
@@ -884,8 +885,14 @@ const startTimer = (duration) => {
             if (localStorageKey && typeof localStorageKey === 'string') {
               localStorage.removeItem(localStorageKey);
             }
+
+            // 🔒 NEW: Also clear timer state
+            const timerStateKey = getLocalStorageKey('timer-state');
+            if (timerStateKey && typeof timerStateKey === 'string') {
+              localStorage.removeItem(timerStateKey);
+            }
           } catch (storageError) {
-            console.warn('Timer: Failed to remove localStorage key', storageError);
+            console.warn('Timer: Failed to remove localStorage keys', storageError);
           }
 
           // 🔒 SAFETY: Redirect with comprehensive checks
@@ -933,6 +940,52 @@ const startTimer = (duration) => {
   }
 }
 
+// 🔒 NEW: Timer synchronization function
+const syncTimerWithServer = async () => {
+  try {
+    const pingStart = Date.now();
+    const response = await axios.get(route('exam.timer.sync'), {
+      params: {
+        attempt_hash: attempt.value.hash
+      }
+    });
+    const latency = (Date.now() - pingStart) / 2; // One-way latency
+    const adjustedTime = response.data.remaining_seconds - Math.round(latency/1000);
+    
+    if (response.data.expired) {
+      console.log('Timer: Server confirms exam expired, redirecting');
+      Inertia.visit(route('exam.finished'));
+      return true;
+    }
+    
+    // Adjust local timer if significant drift (> 5 seconds)
+    const currentTimerSeconds = parseTimerCount(timerCount.value);
+    const drift = Math.abs(currentTimerSeconds - adjustedTime);
+    
+    if (drift > 5) {
+      console.log('Timer: Significant drift detected, adjusting', {
+        local: currentTimerSeconds,
+        server: adjustedTime,
+        drift: drift
+      });
+      // Restart timer with server time
+      return startTimer(adjustedTime);
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Timer: Sync failed', error);
+    return false;
+  }
+};
+
+// 🔒 NEW: Parse timer count string to seconds
+const parseTimerCount = (timerString) => {
+  if (!timerString || typeof timerString !== 'string') return 0;
+  const parts = timerString.split(':');
+  return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+};
+
 onMounted(() => {
   // NEW: Initialize exam context isolation
   console.log('🔒 INITIALIZING EXAM CONTEXT ISOLATION');
@@ -959,16 +1012,67 @@ onMounted(() => {
   try {
     console.log('🕐 Timer: Initializing with remaining seconds:', remainingSeconds.value);
 
+    // 🔒 NEW: Check for timer state persistence
+    const timerStateKey = getLocalStorageKey('timer-state');
+    let savedTimerState = {};
+    try {
+      savedTimerState = JSON.parse(localStorage.getItem(timerStateKey) || '{}');
+    } catch (e) {
+      console.warn('Timer: Failed to parse saved timer state', e);
+    }
+
     // Enhanced validation for remainingSeconds
-    const validRemainingSeconds = typeof remainingSeconds?.value === 'number' && remainingSeconds.value > 0
+    let validRemainingSeconds = typeof remainingSeconds?.value === 'number' && remainingSeconds.value > 0
       ? remainingSeconds.value
       : 0;
 
+    // If we have saved timer state and server time seems valid, use saved elapsed time
+    if (savedTimerState.startTime && savedTimerState.duration) {
+      const elapsedSeconds = Math.floor((Date.now() - savedTimerState.startTime) / 1000);
+      const calculatedRemaining = Math.max(0, savedTimerState.duration - elapsedSeconds);
+      
+      // Use saved time if it's reasonable (within 10 seconds of server calculation)
+      if (Math.abs(calculatedRemaining - validRemainingSeconds) <= 10) {
+        validRemainingSeconds = calculatedRemaining;
+        console.log('Timer: Using persisted timer state', {
+          savedElapsed: elapsedSeconds,
+          calculatedRemaining: calculatedRemaining,
+          serverRemaining: remainingSeconds.value
+        });
+      } else {
+        console.log('Timer: Ignoring persisted state due to drift', {
+          calculatedRemaining: calculatedRemaining,
+          serverRemaining: remainingSeconds.value,
+          drift: Math.abs(calculatedRemaining - validRemainingSeconds)
+        });
+      }
+    }
+
     if (validRemainingSeconds > 0) {
+      // 🔒 NEW: Save timer state to localStorage
+      const timerStateKey = getLocalStorageKey('timer-state');
+      try {
+        localStorage.setItem(timerStateKey, JSON.stringify({
+          startTime: Date.now(),
+          duration: validRemainingSeconds
+        }));
+      } catch (e) {
+        console.warn('Timer: Failed to save timer state', e);
+      }
+
       // Initialize timer with enhanced safety
       const timerInterval = startTimer(validRemainingSeconds);
       if (timerInterval) {
         console.log('✅ Timer: Successfully initialized with', validRemainingSeconds, 'seconds');
+        
+        // 🔒 NEW: Start periodic timer sync (every 30 seconds)
+        setInterval(async () => {
+          console.log('🕐 Timer: Performing periodic sync with server');
+          const wasRestarted = await syncTimerWithServer();
+          if (wasRestarted) {
+            console.log('Timer: Restarted due to server sync');
+          }
+        }, 30000);
       } else {
         console.warn('⚠️ Timer: Failed to initialize interval');
       }
@@ -980,10 +1084,16 @@ onMounted(() => {
         const localStorageKey = getLocalStorageKey('exam-state');
         if (localStorageKey && typeof localStorageKey === 'string') {
           localStorage.removeItem(localStorageKey);
-          console.log('✅ Timer: Cleaned up localStorage before redirect');
         }
+
+        // 🔒 NEW: Also clear timer state on expiry redirect
+        const timerStateKey = getLocalStorageKey('timer-state');
+        if (timerStateKey && typeof timerStateKey === 'string') {
+          localStorage.removeItem(timerStateKey);
+        }
+        console.log('✅ Timer: Cleaned up localStorage before redirect');
       } catch (storageError) {
-        console.warn('⚠️ Timer: Failed to remove localStorage key', storageError);
+        console.warn('⚠️ Timer: Failed to remove localStorage keys', storageError);
       }
 
       // Enhanced redirect with fallback

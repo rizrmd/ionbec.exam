@@ -111,7 +111,7 @@ class DeliveryController extends Controller
         $delivery->ended_at = (! $request->automatic_start || $is_interview)
             ? $ended_at->setTime(23, 59, 59)
             : $ended_at->addMinutes($request->duration);
-        $delivery->duration = $is_interview ? 300 : $request->duration;
+        $delivery->duration = $request->duration;
         $delivery->automatic_start = $is_interview ? false : $request->automatic_start;
         $delivery->is_anytime = $is_interview ? false : ! $request->automatic_start;
         $delivery->save();

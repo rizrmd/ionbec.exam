@@ -35,10 +35,13 @@ class IdentifyTenant
             // 2. Domain is localhost/127.0.0.1
             // 3. Domain ends with .local (for local development)
             // 4. Domain is medxamion.com (hardcoded main domain)
-            $isMainDomain = ($domain === $mainHost) || 
+            // 5. Domain is ionbec.com (main domain)
+            $isMainDomain = ($domain === $mainHost) ||
                            ($domain === 'medxamion.com') ||
                            ($domain === 'www.medxamion.com') ||
-                           ($domain === 'localhost') || 
+                           ($domain === 'ionbec.com') ||
+                           ($domain === 'www.ionbec.com') ||
+                           ($domain === 'localhost') ||
                            ($domain === '127.0.0.1') ||
                            str_ends_with($domain, '.local') ||
                            str_ends_with($domain, '.sslip.io') ||
