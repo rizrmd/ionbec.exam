@@ -55,8 +55,8 @@ class ExamTimerService
     {
         $deliveryName = strtolower($delivery->name ?? '');
 
-        // Check for DEMO indicators in delivery name
-        $demoIndicators = ['demo', 'test', 'trial', 'try out'];
+        // 🔧 ENHANCEMENT: Configurable DEMO indicators with sensible defaults
+        $demoIndicators = config('exam.demo_keywords', ['demo', 'test', 'trial', 'try out']);
 
         foreach ($demoIndicators as $indicator) {
             if (strpos($deliveryName, $indicator) !== false) {
@@ -79,8 +79,11 @@ class ExamTimerService
             $now = Carbon::now();
             $hoursDiff = abs($scheduledTime->diffInHours($now));
 
-            // Only use scheduled_at if it's within reasonable range (max 24 hours difference)
-            if ($hoursDiff <= 24 && $scheduledTime->lte($now)) {
+            // 🔧 ENHANCEMENT: Configurable validation threshold (default 24 hours)
+            $maxHoursDiff = config('exam.timer_max_hours_diff', 24);
+
+            // Only use scheduled_at if it's within reasonable range (configurable max hours)
+            if ($hoursDiff <= $maxHoursDiff && $scheduledTime->lte($now)) {
                 return $scheduledTime;
             }
 
