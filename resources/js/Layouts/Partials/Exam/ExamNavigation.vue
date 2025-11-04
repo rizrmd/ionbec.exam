@@ -77,6 +77,28 @@ const countSkipped = computed(() => {
   return result.length - subtraction;
 })
 
+// 🔧 CRITICAL FIX: Calculate unique questions done to prevent double counting
+// Each question can have both question.hash and item_hash in done array,
+// but we should only count each actual question once
+const uniqueQuestionsDone = computed(() => {
+  const uniqueHashes = new Set();
+
+  // Collect all unique question hashes from done array
+  done.value.forEach(hash => {
+    // Check if this hash corresponds to a question by looking through all items
+    items.value.forEach(item => {
+      item.questions.forEach(question => {
+        // Only add if it matches a question's hash (not item hash)
+        if (hash === question.hash) {
+          uniqueHashes.add(question.hash);
+        }
+      });
+    });
+  });
+
+  return uniqueHashes.size;
+})
+
 const btnColor = (currentItem, item, question) => {
   if (currentItem !== null && currentItem.item_hash === item.hash) {
     return 'bg-blue-600 text-white'
@@ -111,13 +133,23 @@ const btnColor = (currentItem, item, question) => {
           </template>
         </div>
         <div class="flex-1 space-y-2" v-if="enableInfo">
+          <!-- DEBUG: Show debugging info -->
+          <div class="rounded-md bg-blue-50 p-3 border border-blue-200">
+            <div class="text-xs text-blue-800">
+              <div><strong>DEBUG:</strong></div>
+              <div>done.length: {{ done.length }}</div>
+              <div>uniqueQuestionsDone: {{ uniqueQuestionsDone }}</div>
+              <div>done array: {{ done.slice(0, 3).join(', ') }}{{ done.length > 3 ? '...' : '' }}</div>
+            </div>
+          </div>
+
           <div class="rounded-md bg-green-50 p-4">
             <div class="flex">
               <div class="flex-shrink-0">
                 <CheckCircleIcon class="h-5 w-5 text-green-400" aria-hidden="true" />
               </div>
               <div class="ml-3">
-                <h3 class="text-sm font-medium text-green-800">{{ done.length }} Quest Done</h3>
+                <h3 class="text-sm font-medium text-green-800">{{ uniqueQuestionsDone }} Quest Done</h3>
               </div>
             </div>
           </div>
