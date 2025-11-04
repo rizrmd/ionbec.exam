@@ -20,10 +20,29 @@ class AdminOnly
             return redirect()->route('login')->with('error', 'Please login to access admin area.');
         }
 
+        // Debug logging
+        \Log::info('AdminOnly middleware check', [
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email,
+            'is_admin' => auth()->user()->is_admin,
+            'admin_role' => auth()->user()->admin_role,
+        ]);
+
         // Check if user is admin
         if (!auth()->user()->isAdmin()) {
-            abort(403, 'Access Denied. Administrator privileges required.');
+            \Log::warning('Admin access denied', [
+                'user_email' => auth()->user()->email,
+                'is_admin' => auth()->user()->is_admin,
+                'admin_role' => auth()->user()->admin_role,
+            ]);
+
+            abort(403, 'Access Denied. Administrator privileges required. User is_admin: ' . auth()->user()->is_admin);
         }
+
+        \Log::info('Admin access granted', [
+            'user_email' => auth()->user()->email,
+            'admin_role' => auth()->user()->admin_role,
+        ]);
 
         return $next($request);
     }
