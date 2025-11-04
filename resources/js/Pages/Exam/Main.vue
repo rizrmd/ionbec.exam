@@ -431,7 +431,7 @@ const markAsLater = (e, hash) => {
 
 <template>
   <ExamLayout :title="delivery.name" :taker="taker" :timer="timerCount">
-    <div class="flex gap-10">
+    <div class="flex gap-10 pb-32">
       <div class="min-h-full flex-1" v-if="questionData !== null">
         <div class="flex justify-between items-center">
           <div class="relative">
