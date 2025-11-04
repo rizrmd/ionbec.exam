@@ -295,6 +295,9 @@ class MainController extends Controller
             }
         }
 
+        // 🔒 Initialize attempt variable to prevent undefined variable error
+        $attempt = null;
+
         // 🔒 UNIFIED TIMER: Use single timer calculation method
         $remainingSeconds = app(ExamTimerService::class)->calculateRemainingSeconds($delivery, $attempt);
 
