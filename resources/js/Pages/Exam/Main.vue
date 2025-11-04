@@ -40,6 +40,18 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+  examId: {
+    type: Number,
+    default: null,
+  },
+  deliveryId: {
+    type: Number,
+    default: null,
+  },
+  takerId: {
+    type: Number,
+    default: null,
+  },
 })
 
 const {exam, examItems, attempt, delivery, attemptQuestions, admin, remainingSeconds, examId, deliveryId, takerId} = toRefs(props);
