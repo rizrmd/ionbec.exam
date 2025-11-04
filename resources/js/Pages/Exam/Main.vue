@@ -772,16 +772,27 @@ const selectAnswer = function (answerHash, questionHash) {
 const timerCount = ref("00:00");
 const startTimer = (duration) => {
   let timer = duration, minutes, seconds;
-  if (!admin.value) {
+
+  // Safety check for admin
+  if (!admin || !admin.value) {
     setInterval(function () {
       try {
+        // Safety checks for all variables
+        if (typeof timer !== 'number' || isNaN(timer)) {
+          timer = duration;
+          return;
+        }
+
         minutes = parseInt(timer / 60, 10);
         seconds = parseInt(timer % 60, 10);
 
         minutes = minutes < 10 ? "0" + minutes : minutes;
         seconds = seconds < 10 ? "0" + seconds : seconds;
 
-        timerCount.value = minutes + ":" + seconds;
+        // Safety check for timerCount
+        if (timerCount && timerCount.value !== undefined) {
+          timerCount.value = minutes + ":" + seconds;
+        }
 
         if (--timer < 0) {
           timer = duration;
@@ -791,10 +802,19 @@ const startTimer = (duration) => {
           } catch (e) {
             console.warn('Timer: Failed to remove localStorage key', e);
           }
-          Inertia.visit(route('exam.finished'));
+          // Safety check for Inertia and route
+          try {
+            if (typeof route === 'function' && typeof Inertia !== 'undefined') {
+              Inertia.visit(route('exam.finished'));
+            }
+          } catch (e) {
+            console.warn('Timer: Failed to redirect', e);
+          }
         }
       } catch (error) {
         console.error('Timer error:', error);
+        // Reset timer on error to prevent infinite loops
+        timer = duration;
       }
     }, 1000);
   }
