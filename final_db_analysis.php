@@ -1,0 +1,91 @@
+<?php
+
+require_once 'vendor/autoload.php';
+
+$app = require_once 'bootstrap/app.php';
+
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+
+$kernel->bootstrap();
+
+// Check users with their roles using correct table name
+echo "=== USERS WITH ROLES ===\n";
+$usersWithRoles = DB::select("
+    SELECT u.id, u.name, u.email, u.client_id, u.role, r.slug as role_slug, r.name as role_name
+    FROM users u
+    LEFT JOIN role_user ru ON u.id = ru.user_id
+    LEFT JOIN roles r ON ru.role_id = r.id
+    ORDER BY u.id LIMIT 10
+");
+foreach ($usersWithRoles as $user) {
+    $roleInfo = $user->role_slug ? "Role: {$user->role_slug} ({$user->role_name})" : "No role";
+    echo "User ID: {$user->id}, Name: {$user->name}, Email: {$user->email}, Client: {$user->client_id}, Role: {$user->role}, {$roleInfo}\n";
+}
+
+// Check takers table structure
+echo "\n=== TAKERS TABLE STRUCTURE ===\n";
+$takersColumns = DB::select("
+    SELECT column_name, data_type, is_nullable, column_default
+    FROM information_schema.columns
+    WHERE table_name = 'takers'
+    AND table_schema = 'public'
+    ORDER BY ordinal_position
+");
+foreach ($takersColumns as $column) {
+    echo sprintf(
+        "%-20s %-15s %-8s %s\n",
+        $column->column_name,
+        $column->data_type,
+        $column->is_nullable,
+        $column->column_default ? 'DEFAULT: ' . $column->column_default : ''
+    );
+}
+
+// Check sample takers data
+echo "\n=== SAMPLE TAKERS DATA ===\n";
+$sampleTakers = DB::select("SELECT * FROM takers LIMIT 5");
+foreach ($sampleTakers as $taker) {
+    $takerArray = (array) $taker;
+    echo "Taker: " . json_encode($takerArray, JSON_PRETTY_PRINT) . "\n\n";
+}
+
+// Check role_user table structure
+echo "\n=== ROLE_USER TABLE STRUCTURE ===\n";
+$roleUserColumns = DB::select("
+    SELECT column_name, data_type, is_nullable, column_default
+    FROM information_schema.columns
+    WHERE table_name = 'role_user'
+    AND table_schema = 'public'
+    ORDER BY ordinal_position
+");
+foreach ($roleUserColumns as $column) {
+    echo sprintf(
+        "%-20s %-15s %-8s %s\n",
+        $column->column_name,
+        $column->data_type,
+        $column->is_nullable,
+        $column->column_default ? 'DEFAULT: ' . $column->column_default : ''
+    );
+}
+
+// Check if there are any users specifically marked as test takers in the role field
+echo "\n=== USERS BY ROLE FIELD ===\n";
+$usersByRole = DB::select("SELECT DISTINCT role, COUNT(*) as count FROM users WHERE role IS NOT NULL GROUP BY role");
+foreach ($usersByRole as $roleGroup) {
+    echo "Role: '{$roleGroup->role}' - Count: {$roleGroup->count}\n";
+}
+
+// Check all available roles again
+echo "\n=== ALL AVAILABLE ROLES ===\n";
+$roles = DB::select("SELECT id, slug, name, description, client_id FROM roles ORDER BY client_id, slug");
+foreach ($roles as $role) {
+    $clientInfo = $role->client_id ? "Client ID: {$role->client_id}" : "Global";
+    echo "ID: {$role->id}, Slug: {$role->slug}, Name: {$role->name}, Description: " . ($role->description ?? 'N/A') . " ({$clientInfo})\n";
+}
+
+// Check clients
+echo "\n=== CLIENTS ===\n";
+$clients = DB::select("SELECT id, name, slug FROM clients ORDER BY name");
+foreach ($clients as $client) {
+    echo "ID: {$client->id}, Name: {$client->name}, Slug: {$client->slug}\n";
+}

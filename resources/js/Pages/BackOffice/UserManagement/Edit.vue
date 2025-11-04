@@ -41,6 +41,16 @@
                   </div>
 
                   <div class="col-span-6">
+                    <JetLabel for="username" value="Username" required/>
+                    <JetInput
+                      id="username"
+                      v-model="form.username"
+                      type="text"
+                      class="mt-1 block w-full"/>
+                    <JetInputError :message="form.errors.username" class="mt-2"/>
+                  </div>
+
+                  <div class="col-span-6">
                     <JetLabel for="email" value="Email Address" required/>
                     <JetInput
                       id="email"
@@ -166,6 +176,7 @@ const props = defineProps({
 
 const form = useForm({
   name: props.user?.name || '',
+  username: props.user?.username || '',
   email: props.user?.email || '',
   password: '',
   password_confirmation: '',

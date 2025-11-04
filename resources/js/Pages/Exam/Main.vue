@@ -1,7 +1,7 @@
 <script setup>
 import ExamLayout from "@/Layouts/ExamLayout";
 import {XIcon} from '@heroicons/vue/outline'
-import {ref, toRefs, onMounted, computed} from "vue";
+import {ref, toRefs, onMounted, computed, watch} from "vue";
 import Editor from "@/Components/Editor";
 import Card from '@/Components/Card'
 import LoadingCircle from '@/Components/LoadingCircle'
@@ -296,16 +296,83 @@ const createFallbackQuestion = (index) => {
   };
 };
 
-const answerVal = ref({});
+// 🔒 CRITICAL FIX: Implement robust reactive answerVal state
+const rawAnswerVal = ref({});
 const laters = ref([]);
 const submittingAnswer = ref(false);
+
+// 🔒 CRITICAL FIX: Computed property with guaranteed non-null value
+const answerVal = computed({
+  get: () => {
+    if (!rawAnswerVal.value || typeof rawAnswerVal.value !== 'object') {
+      console.warn('⚠️ answerVal.value was invalid, returning empty object', {
+        actualValue: rawAnswerVal.value,
+        type: typeof rawAnswerVal.value
+      });
+      return {};
+    }
+    return rawAnswerVal.value;
+  },
+  set: (newValue) => {
+    if (!newValue || typeof newValue !== 'object') {
+      console.error('❌ Cannot set answerVal to invalid value:', newValue);
+      return;
+    }
+    rawAnswerVal.value = newValue;
+  }
+});
+
+// 🔒 CRITICAL FIX: Safe access helper functions
+const safeGetAnswerVal = () => {
+  return rawAnswerVal.value || {};
+};
+
+const safeSetAnswer = (key, value) => {
+  if (!rawAnswerVal.value) {
+    rawAnswerVal.value = {};
+  }
+  if (key && typeof key === 'string') {
+    rawAnswerVal.value[key] = value;
+  } else {
+    console.error('❌ Cannot set answer with invalid key:', key);
+  }
+};
+
+// 🔒 DEBUG: Monitor rawAnswerVal changes instead
+watch(rawAnswerVal, (newVal, oldVal) => {
+  if (newVal === undefined || newVal === null) {
+    console.error('🚨 CRITICAL: rawAnswerVal became undefined/null!', {
+      newVal,
+      oldVal,
+      stackTrace: new Error().stack,
+      timestamp: new Date().toISOString()
+    });
+    rawAnswerVal.value = {}; // Auto-recovery
+  } else {
+    console.log('🔄 rawAnswerVal changed:', {
+      keys: Object.keys(newVal || {}),
+      timestamp: new Date().toISOString()
+    });
+  }
+}, { deep: true });
 
 const submitAnswer = async (partial = false) => {
   if (submittingAnswer.value) return;
   submittingAnswer.value = true;
-  if (Object.keys(answerVal.value).length >= 1) {
+
+  // 🔒 DEBUG: Log current state before submission
+  const currentAnswers = answerVal.value; // Safe computed property access
+  console.log('🚀 submitAnswer called:', {
+    partial,
+    answerValExists: !!currentAnswers,
+    answerValKeys: Object.keys(currentAnswers),
+    answerValLength: Object.keys(currentAnswers).length,
+    answerValContent: currentAnswers
+  });
+
+  if (Object.keys(currentAnswers).length >= 1) {
     let newAnswers = {
-      ...answerVal.value
+      ...currentAnswers // Safe computed property access
     }
 
     // check if essay null
@@ -518,9 +585,12 @@ const getQuestions = async (index) => {
             // Check if answer actually exists (not null/empty)
             const hasAnswer = answerValue !== null && answerValue !== undefined && answerValue !== ''
 
-            if (hasAnswer) {
+            if (hasAnswer && answerVal.value) {
               console.log('Question answered, adding to done:', hashForMatching)
               answerVal.value[hashForMatching] = answerValue
+            } else if (hasAnswer && !answerVal.value) {
+              console.error('❌ Cannot store answer - answerVal.value is undefined');
+            }
 
               // Add to doneQuests if not already there
               addToStateArray(doneQuests.value, hashForMatching)
@@ -619,7 +689,7 @@ const getQuestions = async (index) => {
 const checkSkippedQuest = (hash) => skippedQuests.value.indexOf(hash) !== -1;
 const checkDoneQuest = (hash) => doneQuests.value.indexOf(hash) !== -1;
 
-// CRITICAL FIX: Smart answer lookup with multiple hash fallbacks
+// 🔒 CRITICAL FIX: Smart answer lookup with computed property safety
 const getAnswerForQuestion = (question) => {
   // Guard against undefined question
   if (!question || typeof question !== 'object') {
@@ -627,27 +697,29 @@ const getAnswerForQuestion = (question) => {
     return null;
   }
 
+  // 🔒 SAFE: Computed property guarantees non-null object
+  const currentAnswers = answerVal.value;
+
+  // 🔒 CRITICAL FIX: Use consistent key priority matching selectAnswer strategy
+  // Primary: question.hash (main storage key), Secondary: question.item_hash (fallback)
   const possibleKeys = [
-    question.item_hash,
-    question.hash,
-    // Additional fallbacks for hash inconsistency
-    question.item_hash ? question.item_hash : null,
-    question.hash ? question.hash : null,
+    question.hash,        // Primary key - this is what selectAnswer uses as main storage
+    question.item_hash,   // Secondary key - fallback storage in selectAnswer
   ].filter(Boolean);
 
   console.log('🔍 getAnswerForQuestion DEBUG:', {
     questionHash: question.hash,
     itemHash: question.item_hash,
     possibleKeys,
-    answerValKeys: Object.keys(answerVal.value),
+    answerValKeys: Object.keys(currentAnswers),
     searchingFor: possibleKeys
   });
 
   // Try all possible keys to find the stored answer
   for (const key of possibleKeys) {
-    if (answerVal.value[key]) {
-      console.log('✅ Found answer with key:', key, 'value:', answerVal.value[key]);
-      return answerVal.value[key];
+    if (currentAnswers[key]) {
+      console.log('✅ Found answer with key:', key, 'value:', currentAnswers[key]);
+      return currentAnswers[key];
     }
   }
 
@@ -685,7 +757,7 @@ const removeFromStateArray = (array, item) => {
     array.splice(index, 1);
   }
 };
-// 🔒 CRITICAL FIX: Enhanced selectAnswer with comprehensive error handling
+// 🔒 CRITICAL FIX: Enhanced selectAnswer with computed property safety
 const selectAnswer = function (answerHash, questionHash) {
   try {
     console.log('🎯 selectAnswer called:', { answerHash, questionHash });
@@ -696,14 +768,11 @@ const selectAnswer = function (answerHash, questionHash) {
       return;
     }
 
-    // 🔒 CRITICAL FIX: Ensure answerVal.value is always an object
-    if (!answerVal.value || typeof answerVal.value !== 'object') {
-      console.warn('⚠️ selectAnswer: Resetting answerVal.value to object', {
-        currentValue: answerVal.value,
-        type: typeof answerVal.value
-      });
-      answerVal.value = {};
-    }
+    // 🔒 SAFE: Computed property guarantees non-null object
+    console.log('🔒 selectAnswer: Using computed property, current answers:', {
+      keys: Object.keys(answerVal.value),
+      questionHash
+    });
 
     // 🔒 CRITICAL FIX: Guard against undefined questionData.value
     if (!questionData.value || !questionData.value.questions) {
@@ -732,23 +801,44 @@ const selectAnswer = function (answerHash, questionHash) {
         questionHash,
         availableQuestionHashes: questions.slice(0, 3).map(q => q.hash)
       });
-      // Fallback: store answer directly using questionHash
-      answerVal.value[questionHash] = answerHash;
+      // Fallback: store answer directly using questionHash using safe function
+      safeSetAnswer(questionHash, answerHash);
       submitAnswer(true);
       return;
     }
 
-    const hashForStorage = currentQuestion.item_hash || questionHash;
+    // 🔒 CRITICAL FIX: Use consistent key strategy with getAnswerForQuestion
+    // Always prioritize question.hash for storage to ensure consistency
+    const hashForStorage = questionHash;
 
     console.log('✅ selectAnswer: Storing answer successfully', {
       questionHash,
       itemHash: currentQuestion.item_hash,
       storageKey: hashForStorage,
       answerHash,
-      questionFound: !!currentQuestion
+      questionFound: !!currentQuestion,
+      strategy: 'Using question.hash as primary key for consistency'
     });
 
-    answerVal.value[hashForStorage] = answerHash;
+    // 🔒 SAFE: Use safe storage function
+    safeSetAnswer(hashForStorage, answerHash);
+
+    // Also store with item_hash as fallback if available and different
+    if (currentQuestion.item_hash && currentQuestion.item_hash !== questionHash) {
+      safeSetAnswer(currentQuestion.item_hash, answerHash);
+      console.log('🔄 Also stored with item_hash fallback:', currentQuestion.item_hash);
+    }
+
+    // 🔒 DEBUG: Verify storage was successful
+    const currentAnswers = answerVal.value; // Safe computed property access
+    console.log('🔍 Post-storage verification:', {
+      expectedKey: hashForStorage,
+      answerValKeys: Object.keys(currentAnswers),
+      hasExpectedKey: !!currentAnswers[hashForStorage],
+      storedValue: currentAnswers[hashForStorage],
+      alsoHasItemHash: currentQuestion.item_hash ? !!currentAnswers[currentQuestion.item_hash] : 'N/A'
+    });
+
     submitAnswer(true);
 
   } catch (error) {
@@ -762,18 +852,16 @@ const selectAnswer = function (answerHash, questionHash) {
 
     // Emergency fallback: try to store answer anyway
     try {
-      // Ensure answerVal.value is an object before trying to set properties
-      if (!answerVal || typeof answerVal !== 'object' || !('value' in answerVal)) {
-        console.warn('⚠️ answerVal is invalid, creating new reactive object');
-        answerVal = ref({});
-      }
-      if (!answerVal.value || typeof answerVal.value !== 'object') {
-        answerVal.value = {};
-      }
-
-      // Validate inputs before storing
+      // 🔒 CRITICAL FIX: Use safe storage function even in fallback
       if (questionHash && typeof questionHash === 'string' && answerHash && typeof answerHash === 'string') {
-        answerVal.value[questionHash] = answerHash;
+        // Primary storage with question.hash using safe function
+        safeSetAnswer(questionHash, answerHash);
+
+        console.log('🆘 Fallback storage: Stored with primary key', {
+          primaryKey: questionHash,
+          answerHash,
+          strategy: 'Emergency fallback - consistent with selectAnswer'
+        });
 
         // Try to submit answer with additional safety
         try {
@@ -940,30 +1028,51 @@ const startTimer = (duration) => {
   }
 }
 
-// 🔒 NEW: Timer synchronization function
-const syncTimerWithServer = async () => {
+// 🔒 ENHANCED: Robust timer synchronization with retry mechanism
+const syncTimerWithServer = async (retryCount = 0, maxRetries = 3) => {
   try {
+    console.log('🕐 Timer: Starting sync attempt', { attempt: retryCount + 1, maxRetries });
+
+    // Validate required data
+    if (!attempt.value?.hash) {
+      console.error('❌ Timer: No attempt hash available for sync');
+      return false;
+    }
+
     const pingStart = Date.now();
     const response = await axios.get(route('exam.timer.sync'), {
       params: {
         attempt_hash: attempt.value.hash
-      }
+      },
+      timeout: 10000 // 10 second timeout
     });
+
     const latency = (Date.now() - pingStart) / 2; // One-way latency
     const adjustedTime = response.data.remaining_seconds - Math.round(latency/1000);
-    
+
+    console.log('🕐 Timer: Sync successful', {
+      serverTime: response.data.remaining_seconds,
+      adjustedTime,
+      latency,
+      response: response.data
+    });
+
     if (response.data.expired) {
-      console.log('Timer: Server confirms exam expired, redirecting');
-      Inertia.visit(route('exam.finished'));
+      console.log('🕐 Timer: Server confirms exam expired, redirecting');
+      if (typeof Inertia !== 'undefined' && Inertia.visit) {
+        Inertia.visit(route('exam.finished'));
+      } else {
+        window.location.href = route('exam.finished');
+      }
       return true;
     }
-    
+
     // Adjust local timer if significant drift (> 5 seconds)
     const currentTimerSeconds = parseTimerCount(timerCount.value);
     const drift = Math.abs(currentTimerSeconds - adjustedTime);
-    
+
     if (drift > 5) {
-      console.log('Timer: Significant drift detected, adjusting', {
+      console.log('🕐 Timer: Significant drift detected, adjusting', {
         local: currentTimerSeconds,
         server: adjustedTime,
         drift: drift
@@ -971,19 +1080,75 @@ const syncTimerWithServer = async () => {
       // Restart timer with server time
       return startTimer(adjustedTime);
     }
-    
+
+    console.log('🕐 Timer: No adjustment needed');
     return false;
+
   } catch (error) {
-    console.error('Timer: Sync failed', error);
-    return false;
+    console.error('🕐 Timer: Sync failed', {
+      error: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      attempt: retryCount + 1,
+      maxRetries
+    });
+
+    // Implement retry logic with exponential backoff
+    if (retryCount < maxRetries) {
+      const backoffMs = Math.min(1000 * Math.pow(2, retryCount), 5000); // Max 5 seconds
+      console.log(`🕐 Timer: Retrying in ${backoffMs}ms...`);
+
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
+      return syncTimerWithServer(retryCount + 1, maxRetries);
+    } else {
+      console.error('🕐 Timer: Max retries reached, sync failed permanently');
+
+      // Fallback: continue with local timer but log warning
+      if (error.response?.status === 404) {
+        console.warn('🕐 Timer: Route not found (404), using local timer only');
+      } else if (error.response?.status >= 500) {
+        console.warn('🕐 Timer: Server error, continuing with local timer');
+      }
+
+      return false;
+    }
   }
 };
 
-// 🔒 NEW: Parse timer count string to seconds
+// 🔒 ENHANCED: Robust timer count parser with validation
 const parseTimerCount = (timerString) => {
-  if (!timerString || typeof timerString !== 'string') return 0;
-  const parts = timerString.split(':');
-  return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  if (!timerString || typeof timerString !== 'string') {
+    console.warn('⚠️ Timer: Invalid timer string format:', timerString);
+    return 0;
+  }
+
+  try {
+    const parts = timerString.split(':');
+    if (parts.length !== 2) {
+      console.warn('⚠️ Timer: Unexpected timer format:', timerString);
+      return 0;
+    }
+
+    const hours = parseInt(parts[0]) || 0;
+    const minutes = parseInt(parts[1]) || 0;
+
+    if (isNaN(hours) || isNaN(minutes)) {
+      console.warn('⚠️ Timer: NaN values in timer string:', timerString);
+      return 0;
+    }
+
+    const totalSeconds = hours * 60 + minutes;
+
+    if (totalSeconds < 0) {
+      console.warn('⚠️ Timer: Negative time calculated:', totalSeconds);
+      return 0;
+    }
+
+    return totalSeconds;
+  } catch (error) {
+    console.error('💥 Timer: Error parsing timer string:', timerString, error);
+    return 0;
+  }
 };
 
 onMounted(() => {
@@ -1065,12 +1230,17 @@ onMounted(() => {
       if (timerInterval) {
         console.log('✅ Timer: Successfully initialized with', validRemainingSeconds, 'seconds');
         
-        // 🔒 NEW: Start periodic timer sync (every 30 seconds)
+        // 🔒 ENHANCED: Start periodic timer sync with error handling
         setInterval(async () => {
-          console.log('🕐 Timer: Performing periodic sync with server');
-          const wasRestarted = await syncTimerWithServer();
-          if (wasRestarted) {
-            console.log('Timer: Restarted due to server sync');
+          try {
+            console.log('🕐 Timer: Performing periodic sync with server');
+            const wasRestarted = await syncTimerWithServer();
+            if (wasRestarted) {
+              console.log('🕐 Timer: Restarted due to server sync');
+            }
+          } catch (error) {
+            console.error('🕐 Timer: Periodic sync error', error);
+            // Don't throw error, just log it and continue
           }
         }, 30000);
       } else {
@@ -1153,11 +1323,16 @@ onMounted(() => {
   }
   console.log('DEBUG: localStorage answerData:', savedExamState.answerData || 'NULL')
 
-  // Populate answerVal from localStorage if available
+  // 🔒 CRITICAL FIX: Ensure rawAnswerVal is properly initialized for computed property
+  if (!rawAnswerVal.value || typeof rawAnswerVal.value !== 'object') {
+    rawAnswerVal.value = {};
+  }
+
+  // Populate rawAnswerVal from localStorage if available
   if (savedExamState.answerData && typeof savedExamState.answerData === 'object') {
     Object.keys(savedExamState.answerData).forEach(key => {
       if (savedExamState.answerData[key]) {
-        answerVal.value[key] = savedExamState.answerData[key]
+        rawAnswerVal.value[key] = savedExamState.answerData[key]
         console.log('✅ Restored answerVal from localStorage:', {key, value: savedExamState.answerData[key]})
       }
     })
@@ -1174,15 +1349,22 @@ onMounted(() => {
       const attemptQuestion = attemptQuestions.value && attemptQuestions.value.find((data) => data.question.hash === question.hash)
       console.log('DEBUG: Question:', question.hash, 'attemptQuestion found:', !!attemptQuestion)
       if (attemptQuestion) {
-        // CRITICAL FIX: Populate answerVal with existing answer hashes
+        // 🔒 CRITICAL FIX: Use consistent strategy matching selectAnswer
+        // Always store with question.hash as primary key for consistency
         if (attemptQuestion.pivot && attemptQuestion.pivot.answer_hash) {
-          const hashForMatching = question.item_hash || question.hash
-          answerVal.value[hashForMatching] = attemptQuestion.pivot.answer_hash
+          // Primary storage with question.hash using safe function
+          safeSetAnswer(question.hash, attemptQuestion.pivot.answer_hash);
+
+          // Secondary storage with item_hash as fallback (if different)
+          if (question.item_hash && question.item_hash !== question.hash) {
+            safeSetAnswer(question.item_hash, attemptQuestion.pivot.answer_hash);
+          }
+
           console.log('✅ Populated answerVal from server data:', {
-            hashForMatching,
+            primaryKey: question.hash,
+            secondaryKey: question.item_hash,
             answerHash: attemptQuestion.pivot.answer_hash,
-            questionHash: question.hash,
-            itemHash: question.item_hash
+            strategy: 'Consistent with selectAnswer - question.hash primary'
           })
         } else {
           console.log('❌ No pivot data or answer_hash in attemptQuestion')
@@ -1201,12 +1383,20 @@ onMounted(() => {
   console.log('DEBUG: Final answerVal state:', answerVal.value)
 
   // Update localStorage with merged state - include answerVal data!
-  localStorage.setItem(getLocalStorageKey('exam-state'), JSON.stringify({
+  const stateToSave = {
     skipped: skippedQuests.value,
     later: laterQuests.value,
     done: doneQuests.value,
     answerData: answerVal.value, // Save current answer state
-  }))
+  };
+
+  console.log('💾 Saving state to localStorage:', {
+    answerDataKeys: Object.keys(stateToSave.answerData || {}),
+    answerDataLength: Object.keys(stateToSave.answerData || {}).length,
+    stateSize: JSON.stringify(stateToSave).length
+  });
+
+  localStorage.setItem(getLocalStorageKey('exam-state'), JSON.stringify(stateToSave));
 
   getQuestions(0)
 })
@@ -1327,7 +1517,7 @@ const markAsLater = (e, hash) => {
                     <div>Item Hash: {{ question.item_hash || 'NULL' }}</div>
                     <div>Direct Lookup: {{ answerVal[question.item_hash || question.hash] || 'NULL' }}</div>
                     <div>Smart Lookup: {{ getAnswerForQuestion(question) || 'NULL' }}</div>
-                    <div>All answerVal keys: {{ Object.keys(answerVal.value).slice(0, 5).join(', ') }}{{ Object.keys(answerVal.value).length > 5 ? '...' : '' }}</div>
+                    <div>All answerVal keys: {{ answerVal.value ? Object.keys(answerVal.value).slice(0, 5).join(', ') : '[]' }}{{ answerVal.value && Object.keys(answerVal.value).length > 5 ? '...' : '' }}</div>
                   </div>
                 </div>
                 <div class="mt-4" v-else>

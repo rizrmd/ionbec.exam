@@ -41,12 +41,24 @@
                   </div>
 
                   <div class="col-span-6">
+                    <JetLabel for="username" value="Username" required/>
+                    <JetInput
+                      id="username"
+                      v-model="form.username"
+                      type="text"
+                      class="mt-1 block w-full"
+                      placeholder="Username will auto-generate from email if left empty"/>
+                    <JetInputError :message="form.errors.username" class="mt-2"/>
+                  </div>
+
+                  <div class="col-span-6">
                     <JetLabel for="email" value="Email Address" required/>
                     <JetInput
                       id="email"
                       v-model="form.email"
                       type="email"
-                      class="mt-1 block w-full"/>
+                      class="mt-1 block w-full"
+                      @input="autoGenerateUsername"/>
                     <JetInputError :message="form.errors.email" class="mt-2"/>
                   </div>
                 </div>
@@ -158,19 +170,35 @@ const props = defineProps({
 
 const form = useForm({
   name: '',
+  username: '',
   email: '',
   password: '',
   password_confirmation: '',
   role_ids: [],
 })
 
+const autoGenerateUsername = () => {
+  // Auto-generate username from email if username is empty
+  if (!form.username && form.email) {
+    const emailParts = form.email.split('@')
+    if (emailParts.length > 0) {
+      form.username = emailParts[0]
+    }
+  }
+}
+
 const handleSubmit = () => {
   const urlParams = new URLSearchParams(window.location.search)
   const clientId = urlParams.get('client_id')
-  
+
+  // Generate username if still empty
+  if (!form.username && form.email) {
+    autoGenerateUsername()
+  }
+
   // Build the route with client_id as query parameter
   const routeParams = clientId ? { client_id: clientId } : {}
-  
+
   form.post(route('back-office.users.store', routeParams))
 }
 

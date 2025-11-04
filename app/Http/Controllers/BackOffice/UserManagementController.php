@@ -38,7 +38,9 @@ class UserManagementController extends Controller
         // Get the specific client
         $currentClient = Client::findOrFail($clientId);
         
-        $users = User::with('roles')
+        $users = User::with(['roles' => function ($query) {
+                $query->withoutGlobalScopes();
+            }])
             ->where('client_id', $clientId)
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -107,7 +109,8 @@ class UserManagementController extends Controller
         
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'username' => ['required', 'string', 'max:255', 'unique:users,NULL,id,client_id,' . $clientId],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,NULL,id,client_id,' . $clientId],
             'password' => ['required', 'confirmed', Password::defaults()],
             'role_ids' => ['array'],
             'role_ids.*' => ['exists:roles,id'],
@@ -115,6 +118,7 @@ class UserManagementController extends Controller
 
         $user = User::create([
             'name' => $validated['name'],
+            'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'client_id' => $clientId,
@@ -195,7 +199,8 @@ class UserManagementController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $user->id . ',id,client_id,' . $clientId],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id . ',id,client_id,' . $clientId],
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'role_ids' => ['array'],
             'role_ids.*' => ['exists:roles,id'],
@@ -203,6 +208,7 @@ class UserManagementController extends Controller
 
         $updateData = [
             'name' => $validated['name'],
+            'username' => $validated['username'],
             'email' => $validated['email'],
         ];
 
