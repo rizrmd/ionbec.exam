@@ -38,7 +38,10 @@
       "Bash(PGPASSWORD='6LP0Ojegy7IUU6kaX9lLkmZRUiAdAUNOltWyL3LegfYGR6rPQtB4DUSVqjdA78ES' psql -h 107.155.75.50 -p 5986 -U postgres -d ionbec-new -c \"SELECT d.id, d.name, d.group_id, d.exam_id, d.client_id FROM deliveries d WHERE MD5(CONCAT(d.id::text, ''ionbec'')) = ''j3GlgkLD'';\")",
       "Bash(mysql:*)",
       "Bash(chmod:*)",
-      "Bash(./deploy_role_fix.sh:*)"
+      "Bash(./deploy_role_fix.sh:*)",
+      "Bash(for:*)",
+      "Bash(do echo:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []
