@@ -951,20 +951,29 @@ class MainController extends Controller
                             'score' => $score
                         ]);
 
+                        // 🔒 CRITICAL FIX: For MCQ, use actual question score, not just is_correct
+                        $actualScore = 0;
+                        if (null !== $question->type && 'multiple-choice' === $question->type->name) {
+                            $actualScore = $answer->is_correct_answer ? $question->score : 0;
+                        }
+
                         $attemptQuestion = AttemptQuestion::updateOrCreate(
                             ['attempt_id' => $attempt->id, 'question_id' => $question->id],
                             [
                                 'answer_id' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? $answer->id : null,
                                 'answer_hash' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? Answer::idToHash($answer->id) : null,
                                 'answer' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? $answer->answer : $answer,
-                                'score' => $score,
-                                'is_correct' => 0 !== $score,
+                                'score' => $actualScore, // Use actual calculated score
+                                'is_correct' => null !== $question->type && 'multiple-choice' === $question->type->name && $answer->is_correct_answer,
                             ]
                         );
 
                         \Log::info('Answer saved successfully', [
                             'attempt_question_id' => $attemptQuestion->id,
-                            'question_hash' => $questionHash
+                            'question_hash' => $questionHash,
+                            'actual_score' => $actualScore,
+                            'question_score' => $question->score,
+                            'is_correct' => null !== $question->type && 'multiple-choice' === $question->type->name && $answer->is_correct_answer
                         ]);
 
                     } catch (\Exception $e) {

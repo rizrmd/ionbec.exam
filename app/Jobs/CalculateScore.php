@@ -128,7 +128,10 @@ class CalculateScore implements ShouldQueue
 
             foreach ($questions as $question) {
                 /** @var AttemptQuestion|null $attemptQuestion */
-                $attemptQuestion = $question->attempts()->where('attempt_id', $this->attempt->id)->latest()->first();
+                // 🔒 CRITICAL FIX: Query directly from attempt_question table, not pivot
+                $attemptQuestion = AttemptQuestion::where('attempt_id', $this->attempt->id)
+                    ->where('question_id', $question->id)
+                    ->first();
 
                 if (! $attemptQuestion) {
                     ++$totalItems;
@@ -138,19 +141,25 @@ class CalculateScore implements ShouldQueue
                 if ('multiple-choice' == $question?->type?->name) {
                     $is_mcq = true;
 
-                    $score = $attemptQuestion?->pivot?->is_correct ? 100 : 0;
-                    $attemptQuestion->score = $score;
-                    $attemptQuestion->save();
+                    // 🔒 CRITICAL FIX: Use actual score from attempt_question, not fixed 100
+                    $score = $attemptQuestion->score ?? 0;
+
+                    // For safety, ensure score is properly calculated for MCQ
+                    if ($score == 0 && $attemptQuestion->is_correct) {
+                        $score = $question->score ?? 0;
+                        $attemptQuestion->score = $score;
+                        $attemptQuestion->save();
+                    }
 
                     $totalScore += $score;
                 } elseif ('essay' == $question?->type?->name) {
-                    // manually updated by users; ignore score assignment.
-                    $totalScore += $attemptQuestion->pivot->score;
+                    // manually updated by users; use score from attempt_question
+                    $totalScore += $attemptQuestion->score ?? 0;
                 } elseif ('interview' == $question?->type?->name) {
                     $is_interview = true;
 
-                    // manually updated by users; ignore score assignment.
-                    $totalScore += $attemptQuestion->pivot->score;
+                    // manually updated by users; use score from attempt_question
+                    $totalScore += $attemptQuestion->score ?? 0;
                 }
 
                 // when attemptQuestion is null
