@@ -422,12 +422,61 @@ const submitAnswer = async (partial = false) => {
           })
 
           if (responseData) {
-            notification.add('success', 'Success', 'Answer saved.')
+            // Check if the response indicates success
+            if (responseData.success === true) {
+              notification.add('success', 'Success', responseData.message || 'Answer saved successfully.')
+            } else if (responseData.error) {
+              // Handle case where server returns error but still HTTP 200
+              console.warn('Server returned error in success response:', responseData.error);
+              notification.add('error', 'Error', responseData.error);
+            } else {
+              notification.add('success', 'Success', 'Answer saved.')
+            }
           }
           if (!partial) answerVal.value = {}
         } catch (error) {
           console.error('Error submitting answer:', error)
-          notification.add('error', 'Error', 'Failed to save answer.')
+
+          // Enhanced error handling with detailed logging
+          let errorMessage = 'Failed to save answer.';
+
+          if (error.response) {
+            // Server responded with error status
+            const status = error.response.status;
+            const data = error.response.data;
+
+            console.error('Server error response:', {
+              status,
+              data,
+              headers: error.response.headers
+            });
+
+            if (status === 403 && data?.expired) {
+              errorMessage = 'Exam time expired. Please contact administrator.';
+            } else if (status === 422) {
+              errorMessage = 'Validation error. Please check your answer.';
+            } else if (status === 500) {
+              errorMessage = data?.error || 'Server error occurred. Please try again.';
+            } else {
+              errorMessage = data?.error || `Server error (${status}). Please try again.`;
+            }
+          } else if (error.request) {
+            // Network error - request was made but no response received
+            console.error('Network error:', error.request);
+            errorMessage = 'Network error. Please check your connection and try again.';
+          } else {
+            // Other errors (config, etc.)
+            console.error('Request setup error:', error.message);
+            errorMessage = `Request error: ${error.message}`;
+          }
+
+          notification.add('error', 'Error', errorMessage);
+
+          // Don't clear answerVal on error so user can retry
+          console.log('Answer preserved due to error:', {
+            answerCount: Object.keys(currentAnswers).length,
+            answers: currentAnswers
+          });
         }
       }
     }

@@ -902,50 +902,109 @@ class MainController extends Controller
             'answers_value' => $request->answers_value
         ]);
 
-        $request->validate([
-            'attempt_hash' => ['required', new ExistsByHash(Attempt::class)],
-            'answers_value' => 'array',
-        ]);
-
-        $answerResults = [];
-        $attempt = Attempt::byHash($request->attempt_hash);
-        
-        // 🔒 CRITICAL SECURITY: Check if attempt has expired
-        if (app(ExamTimerService::class)->isAttemptExpired($attempt)) {
-            \Log::warning('Attempt rejected - exam time expired', [
-                'attempt_id' => $attempt->id,
-                'attempt_hash' => $request->attempt_hash,
-                'ended_at' => $attempt->ended_at,
-                'current_time' => Carbon::now()->toDateTimeString()
+        try {
+            $request->validate([
+                'attempt_hash' => ['required', new ExistsByHash(Attempt::class)],
+                'answers_value' => 'array',
             ]);
-            
-            return response()->json([
-                'error' => 'Exam time expired',
-                'expired' => true
-            ], 403);
-        }
-        if (count($request->answers_value) >= 1) {
-            foreach ($request->answers_value as $questionHash => $answerValue) {
-                $question = Question::byHash($questionHash);
-                $answer = (null !== $question->type && 'multiple-choice' === $question->type->name) ? Answer::byHash($answerValue) : $answerValue;
-                $score = (null !== $question->type && 'multiple-choice' === $question->type->name && $answer->is_correct_answer) ? $question->score : 0;
 
-                AttemptQuestion::updateOrCreate(
-                    ['attempt_id' => $attempt->id, 'question_id' => $question->id],
-                    [
-                        'answer_id' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? $answer->id : null,
-                        'answer_hash' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? Answer::idToHash($answer->id) : null,
-                        'answer' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? $answer->answer : $answer,
-                        'score' => $score,
-                        'is_correct' => 0 !== $score,
-                    ]
-                );
+            $answerResults = [];
+            $attempt = Attempt::byHash($request->attempt_hash);
+
+            // 🔒 CRITICAL SECURITY: Check if attempt has expired
+            if (app(ExamTimerService::class)->isAttemptExpired($attempt)) {
+                \Log::warning('Attempt rejected - exam time expired', [
+                    'attempt_id' => $attempt->id,
+                    'attempt_hash' => $request->attempt_hash,
+                    'ended_at' => $attempt->ended_at,
+                    'current_time' => Carbon::now()->toDateTimeString()
+                ]);
+
+                return response()->json([
+                    'error' => 'Exam time expired',
+                    'expired' => true
+                ], 403);
             }
+
+            if (count($request->answers_value) >= 1) {
+                foreach ($request->answers_value as $questionHash => $answerValue) {
+                    try {
+                        \Log::info('Processing answer', [
+                            'question_hash' => $questionHash,
+                            'answer_value' => $answerValue
+                        ]);
+
+                        $question = Question::byHash($questionHash);
+
+                        if (!$question) {
+                            \Log::error('Question not found', ['question_hash' => $questionHash]);
+                            continue;
+                        }
+
+                        $answer = (null !== $question->type && 'multiple-choice' === $question->type->name) ? Answer::byHash($answerValue) : $answerValue;
+                        $score = (null !== $question->type && 'multiple-choice' === $question->type->name && $answer->is_correct_answer) ? $question->score : 0;
+
+                        \Log::info('Saving answer to database', [
+                            'attempt_id' => $attempt->id,
+                            'question_id' => $question->id,
+                            'answer' => is_string($answer) ? $answer : $answer->answer ?? 'N/A',
+                            'score' => $score
+                        ]);
+
+                        $attemptQuestion = AttemptQuestion::updateOrCreate(
+                            ['attempt_id' => $attempt->id, 'question_id' => $question->id],
+                            [
+                                'answer_id' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? $answer->id : null,
+                                'answer_hash' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? Answer::idToHash($answer->id) : null,
+                                'answer' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? $answer->answer : $answer,
+                                'score' => $score,
+                                'is_correct' => 0 !== $score,
+                            ]
+                        );
+
+                        \Log::info('Answer saved successfully', [
+                            'attempt_question_id' => $attemptQuestion->id,
+                            'question_hash' => $questionHash
+                        ]);
+
+                    } catch (\Exception $e) {
+                        \Log::error('Error processing individual answer', [
+                            'question_hash' => $questionHash,
+                            'answer_value' => $answerValue,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                        // Continue processing other answers even if one fails
+                    }
+                }
+            }
+
+            $this->calculateScore($attempt);
+
+            \Log::info('Answer submission completed successfully', [
+                'attempt_hash' => $request->attempt_hash,
+                'total_answers_processed' => count($request->answers_value)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Answer saved successfully.',
+                'processed_answers' => count($request->answers_value)
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Critical error in answer submission', [
+                'attempt_hash' => $request->attempt_hash,
+                'answers_value' => $request->answers_value,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to save answer: ' . $e->getMessage(),
+                'details' => config('app.debug') ? $e->getTraceAsString() : null
+            ], 500);
         }
-
-        $this->calculateScore($attempt);
-
-        return response()->json($answerResults);
     }
 
     private function calculateScore($attempt)
