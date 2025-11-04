@@ -775,52 +775,117 @@ const selectAnswer = function (answerHash, questionHash) {
 
 const timerCount = ref("00:00");
 const startTimer = (duration) => {
+  // 🔒 COMPREHENSIVE SAFETY CHECKS: Validate all inputs
+  if (!duration || typeof duration !== 'number' || duration <= 0) {
+    console.warn('Timer: Invalid duration provided, using default 0');
+    duration = 0;
+  }
+
   let timer = duration, minutes, seconds;
+  let timerInterval = null;
 
   // Safety check for admin
   if (!admin || !admin.value) {
-    setInterval(function () {
+    timerInterval = setInterval(function () {
       try {
-        // Safety checks for all variables
-        if (typeof timer !== 'number' || isNaN(timer)) {
-          timer = duration;
+        // 🔒 ENHANCED SAFETY: Check timer state
+        if (typeof timer !== 'number' || isNaN(timer) || timer < 0) {
+          console.warn('Timer: Invalid timer state, resetting to duration');
+          timer = duration || 0;
           return;
         }
 
-        minutes = parseInt(timer / 60, 10);
-        seconds = parseInt(timer % 60, 10);
+        // 🔒 SAFETY: Calculate minutes and seconds with validation
+        try {
+          minutes = parseInt(timer / 60, 10);
+          seconds = parseInt(timer % 60, 10);
 
-        minutes = minutes < 10 ? "0" + minutes : minutes;
-        seconds = seconds < 10 ? "0" + seconds : seconds;
+          // Validate calculated values
+          if (isNaN(minutes) || isNaN(seconds)) {
+            throw new Error('Invalid time calculation');
+          }
 
-        // Safety check for timerCount
-        if (timerCount && timerCount.value !== undefined) {
-          timerCount.value = minutes + ":" + seconds;
+          minutes = minutes < 10 ? "0" + minutes : minutes;
+          seconds = seconds < 10 ? "0" + seconds : seconds;
+        } catch (timeError) {
+          console.error('Timer: Time calculation error', timeError);
+          timer = duration || 0;
+          return;
         }
 
-        if (--timer < 0) {
-          timer = duration;
-          // Safety check for localStorage key generation
-          try {
-            localStorage.removeItem(getLocalStorageKey('exam-state'));
-          } catch (e) {
-            console.warn('Timer: Failed to remove localStorage key', e);
+        // 🔒 SAFETY: Update timer display with enhanced checks
+        try {
+          if (timerCount && typeof timerCount === 'object' && 'value' in timerCount) {
+            timerCount.value = minutes + ":" + seconds;
+          } else {
+            console.warn('Timer: timerCount object is invalid');
           }
-          // Safety check for Inertia and route
+        } catch (displayError) {
+          console.error('Timer: Display update error', displayError);
+        }
+
+        // 🔒 SAFETY: Handle timer expiry with comprehensive error handling
+        if (--timer < 0) {
+          console.log('Timer: Time expired, cleaning up and redirecting');
+
+          // Clear interval to prevent multiple executions
+          if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+          }
+
+          // 🔒 SAFETY: Remove localStorage with enhanced error handling
           try {
-            if (typeof route === 'function' && typeof Inertia !== 'undefined') {
-              Inertia.visit(route('exam.finished'));
+            const localStorageKey = getLocalStorageKey('exam-state');
+            if (localStorageKey && typeof localStorageKey === 'string') {
+              localStorage.removeItem(localStorageKey);
             }
-          } catch (e) {
-            console.warn('Timer: Failed to redirect', e);
+          } catch (storageError) {
+            console.warn('Timer: Failed to remove localStorage key', storageError);
+          }
+
+          // 🔒 SAFETY: Redirect with comprehensive checks
+          try {
+            // Check if route function exists and exam.finished route exists
+            if (typeof route === 'function') {
+              const finishedRoute = route('exam.finished');
+              if (typeof Inertia !== 'undefined' && Inertia.visit && typeof finishedRoute === 'string') {
+                Inertia.visit(finishedRoute);
+              } else {
+                console.warn('Timer: Inertia or route is unavailable, using fallback redirect');
+                window.location.href = finishedRoute || '/exam/finished';
+              }
+            } else {
+              console.warn('Timer: Route function unavailable, using fallback redirect');
+              window.location.href = '/exam/finished';
+            }
+          } catch (redirectError) {
+            console.error('Timer: Redirect failed', redirectError);
+            // Final fallback
+            window.location.reload();
           }
         }
       } catch (error) {
-        console.error('Timer error:', error);
-        // Reset timer on error to prevent infinite loops
-        timer = duration;
+        console.error('💥 Timer: Critical error in setInterval callback', error);
+        // Enhanced error recovery
+        try {
+          if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+          }
+          // Attempt to restart timer with safer parameters
+          timer = duration || 0;
+        } catch (recoveryError) {
+          console.error('💥 Timer: Recovery failed', recoveryError);
+        }
       }
     }, 1000);
+
+    // 🔒 SAFETY: Store interval reference for cleanup
+    return timerInterval;
+  } else {
+    console.log('Timer: Admin mode detected, timer disabled');
+    return null;
   }
 }
 
@@ -846,18 +911,68 @@ onMounted(() => {
   console.log('items computed:', items.value)
   console.log('=======================')
 
-  // Use server-provided remaining seconds (timezone agnostic)
-  if (remainingSeconds.value > 0) {
-    startTimer(remainingSeconds.value)
-  } else {
-    // No time remaining, redirect to finished
-    try {
-      localStorage.removeItem(getLocalStorageKey('exam-state'));
-    } catch (e) {
-      console.warn('onMounted: Failed to remove localStorage key', e);
+  // 🔒 ENHANCED SAFETY: Use server-provided remaining seconds with comprehensive validation
+  try {
+    console.log('🕐 Timer: Initializing with remaining seconds:', remainingSeconds.value);
+
+    // Enhanced validation for remainingSeconds
+    const validRemainingSeconds = typeof remainingSeconds?.value === 'number' && remainingSeconds.value > 0
+      ? remainingSeconds.value
+      : 0;
+
+    if (validRemainingSeconds > 0) {
+      // Initialize timer with enhanced safety
+      const timerInterval = startTimer(validRemainingSeconds);
+      if (timerInterval) {
+        console.log('✅ Timer: Successfully initialized with', validRemainingSeconds, 'seconds');
+      } else {
+        console.warn('⚠️ Timer: Failed to initialize interval');
+      }
+    } else {
+      console.log('⏰ Timer: No time remaining or invalid value, redirecting to finished');
+
+      // Enhanced cleanup before redirect
+      try {
+        const localStorageKey = getLocalStorageKey('exam-state');
+        if (localStorageKey && typeof localStorageKey === 'string') {
+          localStorage.removeItem(localStorageKey);
+          console.log('✅ Timer: Cleaned up localStorage before redirect');
+        }
+      } catch (storageError) {
+        console.warn('⚠️ Timer: Failed to remove localStorage key', storageError);
+      }
+
+      // Enhanced redirect with fallback
+      try {
+        if (typeof route === 'function') {
+          const finishedRoute = route('exam.finished');
+          if (typeof Inertia !== 'undefined' && Inertia.visit && typeof finishedRoute === 'string') {
+            Inertia.visit(finishedRoute);
+          } else {
+            console.warn('⚠️ Timer: Inertia unavailable, using fallback redirect');
+            window.location.href = finishedRoute || '/exam/finished';
+          }
+        } else {
+          console.warn('⚠️ Timer: Route function unavailable, using fallback redirect');
+          window.location.href = '/exam/finished';
+        }
+      } catch (redirectError) {
+        console.error('💥 Timer: Redirect failed, using final fallback', redirectError);
+        window.location.reload();
+      }
+      return;
     }
-    Inertia.visit(route('exam.finished'));
-    return
+  } catch (timerInitError) {
+    console.error('💥 Timer: Critical error during timer initialization', timerInitError);
+
+    // Emergency fallback redirect
+    try {
+      window.location.href = '/exam/finished';
+    } catch (emergencyError) {
+      console.error('💥 Timer: Emergency redirect failed', emergencyError);
+      window.location.reload();
+    }
+    return;
   }
 
   // CRITICAL: First load localStorage to preserve any existing state
