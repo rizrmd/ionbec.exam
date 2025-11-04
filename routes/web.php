@@ -42,6 +42,35 @@ Route::get('/test-traefik-config', function () {
     }
 });
 
+Route::get('/test-group-update', function() {
+    $group = \App\Models\Takers\Group::where('hash', '5bzO5NvE')->first();
+    return response()->json([
+        'message' => 'Test API working',
+        'timestamp' => now(),
+        'group' => $group ? ['name' => $group->name, 'code' => $group->code] : null,
+        'group_found' => $group ? true : false
+    ]);
+});
+
+Route::get('/debug-route-binding/{hash}', function($hash) {
+    try {
+        $groupModel = new \App\Models\Takers\Group();
+        $group = $groupModel->resolveRouteBinding($hash);
+        return response()->json([
+            'hash' => $hash,
+            'group_found' => $group ? true : false,
+            'group' => $group ? ['id' => $group->id, 'name' => $group->name, 'hash' => $group->hash] : null,
+            'route_key_name' => $groupModel->getRouteKeyName()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'hash' => $hash,
+            'error' => $e->getMessage(),
+            'route_key_name' => (new \App\Models\Takers\Group())->getRouteKeyName()
+        ], 500);
+    }
+});
+
 Route::get('/health', function () {
     return response()->json([
         'status' => 'ok',
