@@ -45,6 +45,8 @@ const props = defineProps({
 const {exam, examItems, attempt, delivery, attemptQuestions, admin, remainingSeconds} = toRefs(props);
 
 const loadingQuestion = ref(false);
+const loadingQuestions = ref(false); // NEW: Loading state for question navigation
+const lastLoadedIndex = ref(null); // NEW: Track last loaded index to prevent duplicate requests
 const vignetteData = ref(null);
 const questionData = ref(null);
 const items = computed(() => {
@@ -147,113 +149,153 @@ const doneQuests = ref([]);
 
 const getQuestions = async (index) => {
   const item = items.value[index];
-  if (questionData.value !== null && questionData.value.item_hash === item.hash) return null;
-  await submitAnswer(true) // Use partial=true to avoid resetting answerVal during navigation
 
-  // CRITICAL FIX: Don't reset answerVal - it contains all stored answers!
-// Only reset current question's data, not all answers
-// answerVal.value = []; // REMOVED - This was causing green indicators to disappear
-
-  vignetteData.value = item.is_vignette ? item.content : null
-  questionData.value = {
-    index: index,
-    item_hash: item.hash,
-    type:  item.item_type,
-    is_random: item.is_random,
-    questions: item.questions,
-    attachments: item.attachments,
+  // NEW: Prevent duplicate requests and track loading state
+  if (loadingQuestions.value || lastLoadedIndex.value === index) {
+    console.log('Skipping duplicate request for index:', index, 'loading:', loadingQuestions.value);
+    return null;
   }
 
-  // Only add to skipped if not already done or skipped
-  item.questions.forEach((question) => {
-    if (!checkSkippedQuest(question.hash) && !checkDoneQuest(question.hash)) {
-      addToStateArray(skippedQuests.value, question.hash)
+  if (questionData.value !== null && questionData.value.item_hash === item.hash) return null;
+
+  loadingQuestions.value = true;
+  console.log('🔄 Loading questions for index:', index, 'item:', item.hash);
+
+  try {
+    await submitAnswer(true) // Use partial=true to avoid resetting answerVal during navigation
+
+    // NEW: Preserve existing questions during loading to prevent blank screen
+    const previousQuestions = questionData.value?.questions || [];
+    const previousQuestionData = {...questionData.value};
+
+    // CRITICAL: Update only metadata, keep questions visible during loading
+    questionData.value = {
+      ...previousQuestionData,
+      index: index,
+      item_hash: item.hash,
+      type: item.item_type,
+      is_random: item.is_random,
+      questions: previousQuestions.length > 0 ? previousQuestions : item.questions, // Keep previous if available
+      attachments: item.attachments,
+      loading: true // NEW: Add loading flag
     }
-  })
 
-  // Sync laters checkbox state with laterQuests
-  item.questions.forEach((question) => {
-    laters.value[question.hash] = laterQuests.value.indexOf(question.hash) !== -1;
-  })
+    vignetteData.value = item.is_vignette ? item.content : null
 
-  loadingQuestion.value = true;
-  axios.get(route('exam.get-taker-answer', { item_hash: item.hash }))
-    .then((res) => {
-      console.log('Server response for item:', item.id, res.data)
-      if (res.data && res.data.questions) {
-        loadingQuestion.value = false;
-        const questions = res.data.questions;
-        const attempt = res.data.attempt;
-        
-        // Load questions into the item
-        item.questions = questions;
-        
-        // Sync laters checkbox state with laterQuests
-        item.questions.forEach((question) => {
-          laters.value[question.hash] = laterQuests.value.indexOf(question.hash) !== -1;
-        })
-
-        // Process attempt answers if they exist
-        if (attempt && attempt.questions && attempt.questions.length > 0) {
-          const attemptAnswer = attempt.questions;
-          console.log('Processing attempt answers:', attemptAnswer)
-          attemptAnswer.forEach((question) => {
-            console.log('Processing question:', question.hash, 'item_hash:', question.item_hash, 'pivot:', question.pivot)
-            // Only process if question has pivot (was answered)
-            if (question.pivot) {
-              // CRITICAL FIX: Use item_hash for matching with current item, not question.hash
-              const hashForMatching = question.item_hash || question.hash
-              const answerValue = (item.item_type.value === 'multiple-choice') ? question.pivot.answer_hash : question.pivot.answer
-              console.log('Answer value:', answerValue, 'Stored with key:', hashForMatching)
-
-              // Check if answer actually exists (not null/empty)
-              const hasAnswer = answerValue !== null && answerValue !== undefined && answerValue !== ''
-
-              if (hasAnswer) {
-                console.log('Question answered, adding to done:', hashForMatching)
-                answerVal.value[hashForMatching] = answerValue
-
-                // Add to doneQuests if not already there
-                addToStateArray(doneQuests.value, hashForMatching)
-
-                // Remove from skipped if answered
-                removeFromStateArray(skippedQuests.value, hashForMatching)
-
-                // Remove from later if answered
-                removeFromStateArray(laterQuests.value, hashForMatching)
-                // Also uncheck the checkbox
-                if (laters.value[hashForMatching]) {
-                  laters.value[hashForMatching] = false;
-                }
-              }
-            }
-          })
-        }
-
-        console.log('Done quests after processing:', doneQuests.value)
-        // CRITICAL: Update localStorage AFTER processing server response
-        // This ensures the server state is properly merged with local state
-        localStorage.setItem('exam-state', JSON.stringify({
-          skipped: skippedQuests.value,
-          later: laterQuests.value,
-          done: doneQuests.value,
-        }))
-      } else {
-        loadingQuestion.value = false;
-        pageNumber.value = Math.ceil((index + 1) / 20)
-        
-        // Also update localStorage when no server data
-        localStorage.setItem('exam-state', JSON.stringify({
-          skipped: skippedQuests.value,
-          later: laterQuests.value,
-          done: doneQuests.value,
-        }))
+    // Only add to skipped if not already done or skipped
+    item.questions.forEach((question) => {
+      if (!checkSkippedQuest(question.hash) && !checkDoneQuest(question.hash)) {
+        addToStateArray(skippedQuests.value, question.hash)
       }
     })
-    .catch((err) => {
-      loadingQuestion.value = false;
-      console.log(err)
+
+    // Sync laters checkbox state with laterQuests
+    item.questions.forEach((question) => {
+      laters.value[question.hash] = laterQuests.value.indexOf(question.hash) !== -1;
     })
+
+    loadingQuestion.value = true;
+    console.log('📡 Fetching server data for item:', item.hash);
+
+    const {data: responseData} = await axios.get(route('exam.get-taker-answer', { item_hash: item.hash }));
+    console.log('✅ Server response received for item:', item.hash, responseData);
+
+    if (responseData && responseData.questions) {
+      const questions = responseData.questions;
+      const attempt = responseData.attempt;
+
+      // Load questions into the item
+      item.questions = questions;
+
+      // Sync laters checkbox state with laterQuests
+      item.questions.forEach((question) => {
+        laters.value[question.hash] = laterQuests.value.indexOf(question.hash) !== -1;
+      })
+
+      // Process attempt answers if they exist
+      if (attempt && attempt.questions && attempt.questions.length > 0) {
+        const attemptAnswer = attempt.questions;
+        console.log('Processing attempt answers:', attemptAnswer)
+        attemptAnswer.forEach((question) => {
+          console.log('Processing question:', question.hash, 'item_hash:', question.item_hash, 'pivot:', question.pivot)
+          // Only process if question has pivot (was answered)
+          if (question.pivot) {
+            // CRITICAL FIX: Use item_hash for matching with current item, not question.hash
+            const hashForMatching = question.item_hash || question.hash
+            const answerValue = (item.item_type.value === 'multiple-choice') ? question.pivot.answer_hash : question.pivot.answer
+            console.log('Answer value:', answerValue, 'Stored with key:', hashForMatching)
+
+            // Check if answer actually exists (not null/empty)
+            const hasAnswer = answerValue !== null && answerValue !== undefined && answerValue !== ''
+
+            if (hasAnswer) {
+              console.log('Question answered, adding to done:', hashForMatching)
+              answerVal.value[hashForMatching] = answerValue
+
+              // Add to doneQuests if not already there
+              addToStateArray(doneQuests.value, hashForMatching)
+
+              // Remove from skipped if answered
+              removeFromStateArray(skippedQuests.value, hashForMatching)
+
+              // Remove from later if answered
+              removeFromStateArray(laterQuests.value, hashForMatching)
+              // Also uncheck the checkbox
+              if (laters.value[hashForMatching]) {
+                laters.value[hashForMatching] = false;
+              }
+            }
+          }
+        })
+      }
+
+      console.log('Done quests after processing:', doneQuests.value)
+      // CRITICAL: Update localStorage AFTER processing server response
+      // This ensures the server state is properly merged with local state
+      localStorage.setItem('exam-state', JSON.stringify({
+        skipped: skippedQuests.value,
+        later: laterQuests.value,
+        done: doneQuests.value,
+      }))
+    } else {
+      loadingQuestion.value = false;
+      pageNumber.value = Math.ceil((index + 1) / 20)
+
+      // Also update localStorage when no server data
+      localStorage.setItem('exam-state', JSON.stringify({
+        skipped: skippedQuests.value,
+        later: laterQuests.value,
+        done: doneQuests.value,
+      }))
+    }
+
+    // NEW: Final update with fresh data
+    questionData.value = {
+      index: index,
+      item_hash: item.hash,
+      type: item.item_type,
+      is_random: item.is_random,
+      questions: item.questions,
+      attachments: item.attachments,
+      loading: false // NEW: Remove loading flag
+    };
+
+    lastLoadedIndex.value = index;
+    console.log('✅ Successfully loaded questions for index:', index);
+
+  } catch (error) {
+    console.error('❌ Error loading questions for index:', index, error);
+
+    // Keep previous questions on error to prevent blank screen
+    if (questionData.value) {
+      questionData.value.loading = false;
+    }
+
+  } finally {
+    loadingQuestions.value = false;
+    loadingQuestion.value = false;
+    console.log('🏁 Loading complete for index:', index);
+  }
 }
 const checkSkippedQuest = (hash) => skippedQuests.value.indexOf(hash) !== -1;
 const checkDoneQuest = (hash) => doneQuests.value.indexOf(hash) !== -1;
@@ -492,7 +534,15 @@ const markAsLater = (e, hash) => {
 
 <template>
   <ExamLayout :title="delivery.name" :taker="taker" :timer="timerCount">
-    <div class="flex gap-10 pb-32">
+    <!-- NEW: Loading Overlay - Non-intrusive -->
+    <div v-if="loadingQuestions" class="loading-overlay">
+      <div class="flex items-center gap-3">
+        <LoadingCircle />
+        <span class="text-sm font-medium">Loading next question...</span>
+      </div>
+    </div>
+
+    <div class="flex gap-10 pb-32" :class="{ 'question-loading': loadingQuestions }">
       <div class="min-h-full flex-1" v-if="questionData !== null">
         <div class="flex justify-between items-center">
           <div class="relative">
@@ -657,6 +707,57 @@ const markAsLater = (e, hash) => {
   </Modal>
 </template>
 
+<!-- NEW: CSS for smooth loading transitions -->
 <style scoped>
+.loading-overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
 
+.question-loading {
+  transition: opacity 0.2s ease;
+}
+
+.question-loading {
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* Smooth transition for content updates */
+.question-content {
+  transition: opacity 0.2s ease;
+}
+
+.question-content.loading {
+  opacity: 0.7;
+}
+
+/* Ensure loading overlay is always visible */
+.loading-overlay {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 </style>
