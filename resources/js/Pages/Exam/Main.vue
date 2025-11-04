@@ -86,8 +86,12 @@ const questionData = ref(null);
 
 // NEW: Isolated localStorage keys for this exam session
 const getLocalStorageKey = (key) => {
-  const examId = examContext.value?.examId || 'unknown';
-  const deliveryId = examContext.value?.deliveryId || 'unknown';
+  // Enhanced safety check for examContext
+  if (!examContext || !examContext.value) {
+    return `exam_unknown_delivery_unknown_${key}`;
+  }
+  const examId = examContext.value.examId || 'unknown';
+  const deliveryId = examContext.value.deliveryId || 'unknown';
   return `exam_${examId}_delivery_${deliveryId}_${key}`;
 };
 
