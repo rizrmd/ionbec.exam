@@ -332,14 +332,14 @@ class MainController extends Controller
                     // Find corresponding item by checking question-item relationship directly
                     $matchingItem = $items->first(function ($item) use ($question) {
                         // Load the questions for this item to check relationship
-                        $itemQuestions = \App\Models\Exams\Question::where('item_id', $item->id)->get();
+                        $itemQuestions = \App\Models\Exams\Question::where('item_id', $item['id'])->get();
                         return $itemQuestions->contains(function ($q) use ($question) {
                             return $q->id === $question->id;
                         });
                     });
 
                     if ($matchingItem) {
-                        $question->item_hash = $matchingItem->hash;
+                        $question->item_hash = $matchingItem['hash'];
                         \Log::info('Added item hash to initial attempt question', [
                             'question_id' => $question->id,
                             'question_hash' => $question->hash,
