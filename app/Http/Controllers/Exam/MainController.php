@@ -328,9 +328,9 @@ class MainController extends Controller
 
             // CRITICAL FIX: Add item_hash to initial attemptQuestions for onMounted matching
             if ($data['attemptQuestions'] && $data['attemptQuestions']->count() > 0) {
-                $data['attemptQuestions']->each(function ($question) use ($data) {
+                $data['attemptQuestions']->each(function ($question) use ($items) {
                     // Find corresponding item to get its hash
-                    $matchingItem = $data['items']->first(function ($item) use ($question) {
+                    $matchingItem = $items->first(function ($item) use ($question) {
                         return $item->questions->contains(function ($q) use ($question) {
                             return $q->id === $question->id;
                         });
