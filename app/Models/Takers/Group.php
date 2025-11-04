@@ -79,4 +79,29 @@ class Group extends Model
         return $this->hasMany(Delivery::class, 'group_id', 'id')
             ->withoutGlobalScope(\App\Scopes\ClientScope::class);
     }
-}
+
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'hash';
+    }
+
+    /**
+     * Retrieve the model for a bound value.
+     *
+     * @param  mixed  $value
+     * @param  string|null  $field
+     * @return \Illuminate\Database\Eloquent\Model|null
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if ($field !== null) {
+            return parent::resolveRouteBinding($value, $field);
+        }
+
+        return $this->where('hash', $value)->first() ?? parent::resolveRouteBinding($value, $field);
+    }}
