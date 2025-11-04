@@ -347,32 +347,43 @@ class MainController extends Controller
             $data['attempt'] = $attempt;
             $data['attemptQuestions'] = $attempt->questions;
 
-            // CRITICAL FIX: Add item_hash to initial attemptQuestions for onMounted matching
+            // 🔒 CRITICAL FIX: Add item_hash to initial attemptQuestions for onMounted green indicator matching
             if ($data['attemptQuestions'] && $data['attemptQuestions']->count() > 0) {
                 $data['attemptQuestions']->each(function ($question) use ($items) {
-                    // Find corresponding item by checking question-item relationship directly
+                    // Find corresponding item by checking if question belongs to item
                     $matchingItem = $items->first(function ($item) use ($question) {
-                        // CRITICAL FIX: Rust API items are objects, not arrays - use object property access with fallback
+                        // Support both object and array formats for Rust API compatibility
                         $itemId = $item->id ?? $item['id'] ?? null;
                         if (!$itemId) {
+                            \Log::warning('Item missing ID', [
+                                'item' => is_object($item) ? get_class($item) : print_r($item, true)
+                            ]);
                             return false;
                         }
 
-                        // Load the questions for this item to check relationship
-                        $itemQuestions = \App\Models\Exams\Question::where('item_id', $itemId)->get();
-                        return $itemQuestions->contains(function ($q) use ($question) {
-                            return $q->id === $question->id;
-                        });
+                        // Check if this question belongs to this item by querying database
+                        return \App\Models\Exams\Question::where('id', $question->id)
+                            ->where('item_id', $itemId)
+                            ->exists();
                     });
 
                     if ($matchingItem) {
-                        // CRITICAL FIX: Use object property access with fallback for Rust API data
-                        $question->item_hash = $matchingItem->hash ?? $matchingItem['hash'] ?? null;
-                        \Log::info('Added item hash to initial attempt question', [
+                        // 🔒 CRITICAL: Use the same hash that frontend will see for this item
+                        $itemHash = $matchingItem->hash ?? $matchingItem['hash'] ?? null;
+                        $question->item_hash = $itemHash;
+
+                        \Log::info('GREEN INDICATOR FIX: Added item hash to initial attempt question', [
                             'question_id' => $question->id,
                             'question_hash' => $question->hash,
-                            'item_hash' => $question->item_hash,
+                            'item_hash' => $itemHash,
+                            'item_id' => $matchingItem->id ?? $matchingItem['id'] ?? null,
                             'answer_hash' => $question->pivot->answer_hash ?? 'N/A'
+                        ]);
+                    } else {
+                        \Log::warning('Could not find matching item for initial attempt question', [
+                            'question_id' => $question->id,
+                            'question_hash' => $question->hash,
+                            'items_count' => $items->count()
                         ]);
                     }
                 });
@@ -550,7 +561,7 @@ class MainController extends Controller
         ]);
 
         if (($examData['success'] ?? false) && isset($examData['items'])) {
-            // Find item in Rust data by hash
+            // 🔒 UNIFIED DATA SOURCE: Find item in Rust data by hash
             $rustItem = null;
             $rustQuestions = [];
 
@@ -563,40 +574,60 @@ class MainController extends Controller
             }
 
             if ($rustItem) {
-                \Log::info('getQuestions: Found item in Rust API', [
+                \Log::info('🔒 UNIFIED DATA SOURCE: getQuestions found item in Rust API', [
                     'hash' => $actualHash,
                     'item_name' => $rustItem['name'] ?? 'No name',
-                    'questions_count' => count($rustQuestions)
+                    'questions_count' => count($rustQuestions),
+                    'unified_with_index' => true
                 ]);
 
                 // Get attempt data for this user
                 $attempt = $this->getAttemptForTaker($dataSession);
 
-                // Add item_hash to questions for green indicator consistency
+                // 🔒 CRITICAL FIX: Add request hash to questions for green indicator consistency
+                // This ensures frontend receives the same hash it requested for matching
                 foreach ($rustQuestions as &$question) {
                     $question['item_hash'] = $actualHash;
+                }
+
+                // 🔒 CRITICAL: Also add item_hash to attempt questions for green indicator matching
+                if ($attempt && $attempt->questions) {
+                    $attempt->questions->each(function ($question) use ($actualHash) {
+                        $question->item_hash = $actualHash;
+
+                        \Log::info('🔒 GREEN INDICATOR: Added request hash to Rust API attempt question', [
+                            'question_id' => $question->id,
+                            'question_hash' => $question->hash,
+                            'request_hash' => $actualHash,
+                            'answer_hash' => $question->pivot->answer_hash ?? 'N/A'
+                        ]);
+                    });
                 }
 
                 return response()->json([
                     'questions' => $rustQuestions,
                     'attempt' => $attempt,
-                    'using_rust_api' => true
+                    'using_rust_api' => true,
+                    'unified_data_source' => true
                 ]);
             } else {
-                \Log::warning('getQuestions: Item not found in Rust API, falling back to database', [
-                    'hash' => $actualHash
+                \Log::warning('🔒 UNIFIED DATA SOURCE: Item not found in Rust API, falling back to database', [
+                    'hash' => $actualHash,
+                    'rust_items_count' => count($examData['items'])
                 ]);
             }
         } else {
-            \Log::warning('getQuestions: Rust API failed, falling back to database', [
+            \Log::warning('🔒 UNIFIED DATA SOURCE: Rust API failed, falling back to database', [
                 'hash' => $actualHash,
+                'rust_success' => $examData['success'] ?? false,
                 'rust_error' => $examData['error'] ?? 'Unknown error'
             ]);
         }
 
-        // FALLBACK: Try database if Rust API fails
-        \Log::info('getQuestions: Attempting database fallback', [
+        // 🔒 UNIFIED DATA SOURCE: Database fallback if Rust API fails
+        \Log::info('🔒 UNIFIED DATA SOURCE: Attempting database fallback', [
             'hash' => $actualHash,
+            'rust_api_failed' => true,
             'using_without_globalscope' => true
         ]);
 
@@ -605,11 +636,19 @@ class MainController extends Controller
             ->first();
 
         if (!$item) {
-            \Log::error('getQuestions: Item not found in database either', [
+            \Log::error('🔒 CRITICAL ERROR: Item not found in Rust API or database', [
                 'hash' => $actualHash,
                 'original_item_hash' => $item_hash,
                 'rust_api_tried' => true,
-                'database_tried' => true
+                'database_tried' => true,
+                'exam_id' => $examId,
+                'delivery_id' => $deliveryId,
+                'taker_id' => $takerId,
+                'frontend_debug_info' => [
+                    'hash_format_issue' => is_string($actualHash),
+                    'hash_length' => strlen($actualHash ?? ''),
+                    'hash_preview' => substr($actualHash ?? '', 0, 20)
+                ]
             ]);
 
             return response()->json([
@@ -617,14 +656,22 @@ class MainController extends Controller
                 'questions' => [],
                 'attempt' => null,
                 'rust_api_failed' => true,
-                'database_failed' => true
+                'database_failed' => true,
+                'debug_info' => [
+                    'requested_hash' => $actualHash,
+                    'exam_id' => $examId,
+                    'delivery_id' => $deliveryId
+                ]
             ], 404);
         }
 
-        \Log::info('Item found', [
+        \Log::info('🔒 DATABASE FALLBACK: Item found successfully', [
             'item_id' => $item->id,
             'item_hash' => $item->hash,
-            'item_title' => substr($item->title, 0, 50)
+            'item_title' => substr($item->title, 0, 50),
+            'hash_matches' => $item->hash === $actualHash,
+            'exam_id' => $examId,
+            'delivery_id' => $deliveryId
         ]);
 
         // FIXED: Load questions with all necessary relationships
@@ -866,31 +913,46 @@ class MainController extends Controller
             });
         });
 
-        // CRITICAL FIX: Add item hash to attempt questions for frontend matching
+        // 🔒 CRITICAL FIX: Add item_hash to attempt questions for frontend green indicator matching
         if ($attempt && $attempt->questions) {
-            $attempt->questions->each(function ($question) use ($item) {
-                // Frontend needs item.hash to match with current item, not question.hash
-                $question->item_hash = $item->hash;
+            $attempt->questions->each(function ($question) use ($actualHash, $item) {
+                // 🔒 CRITICAL: Use request hash (actualHash) for consistency with frontend request
+                // Frontend sent this hash, so we must return the same hash for matching
+                $question->item_hash = $actualHash;
 
-                \Log::info('Added item hash to attempt question', [
-                    'question_hash' => $question->hash,
-                    'item_hash' => $item->hash,
+                \Log::info('GREEN INDICATOR FIX: Added request hash to attempt question', [
                     'question_id' => $question->id,
-                    'item_id' => $item->id
+                    'question_hash' => $question->hash,
+                    'request_hash' => $actualHash,
+                    'item_hash' => $item->hash,
+                    'item_id' => $item->id,
+                    'answer_hash' => $question->pivot->answer_hash ?? 'N/A'
                 ]);
             });
         }
 
-        \Log::info('Returning questions response', [
+        \Log::info('🔒 DATABASE FALLBACK: Returning questions response', [
             'questions_count' => $questions->count(),
             'attempt_id' => $attempt ? $attempt->id : null,
             'has_attempt_questions' => $attempt ? ($attempt->questions ?? false) : false,
-            'attempt_questions_count' => $attempt ? (isset($attempt->questions) ? $attempt->questions->count() : 0) : 0
+            'attempt_questions_count' => $attempt ? (isset($attempt->questions) ? $attempt->questions->count() : 0) : 0,
+            'using_rust_api' => false,
+            'using_database_fallback' => true,
+            'hash_used' => $actualHash,
+            'item_id' => $item->id,
+            'green_indicator_ready' => $attempt && $attempt->questions ? true : false
         ]);
 
         return response()->json([
             'questions' => $questions,
-            'attempt' => $attempt
+            'attempt' => $attempt,
+            'using_rust_api' => false,
+            'using_database_fallback' => true,
+            'debug_info' => [
+                'hash_used' => $actualHash,
+                'item_id' => $item->id,
+                'attempt_questions_with_item_hash' => $attempt && $attempt->questions ? $attempt->questions->contains('item_hash') : false
+            ]
         ]);
     }
 
