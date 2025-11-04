@@ -289,7 +289,7 @@ const createFallbackQuestion = (index) => {
   };
 };
 
-const answerVal = ref([]);
+const answerVal = ref({});
 const laters = ref([]);
 const submittingAnswer = ref(false);
 
@@ -350,7 +350,7 @@ const submitAnswer = async (partial = false) => {
           if (responseData) {
             notification.add('success', 'Success', 'Answer saved.')
           }
-          if (!partial) answerVal.value = []
+          if (!partial) answerVal.value = {}
         } catch (error) {
           console.error('Error submitting answer:', error)
           notification.add('error', 'Error', 'Failed to save answer.')
@@ -689,6 +689,15 @@ const selectAnswer = function (answerHash, questionHash) {
       return;
     }
 
+    // 🔒 CRITICAL FIX: Ensure answerVal.value is always an object
+    if (!answerVal.value || typeof answerVal.value !== 'object') {
+      console.warn('⚠️ selectAnswer: Resetting answerVal.value to object', {
+        currentValue: answerVal.value,
+        type: typeof answerVal.value
+      });
+      answerVal.value = {};
+    }
+
     // 🔒 CRITICAL FIX: Guard against undefined questionData.value
     if (!questionData.value || !questionData.value.questions) {
       console.error('❌ selectAnswer: questionData.value is undefined or has no questions', {
@@ -746,6 +755,10 @@ const selectAnswer = function (answerHash, questionHash) {
 
     // Emergency fallback: try to store answer anyway
     try {
+      // Ensure answerVal.value is an object before trying to set properties
+      if (!answerVal.value || typeof answerVal.value !== 'object') {
+        answerVal.value = {};
+      }
       answerVal.value[questionHash] = answerHash;
       submitAnswer(true);
     } catch (fallbackError) {
