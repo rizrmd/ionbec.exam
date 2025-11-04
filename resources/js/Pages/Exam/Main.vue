@@ -440,7 +440,7 @@ const submitAnswer = async (partial = false) => {
           }
           if (!partial) answerVal.value = {}
         } catch (error) {
-          console.error('Error submitting answer:', error)
+          safeConsoleError('Error submitting answer:', error)
 
           // Enhanced error handling with detailed logging
           let errorMessage = 'Failed to save answer.';
@@ -450,7 +450,7 @@ const submitAnswer = async (partial = false) => {
             const status = error.response.status;
             const data = error.response.data;
 
-            console.error('Server error response:', {
+            safeConsoleError('Server error response:', {
               status,
               data,
               headers: error.response.headers
@@ -467,18 +467,18 @@ const submitAnswer = async (partial = false) => {
             }
           } else if (error.request) {
             // Network error - request was made but no response received
-            console.error('Network error:', error.request);
+            safeConsoleError('Network error:', error.request);
             errorMessage = 'Network error. Please check your connection and try again.';
           } else {
             // Other errors (config, etc.)
-            console.error('Request setup error:', error.message);
+            safeConsoleError('Request setup error:', error.message);
             errorMessage = `Request error: ${error.message}`;
           }
 
           notification.add('error', 'Error', errorMessage);
 
           // Don't clear answerVal on error so user can retry
-          console.log('Answer preserved due to error:', {
+          safeConsoleLog('Answer preserved due to error:', {
             answerCount: Object.keys(currentAnswers).length,
             answers: currentAnswers
           });
@@ -837,23 +837,23 @@ const removeFromStateArray = (array, item) => {
 // 🔒 CRITICAL FIX: Enhanced selectAnswer with comprehensive validation
 const selectAnswer = function (answerHash, questionHash) {
   try {
-    console.log('🎯 selectAnswer called:', { answerHash, questionHash });
+    safeConsoleLog('🎯 selectAnswer called:', { answerHash, questionHash });
 
     // 🔒 ENHANCED: Use validation functions
     if (!validateAnswerStorage(questionHash, answerHash)) {
-      console.error('❌ selectAnswer: Validation failed', { answerHash, questionHash });
+      safeConsoleError('❌ selectAnswer: Validation failed', { answerHash, questionHash });
       return;
     }
 
     // 🔒 SAFE: Computed property guarantees non-null object
-    console.log('🔒 selectAnswer: Using computed property, current answers:', {
+    safeConsoleLog('🔒 selectAnswer: Using computed property, current answers:', {
       keys: Object.keys(answerVal.value),
       questionHash
     });
 
     // 🔒 CRITICAL FIX: Guard against undefined questionData.value
     if (!questionData.value || !questionData.value.questions) {
-      console.error('❌ selectAnswer: questionData.value is undefined or has no questions', {
+      safeConsoleError('❌ selectAnswer: questionData.value is undefined or has no questions', {
         questionData: questionData.value,
         hasQuestions: questionData.value?.questions
       });
@@ -864,7 +864,7 @@ const selectAnswer = function (answerHash, questionHash) {
     }
 
     const questions = questionData.value.questions;
-    console.log('🔍 selectAnswer: Searching questions', {
+    safeConsoleLog('🔍 selectAnswer: Searching questions', {
       totalQuestions: questions.length,
       questionHash,
       answerHash
@@ -919,7 +919,7 @@ const selectAnswer = function (answerHash, questionHash) {
     submitAnswer(true);
 
   } catch (error) {
-    console.error('💥 selectAnswer: Critical error occurred', {
+    safeConsoleError('💥 selectAnswer: Critical error occurred', {
       error: error.message,
       stack: error.stack,
       answerHash,
@@ -934,7 +934,7 @@ const selectAnswer = function (answerHash, questionHash) {
         // Primary storage with question.hash using safe function
         safeSetAnswer(questionHash, answerHash);
 
-        console.log('🆘 Fallback storage: Stored with primary key', {
+        safeConsoleLog('🆘 Fallback storage: Stored with primary key', {
           primaryKey: questionHash,
           answerHash,
           strategy: 'Emergency fallback - consistent with selectAnswer'
@@ -945,16 +945,16 @@ const selectAnswer = function (answerHash, questionHash) {
           if (typeof submitAnswer === 'function') {
             submitAnswer(true);
           } else {
-            console.warn('⚠️ submitAnswer function not available');
+            safeConsoleWarn('⚠️ submitAnswer function not available');
           }
         } catch (submitError) {
-          console.error('💥 submitAnswer failed in fallback:', submitError);
+          safeConsoleError('💥 submitAnswer failed in fallback:', submitError);
         }
       } else {
-        console.warn('⚠️ Invalid questionHash or answerHash in fallback:', { questionHash, answerHash });
+        safeConsoleWarn('⚠️ Invalid questionHash or answerHash in fallback:', { questionHash, answerHash });
       }
     } catch (fallbackError) {
-      console.error('💥 selectAnswer: Emergency fallback also failed', fallbackError);
+      safeConsoleError('💥 selectAnswer: Emergency fallback also failed', fallbackError);
     }
   }
 };
@@ -1577,19 +1577,19 @@ const validateHashConsistency = (question) => {
 // 🔒 CRITICAL: Answer storage validation
 const validateAnswerStorage = (questionHash, answerHash) => {
   if (!questionHash || typeof questionHash !== 'string') {
-    console.error('❌ Answer validation: Invalid questionHash', questionHash);
+    safeConsoleError('❌ Answer validation: Invalid questionHash', questionHash);
     return false;
   }
 
   if (!answerHash || typeof answerHash !== 'string') {
-    console.error('❌ Answer validation: Invalid answerHash', answerHash);
+    safeConsoleError('❌ Answer validation: Invalid answerHash', answerHash);
     return false;
   }
 
   const currentAnswers = answerVal.value;
   const isStored = !!currentAnswers[questionHash];
 
-  console.log('🔍 Answer validation:', {
+  safeConsoleLog('🔍 Answer validation:', {
     questionHash,
     answerHash,
     isStored,
@@ -1597,6 +1597,39 @@ const validateAnswerStorage = (questionHash, answerHash) => {
   });
 
   return true;
+};
+
+// 🔒 SAFE: Console logging with fallback for environments where console is undefined
+const safeConsoleLog = (...args) => {
+  try {
+    if (typeof console !== 'undefined' && console.log) {
+      console.log(...args);
+    }
+  } catch (error) {
+    // Silently fail if console is not available
+  }
+};
+
+// 🔒 SAFE: Console error with fallback for environments where console is undefined
+const safeConsoleError = (...args) => {
+  try {
+    if (typeof console !== 'undefined' && console.error) {
+      console.error(...args);
+    }
+  } catch (error) {
+    // Silently fail if console is not available
+  }
+};
+
+// 🔒 SAFE: Console warning with fallback for environments where console is undefined
+const safeConsoleWarn = (...args) => {
+  try {
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn(...args);
+    }
+  } catch (error) {
+    // Silently fail if console is not available
+  }
 };
 
 const finishCheckbox = ref(false)
@@ -1701,7 +1734,7 @@ const markAsLater = (e, hash) => {
               <div class="whitespace-pre-wrap mb-4" v-html="question.question"></div>
               <div v-if="!loadingQuestion">
                 <div class="flex flex-col gap-2 mt-6 w-auto" v-if="question.type !== null && question.type?.name === 'multiple-choice'">
-                  <button v-for="(answer, ansIndex) in question.answers" :key="ansIndex" @click="selectAnswer(answer.hash, question.hash)" :class="['flex text-left px-3 py-2 bg-gray-100 rounded-md', isAnswerSelected(answer.hash, question) ? 'bg-green-600 text-white' : 'hover:bg-green-200 hover:text-green-600']" @click.once="console.log('Click check:', {questionHash: question.hash, itemHash: question.item_hash, answerHash: answer.hash, storedValue: getAnswerForQuestion(question)})">
+                  <button v-for="(answer, ansIndex) in question.answers" :key="ansIndex" @click="selectAnswer(answer.hash, question.hash)" :class="['flex text-left px-3 py-2 bg-gray-100 rounded-md', isAnswerSelected(answer.hash, question) ? 'bg-green-600 text-white' : 'hover:bg-green-200 hover:text-green-600']" @click.once="safeConsoleLog('Click check:', {questionHash: question.hash, itemHash: question.item_hash, answerHash: answer.hash, storedValue: getAnswerForQuestion(question)})">
                     <span class="mr-3 font-bold uppercase">{{ answerIndex[ansIndex] }}</span> <span v-html="answer.answer"></span>
                   </button>
                   <!-- DEBUG: Show answerVal state for this question -->
