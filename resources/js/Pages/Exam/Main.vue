@@ -762,11 +762,31 @@ const selectAnswer = function (answerHash, questionHash) {
     // Emergency fallback: try to store answer anyway
     try {
       // Ensure answerVal.value is an object before trying to set properties
+      if (!answerVal || typeof answerVal !== 'object' || !('value' in answerVal)) {
+        console.warn('⚠️ answerVal is invalid, creating new reactive object');
+        answerVal = ref({});
+      }
       if (!answerVal.value || typeof answerVal.value !== 'object') {
         answerVal.value = {};
       }
-      answerVal.value[questionHash] = answerHash;
-      submitAnswer(true);
+
+      // Validate inputs before storing
+      if (questionHash && typeof questionHash === 'string' && answerHash && typeof answerHash === 'string') {
+        answerVal.value[questionHash] = answerHash;
+
+        // Try to submit answer with additional safety
+        try {
+          if (typeof submitAnswer === 'function') {
+            submitAnswer(true);
+          } else {
+            console.warn('⚠️ submitAnswer function not available');
+          }
+        } catch (submitError) {
+          console.error('💥 submitAnswer failed in fallback:', submitError);
+        }
+      } else {
+        console.warn('⚠️ Invalid questionHash or answerHash in fallback:', { questionHash, answerHash });
+      }
     } catch (fallbackError) {
       console.error('💥 selectAnswer: Emergency fallback also failed', fallbackError);
     }
@@ -815,16 +835,37 @@ const startTimer = (duration) => {
 
         // 🔒 SAFETY: Update timer display with enhanced checks
         try {
-          if (timerCount && typeof timerCount === 'object' && 'value' in timerCount) {
+          // Ensure timerCount exists and is reactive
+          if (!timerCount) {
+            console.warn('Timer: timerCount is undefined, creating new reactive object');
+            // Note: This is a fallback - ideally timerCount should be properly initialized
+            return;
+          }
+
+          if (typeof timerCount === 'object' && 'value' in timerCount) {
             // Enhanced safety for time formatting
             const formattedMinutes = typeof minutes === 'string' ? minutes : (minutes ? minutes.toString() : '00');
             const formattedSeconds = typeof seconds === 'string' ? seconds : (seconds ? seconds.toString() : '00');
-            timerCount.value = `${formattedMinutes}:${formattedSeconds}`;
+
+            // Additional validation before assignment
+            if (formattedMinutes && formattedSeconds) {
+              timerCount.value = `${formattedMinutes}:${formattedSeconds}`;
+            } else {
+              console.warn('Timer: Invalid formatted time values', { formattedMinutes, formattedSeconds });
+            }
           } else {
-            console.warn('Timer: timerCount object is invalid');
+            console.warn('Timer: timerCount object is invalid or not reactive');
           }
         } catch (displayError) {
           console.error('Timer: Display update error', displayError);
+          // Try to reset timerCount to safe state
+          try {
+            if (timerCount && typeof timerCount === 'object') {
+              timerCount.value = "00:00";
+            }
+          } catch (resetError) {
+            console.error('Timer: Failed to reset timerCount', resetError);
+          }
         }
 
         // 🔒 SAFETY: Handle timer expiry with comprehensive error handling
