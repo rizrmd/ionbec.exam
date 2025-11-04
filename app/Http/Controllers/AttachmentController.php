@@ -60,7 +60,7 @@ class AttachmentController extends Controller
             }
 
             // Get file content
-            $file = $filesystem->get($fullPath);
+            $file = $filesystem->get($filePath);
 
             // Validate file content
             if (empty($file)) {
