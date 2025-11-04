@@ -600,7 +600,6 @@ const getQuestions = async (index) => {
               // 🔒 SAFE: Use computed property access
               const currentAnswers = answerVal.value;
               currentAnswers[hashForMatching] = answerValue;
-            }
 
               // Add to doneQuests if not already there
               addToStateArray(doneQuests.value, hashForMatching)
