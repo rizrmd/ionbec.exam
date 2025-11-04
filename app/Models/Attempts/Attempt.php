@@ -192,7 +192,13 @@ class Attempt extends Model
             return $this->started_at->addMinutes($delivery->duration + $this->extra_minute);
         }
 
-        return $delivery->ended_at->addMinutes($this->extra_minute);
+        // Ensure ended_at is a Carbon instance
+        $endedAt = $delivery->ended_at;
+        if (is_string($endedAt)) {
+            $endedAt = \Carbon\Carbon::parse($endedAt);
+        }
+
+        return $endedAt->addMinutes($this->extra_minute);
     }
 
     /**
