@@ -339,15 +339,22 @@ class MainController extends Controller
                 $data['attemptQuestions']->each(function ($question) use ($items) {
                     // Find corresponding item by checking question-item relationship directly
                     $matchingItem = $items->first(function ($item) use ($question) {
+                        // CRITICAL FIX: Rust API items are objects, not arrays - use object property access with fallback
+                        $itemId = $item->id ?? $item['id'] ?? null;
+                        if (!$itemId) {
+                            return false;
+                        }
+
                         // Load the questions for this item to check relationship
-                        $itemQuestions = \App\Models\Exams\Question::where('item_id', $item['id'])->get();
+                        $itemQuestions = \App\Models\Exams\Question::where('item_id', $itemId)->get();
                         return $itemQuestions->contains(function ($q) use ($question) {
                             return $q->id === $question->id;
                         });
                     });
 
                     if ($matchingItem) {
-                        $question->item_hash = $matchingItem['hash'];
+                        // CRITICAL FIX: Use object property access with fallback for Rust API data
+                        $question->item_hash = $matchingItem->hash ?? $matchingItem['hash'] ?? null;
                         \Log::info('Added item hash to initial attempt question', [
                             'question_id' => $question->id,
                             'question_hash' => $question->hash,
