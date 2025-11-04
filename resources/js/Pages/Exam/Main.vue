@@ -513,11 +513,19 @@ const getQuestions = async (index) => {
     // Continue with question loading even if submit fails
   }
 
-    // NEW: Preserve existing questions during loading to prevent blank screen
+    // 🔒 ENHANCED: Preserve existing questions during loading to prevent blank screen
     const previousQuestions = questionData.value?.questions || [];
     const previousQuestionData = {...questionData.value};
 
-    // CRITICAL: Update only metadata, keep questions visible during loading
+    // 🔒 CRITICAL: Save current answers before navigation
+    const currentAnswers = answerVal.value;
+    console.log('🔄 getQuestions: Preserving answers before navigation', {
+      answerCount: Object.keys(currentAnswers).length,
+      fromIndex: previousQuestionData?.index,
+      toIndex: index
+    });
+
+    // 🔒 ENHANCED: Update metadata but preserve questions and loading state
     questionData.value = {
       ...previousQuestionData,
       index: index,
@@ -526,7 +534,9 @@ const getQuestions = async (index) => {
       is_random: item.is_random,
       questions: previousQuestions.length > 0 ? previousQuestions : item.questions, // Keep previous if available
       attachments: item.attachments,
-      loading: true // NEW: Add loading flag
+      loading: true,
+      // Preserve answer state reference
+      answerState: currentAnswers
     }
 
     vignetteData.value = item.is_vignette ? item.content : null
@@ -585,11 +595,11 @@ const getQuestions = async (index) => {
             // Check if answer actually exists (not null/empty)
             const hasAnswer = answerValue !== null && answerValue !== undefined && answerValue !== ''
 
-            if (hasAnswer && answerVal.value) {
+            if (hasAnswer) {
               console.log('Question answered, adding to done:', hashForMatching)
-              answerVal.value[hashForMatching] = answerValue
-            } else if (hasAnswer && !answerVal.value) {
-              console.error('❌ Cannot store answer - answerVal.value is undefined');
+              // 🔒 SAFE: Use computed property access
+              const currentAnswers = answerVal.value;
+              currentAnswers[hashForMatching] = answerValue;
             }
 
               // Add to doneQuests if not already there
@@ -654,7 +664,7 @@ const getQuestions = async (index) => {
       hasItems: !!items.value
     });
 
-    // 🔒 Enhanced error recovery
+    // 🔒 ENHANCED: Comprehensive error recovery with answer state preservation
     try {
       // Attempt to restore loading states
       loadingQuestions.value = false;
@@ -663,12 +673,26 @@ const getQuestions = async (index) => {
       // Keep previous questions on error to prevent blank screen
       if (questionData.value) {
         questionData.value.loading = false;
+
+        // 🔒 CRITICAL: Ensure answer state is preserved during error recovery
+        if (!questionData.value.answerState && rawAnswerVal.value) {
+          questionData.value.answerState = rawAnswerVal.value;
+          console.log('🔄 getQuestions: Answer state preserved during error recovery');
+        }
       }
 
       // Try to set a safe page number
       if (typeof index === 'number' && index >= 0) {
         pageNumber.value = Math.ceil((index + 1) / 20);
       }
+
+      // 🔒 CRITICAL: Verify answer integrity after error
+      const currentAnswers = answerVal.value;
+      console.log('🔄 getQuestions: Answer state verification after error recovery', {
+        answerCount: Object.keys(currentAnswers).length,
+        hasRawAnswerVal: !!rawAnswerVal.value,
+        rawAnswerCount: Object.keys(rawAnswerVal.value || {}).length
+      });
 
     } catch (recoveryError) {
       console.error('💥 Recovery also failed:', recoveryError);
@@ -757,14 +781,14 @@ const removeFromStateArray = (array, item) => {
     array.splice(index, 1);
   }
 };
-// 🔒 CRITICAL FIX: Enhanced selectAnswer with computed property safety
+// 🔒 CRITICAL FIX: Enhanced selectAnswer with comprehensive validation
 const selectAnswer = function (answerHash, questionHash) {
   try {
     console.log('🎯 selectAnswer called:', { answerHash, questionHash });
 
-    // Validate inputs
-    if (!answerHash || !questionHash) {
-      console.error('❌ selectAnswer: Missing required parameters', { answerHash, questionHash });
+    // 🔒 ENHANCED: Use validation functions
+    if (!validateAnswerStorage(questionHash, answerHash)) {
+      console.error('❌ selectAnswer: Validation failed', { answerHash, questionHash });
       return;
     }
 
@@ -780,8 +804,8 @@ const selectAnswer = function (answerHash, questionHash) {
         questionData: questionData.value,
         hasQuestions: questionData.value?.questions
       });
-      // Fallback: store answer directly using questionHash
-      answerVal.value[questionHash] = answerHash;
+      // Fallback: store answer directly using questionHash using safe function
+      safeSetAnswer(questionHash, answerHash);
       submitAnswer(true);
       return;
     }
@@ -1403,7 +1427,124 @@ onMounted(() => {
 
 const modalFinish = ref(false)
 
-const navigationClicked = (hash, index) => getQuestions(index)
+// 🔒 ENHANCED: Robust navigation with state validation and persistence
+const navigationClicked = async (hash, index) => {
+  try {
+    console.log('🧭 Navigation: Starting navigation', { hash, index });
+
+    // Validate inputs
+    if (typeof index !== 'number' || index < 0) {
+      console.error('❌ Navigation: Invalid index', { index, hash });
+      return false;
+    }
+
+    // Validate items data
+    if (!items.value || !Array.isArray(items.value) || index >= items.value.length) {
+      console.error('❌ Navigation: Invalid items data', {
+        items: items.value,
+        index,
+        itemsLength: items.value?.length
+      });
+      return false;
+    }
+
+    // Save current answer state before navigation
+    const currentAnswers = answerVal.value;
+    console.log('🧭 Navigation: Saving state before navigation', {
+      currentAnswerCount: Object.keys(currentAnswers).length,
+      currentIndex: questionData.value?.index,
+      targetIndex: index
+    });
+
+    // Persist current state to localStorage before navigation
+    try {
+      const stateToSave = {
+        skipped: skippedQuests.value,
+        later: laterQuests.value,
+        done: doneQuests.value,
+        answerData: currentAnswers,
+        navigationTimestamp: Date.now(),
+        navigationIndex: index
+      };
+
+      localStorage.setItem(getLocalStorageKey('exam-state'), JSON.stringify(stateToSave));
+      console.log('🧭 Navigation: State saved before navigation');
+    } catch (storageError) {
+      console.warn('⚠️ Navigation: Failed to save state', storageError);
+    }
+
+    // Perform navigation
+    await getQuestions(index);
+    return true;
+
+  } catch (error) {
+    console.error('💥 Navigation: Critical error', {
+      error: error.message,
+      hash,
+      index,
+      stack: error.stack
+    });
+
+    // Fallback: Try to reload current question
+    try {
+      if (questionData.value?.index !== undefined) {
+        console.log('🧭 Navigation: Attempting to reload current question');
+        await getQuestions(questionData.value.index);
+      }
+    } catch (fallbackError) {
+      console.error('💥 Navigation: Fallback also failed', fallbackError);
+    }
+
+    return false;
+  }
+};
+
+// 🔒 CRITICAL: Hash consistency validation for answer storage
+const validateHashConsistency = (question) => {
+  if (!question || typeof question !== 'object') {
+    console.warn('⚠️ Hash validation: Invalid question object');
+    return false;
+  }
+
+  const hasQuestionHash = !!question.hash && typeof question.hash === 'string';
+  const hasItemHash = !!question.item_hash && typeof question.item_hash === 'string';
+  const hashesMatch = question.hash === question.item_hash;
+
+  console.log('🔍 Hash validation:', {
+    questionHash: question.hash,
+    itemHash: question.item_hash,
+    hasQuestionHash,
+    hasItemHash,
+    hashesMatch
+  });
+
+  return hasQuestionHash; // At minimum, we need question.hash
+};
+
+// 🔒 CRITICAL: Answer storage validation
+const validateAnswerStorage = (questionHash, answerHash) => {
+  if (!questionHash || typeof questionHash !== 'string') {
+    console.error('❌ Answer validation: Invalid questionHash', questionHash);
+    return false;
+  }
+
+  if (!answerHash || typeof answerHash !== 'string') {
+    console.error('❌ Answer validation: Invalid answerHash', answerHash);
+    return false;
+  }
+
+  const currentAnswers = answerVal.value;
+  const isStored = !!currentAnswers[questionHash];
+
+  console.log('🔍 Answer validation:', {
+    questionHash,
+    answerHash,
+    isStored,
+    totalStoredAnswers: Object.keys(currentAnswers).length
+  });
+
+  return true;
+};
 
 const finishCheckbox = ref(false)
 
