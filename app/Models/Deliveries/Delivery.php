@@ -64,8 +64,6 @@ class Delivery extends Model
      * @var array
      */
     protected $casts = [
-        'scheduled_at' => 'datetime:Y-m-d H:i',
-        'ended_at' => 'datetime:Y-m-d H:i',
         'is_anytime' => 'boolean',
         'automatic_start' => 'boolean',
         'duration' => 'integer',
