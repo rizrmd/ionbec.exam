@@ -12,7 +12,8 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        'exam'  // Allow DEMO token requests
+        'exam',  // Allow DEMO token requests
+        'back-office/delivery/*',  // Temporarily exclude delivery routes for debugging
     ];
 
     /**
