@@ -645,27 +645,30 @@ const getQuestions = async (index) => {
           console.log('Processing question:', question.hash, 'item_hash:', question.item_hash, 'pivot:', question.pivot)
           // Only process if question has pivot (was answered)
           if (question.pivot) {
-            // CRITICAL FIX: Use item_hash for matching with current item, not question.hash
-            const hashForMatching = question.item_hash || question.hash
+            // 🔒 CRITICAL FIX: Use question.hash for storage to prevent vignette collision
+            const hashForStorage = question.hash; // Always use question.hash for storage
+            const hashForMatching = question.item_hash || question.hash // For state tracking
             const answerValue = (item.item_type.value === 'multiple-choice') ? question.pivot.answer_hash : question.pivot.answer
-            console.log('Answer value:', answerValue, 'Stored with key:', hashForMatching)
+            console.log('Answer value:', answerValue, 'Stored with key:', hashForStorage, 'Tracking with:', hashForMatching)
 
             // Check if answer actually exists (not null/empty)
             const hasAnswer = answerValue !== null && answerValue !== undefined && answerValue !== ''
 
             if (hasAnswer) {
-              console.log('Question answered, adding to done:', hashForMatching)
+              console.log('Question answered, adding to done:', hashForStorage)
               // 🔒 SAFE: Use computed property access
               const currentAnswers = answerVal.value;
-              currentAnswers[hashForMatching] = answerValue;
+              currentAnswers[hashForStorage] = answerValue;
 
-              // Add to doneQuests if not already there
-              addToStateArray(doneQuests.value, hashForMatching)
+              // Add to doneQuests if not already there (use hashForMatching for state tracking)
+              if (!doneQuests.value.includes(hashForMatching)) {
+                addToStateArray(doneQuests.value, hashForMatching)
+              }
 
-              // Remove from skipped if answered
+              // Remove from skipped if answered (use hashForMatching for state tracking)
               removeFromStateArray(skippedQuests.value, hashForMatching)
 
-              // Remove from later if answered
+              // Remove from later if answered (use hashForMatching for state tracking)
               removeFromStateArray(laterQuests.value, hashForMatching)
               // Also uncheck the checkbox
               if (laters.value[hashForMatching]) {
@@ -784,12 +787,17 @@ const getAnswerForQuestion = (question) => {
   // 🔒 SAFE: Computed property guarantees non-null object
   const currentAnswers = answerVal.value;
 
-  // 🔒 CRITICAL FIX: Use consistent key priority matching selectAnswer strategy
-  // Primary: question.hash (main storage key), Secondary: question.item_hash (fallback)
+  // 🔒 CRITICAL FIX: Use consistent key strategy matching selectAnswer
+  // Primary: question.hash (main storage key only - dual storage removed to prevent collision)
   const possibleKeys = [
     question.hash,        // Primary key - this is what selectAnswer uses as main storage
-    question.item_hash,   // Secondary key - fallback storage in selectAnswer
   ].filter(Boolean);
+
+  // 🔒 BACKWARD COMPATIBILITY: Check for existing answers stored with item_hash
+  // Only for reading, not for new storage to prevent collision
+  if (question.item_hash && question.item_hash !== question.hash) {
+    possibleKeys.push(question.item_hash);
+  }
 
   console.log('🔍 getAnswerForQuestion DEBUG:', {
     questionHash: question.hash,
@@ -907,10 +915,14 @@ const selectAnswer = function (answerHash, questionHash) {
     // 🔒 SAFE: Use safe storage function
     safeSetAnswer(hashForStorage, answerHash);
 
-    // Also store with item_hash as fallback if available and different
+    // 🔒 CRITICAL FIX: Remove dual storage to prevent vignette answer collision
+    // Only store with question.hash to ensure each question has unique answer storage
     if (currentQuestion.item_hash && currentQuestion.item_hash !== questionHash) {
-      safeSetAnswer(currentQuestion.item_hash, answerHash);
-      console.log('🔄 Also stored with item_hash fallback:', currentQuestion.item_hash);
+      console.log('🚫 Skipped item_hash fallback storage to prevent vignette collision:', {
+        itemHash: currentQuestion.item_hash,
+        questionHash: questionHash,
+        reason: 'Prevents auto-filling between vignette columns'
+      });
     }
 
     // 🔒 DEBUG: Verify storage was successful
@@ -1474,16 +1486,21 @@ onMounted(() => {
           // Primary storage with question.hash using safe function
           safeSetAnswer(question.hash, attemptQuestion.pivot.answer_hash);
 
-          // Secondary storage with item_hash as fallback (if different)
+          // 🔒 CRITICAL FIX: Remove dual storage to prevent vignette answer collision
+          // Only store with question.hash to ensure each question has unique answer storage
           if (question.item_hash && question.item_hash !== question.hash) {
-            safeSetAnswer(question.item_hash, attemptQuestion.pivot.answer_hash);
+            console.log('🚫 Skipped item_hash fallback storage to prevent vignette collision:', {
+              itemHash: question.item_hash,
+              questionHash: question.hash,
+              answerHash: attemptQuestion.pivot.answer_hash,
+              reason: 'Prevents auto-filling between vignette columns'
+            });
           }
 
           console.log('✅ Populated answerVal from server data:', {
             primaryKey: question.hash,
-            secondaryKey: question.item_hash,
             answerHash: attemptQuestion.pivot.answer_hash,
-            strategy: 'Consistent with selectAnswer - question.hash primary'
+            strategy: 'Consistent with selectAnswer - question.hash primary only'
           })
         } else {
           console.log('❌ No pivot data or answer_hash in attemptQuestion')
@@ -1889,13 +1906,13 @@ const markAsLater = (e, hash) => {
                     <div><strong>🔍 HASH DEBUG:</strong></div>
                     <div>Question Hash: {{ question.hash }}</div>
                     <div>Item Hash: {{ question.item_hash || 'NULL' }}</div>
-                    <div>Direct Lookup: {{ answerVal[question.item_hash || question.hash] || 'NULL' }}</div>
+                    <div>Direct Lookup: {{ answerVal[question.hash] || 'NULL' }}</div>
                     <div>Smart Lookup: {{ getAnswerForQuestion(question) || 'NULL' }}</div>
                     <div>All answerVal keys: {{ answerVal.value ? Object.keys(answerVal.value).slice(0, 5).join(', ') : '[]' }}{{ answerVal.value && Object.keys(answerVal.value).length > 5 ? '...' : '' }}</div>
                   </div>
                 </div>
                 <div class="mt-4" v-else>
-                  <Editor class="my-2" v-model="answerVal[question.item_hash || question.hash]" @blur="submitAnswer(true)" />
+                  <Editor class="my-2" v-model="answerVal[question.hash]" @blur="submitAnswer(true)" />
                 </div>
 
                 <div class="text-xs text-gray-500" v-if="question.type?.name === 'multiple-choice' && question.answers.length <= 0">
