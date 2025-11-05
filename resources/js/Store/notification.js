@@ -6,11 +6,13 @@ export const notification = reactive({
   add(type = 'success', title = 'Success', message = '', timeout = 5) {
     // 🔒 FIXED: Less aggressive throttling for answer saving notifications
     // Allow answer save notifications to show more frequently (1 second cooldown)
-    const isAnswerSaveNotification = title === 'Success' && message.includes('saved');
+    // Ensure message is a string before using .includes()
+    const messageStr = typeof message === 'string' ? message : String(message || '');
+    const isAnswerSaveNotification = title === 'Success' && messageStr.includes('saved');
     const throttleTime = isAnswerSaveNotification ? 1000 : 3000; // 1s for answers, 3s for others
 
     // Throttle duplicate notifications - but allow answer save notifications more frequently
-    const notificationKey = `${type}-${title}-${message}`;
+    const notificationKey = `${type}-${title}-${messageStr}`;
     const now = Date.now();
     if (this.lastNotification[notificationKey] &&
         (now - this.lastNotification[notificationKey]) < throttleTime) {

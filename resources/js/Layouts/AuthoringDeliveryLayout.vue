@@ -286,7 +286,7 @@ const generateTokenToScheduleOrStart = () => {
                 Display Name <small class="text-red-500">*</small>
               </label>
               <div class="mt-1 sm:mt-0 sm:col-span-2">
-                <input id="display_name" v-model="form.display_name" autofocus
+                <input id="display_name" v-model="form.display_name"
                        class="max-w-lg block w-full shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
                        type="text"/>
               </div>
@@ -326,7 +326,7 @@ const generateTokenToScheduleOrStart = () => {
                 Duration
               </label>
               <div class="mt-1 sm:mt-0 sm:col-span-2">
-                <input id="duration" v-model="form.duration" autofocus
+                <input id="duration" v-model="form.duration"
                        class="w-36 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
                        type="number"/>
                 <span class="ml-2 text-gray-500">minute</span>
