@@ -184,11 +184,15 @@ class MainController extends Controller
             $taker ? $taker->id : null
         );
 
+        // Production: Always set to false (not demo session)
+        $isDemoSession = false;
+
         \Log::info('UNIFIED DATA SOURCE: Using Rust API to resolve hash conflicts', [
             'exam_id' => $exam->id,
             'delivery_id' => $delivery->id,
             'rust_success' => $examData['success'] ?? false,
-            'rust_items_count' => isset($examData['items']) ? count($examData['items']) : 0
+            'rust_items_count' => isset($examData['items']) ? count($examData['items']) : 0,
+            'is_demo_session' => $isDemoSession
         ]);
 
         if (($examData['success'] ?? false) && isset($examData['items'])) {
@@ -229,8 +233,20 @@ class MainController extends Controller
                 $items = collect($snapshot->exam_structure['items'] ?? []);
 
                 // Convert snapshot data to objects for compatibility
-                $items = $items->map(function ($itemData) use ($isDemoSession) {
+                $items = $items->map(function ($itemData) use ($isDemoSession, $delivery) {
                     $item = (object) $itemData;
+
+                    // Generate hash if missing from snapshot - critical for frontend API calls
+                    if (!isset($item->hash) || empty($item->hash)) {
+                        // Use item ID if available, otherwise generate deterministic hash
+                        $hashSource = isset($item->id) ? $item->id : ($item->name ?? 'item_' . uniqid());
+                        $item->hash = 'item_' . ($item->id ?? substr(md5($hashSource . $delivery->id), 0, 8));
+                        \Log::warning('Generated fallback hash for item', [
+                            'item_id' => $item->id ?? 'none',
+                            'item_name' => $item->name ?? 'none',
+                            'generated_hash' => $item->hash
+                        ]);
+                    }
 
                     // Convert questions array
                     if (isset($item->questions) && is_array($item->questions)) {
@@ -404,13 +420,23 @@ class MainController extends Controller
         // Validate items structure before sending to frontend
         if ($items) {
             $items->each(function ($item, $index) {
-                $itemHash = $item->hash ?? $item['hash'] ?? null;
-                $itemName = $item->name ?? $item['name'] ?? 'ITEM_' . $index;
+                // Handle both array and object formats
+                if (is_array($item)) {
+                    $itemHash = $item['hash'] ?? null;
+                    $itemName = $item['name'] ?? 'ITEM_' . $index;
+                    $hasQuestions = isset($item['questions']);
+                } else {
+                    $itemHash = $item->hash ?? null;
+                    $itemName = $item->name ?? 'ITEM_' . $index;
+                    $hasQuestions = isset($item->questions);
+                }
+
                 \Log::info('Item validation before frontend', [
                     'index' => $index,
+                    'item_type' => is_array($item) ? 'array' : 'object',
                     'item_hash' => $itemHash,
                     'item_name' => $itemName,
-                    'has_questions' => isset($item->questions) || isset($item['questions'])
+                    'has_questions' => $hasQuestions
                 ]);
             });
         }

@@ -522,7 +522,7 @@ struct QuestionType {
 #[derive(Serialize)]
 struct ExamAnswer {
     hash: String,
-    answer: String,
+    answer: Option<String>,
     // is_correct_answer is intentionally omitted for security
 }
 
@@ -641,7 +641,7 @@ async fn load_exam_data(
         let answer_id: i32 = answer_row.get("id");
         let answer = ExamAnswer {
             hash: generate_hash_from_id(answer_id, "Answer"),
-            answer: answer_row.get("answer"),
+            answer: answer_row.get::<Option<String>, _>("answer"),
         };
         answers_by_question.entry(question_id).or_default().push(answer);
     }
