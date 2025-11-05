@@ -64,6 +64,7 @@ return [
     'web' => [
         App\Http\Routes\RootRoute::class,
         App\Http\Controllers\Exam\ExamController::class,
+        App\Http\Controllers\PublicTokenLoginController::class,
         App\Http\Controllers\Taker\AuthController::class,
         App\Http\Controllers\Exam\FinishedController::class,
         \App\Http\Controllers\Interview\LiveController::class,
