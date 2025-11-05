@@ -1,0 +1,1207 @@
+{
+  "exam_title": "National Orthopaedic Board Examination – Part 1",
+  "exam_date": "Wednesday, 5 November 2025",
+  "exam_type": "MCQ Question",
+  "questions": [
+    {
+      "question_number": 1,
+      "vignette": "A 25-year-old man came to the emergency room complaining of wounds on the middle finger and ring finger of his left hand due to being hit by glass 1 hour before being admitted to the hospital. He can flex his fingers except his middle finger. The sensory for middle finger: ulnar site is hiposthesia and normal at radial site. The sensory for ring finger is normal at radial and ulnar site. CRT at all fingers less than 2 seconds.",
+      "question": "From clinical picture, what zone the wound located?",
+      "options": {
+        "a": "Zone 1 at middle and ring finger",
+        "b": "Zone 2 at middle and ring finger",
+        "c": "Zone 1 at middle finger and zone 2 at ring finger",
+        "d": "Zone 2 at middle finger and zone 1 at ring finger",
+        "e": "Zone 3 at middle finger and zone 1 at ring finger"
+      },
+      "correct_answer": "d"
+    },
+    {
+      "question_number": 2,
+      "vignette": "Same as question 1",
+      "question": "What structure may be injured at middle finger?",
+      "options": {
+        "a": "FDS + FDP tendon",
+        "b": "FDS + FDP tendon + interdigital nerve radial side",
+        "c": "FDS + FDP tendon + interdigital nerve",
+        "d": "FDS + FDP tendon + interdigital nerve ulnar side",
+        "e": "FDS + FDP tendon + neurovascular"
+      },
+      "correct_answer": "d"
+    },
+    {
+      "question_number": 3,
+      "question": "A 50-year-old woman presented with a complaint of inability to bend her thumb, a condition she had experienced since a month prior to admission due to a traffic accident. She fall with outstretched hand. She had seen a bone setter three times but there was no improvement. Physical examination revealed a deformity in the MCP of her thumb, there is a hyperextension MCP joint, with limited movement due to pain. What is the possible pathology for this case?",
+      "options": {
+        "a": "Interposition of volar plate and or sesamoids",
+        "b": "Interposition of FPL tendon",
+        "c": "Interposition of central slips",
+        "d": "Changes of articular joint of 1st MCP",
+        "e": "Osteophyte at MCP joint"
+      },
+      "correct_answer": "a"
+    },
+    {
+      "question_number": 4,
+      "question": "A 12-year-old sustains a twisting injury to his ankle while playing soccer. His skin is intact and he has no evidence of neurovascular compromise. An injury radiograph is shown in Figure A. What is the next best step to optimize this patient's outcome?",
+      "options": {
+        "a": "Splinting and admit for observation for compartment syndrome",
+        "b": "Short leg cast and discharge with outpatient follow-up",
+        "c": "Long leg cast and discharge with outpatient follow-up",
+        "d": "Percutaneous pinning with casting immobilization",
+        "e": "Splinting and CT scan of the ankle"
+      },
+      "correct_answer": "e"
+    },
+    {
+      "question_number": 5,
+      "question": "Assuming that the fracture shown in this radiograph (Figure 1) is aligned on the anteroposterior radiograph and heals in this position, secondary to fracture malalignment, the most likely loss of active motion will be",
+      "options": {
+        "a": "metacarpophalangeal (MP) joint extension",
+        "b": "proximal interphalangeal (PIP) joint extension",
+        "c": "metacarpophalangeal (MP) joint flexion",
+        "d": "proximal interphalangeal (PIP) joint flexion"
+      },
+      "correct_answer": "b"
+    },
+    {
+      "question_number": 6,
+      "question": "A 86-year-old woman presents with groin pain and mild limp after a fall. X-ray pelvis shows no obvious cortical disruption. She is treated as a soft-tissue injury but returns 5 days later with worsening pain. What is the most sensitive imaging for detecting occult femoral neck fracture?",
+      "options": {
+        "A": "CT scan",
+        "B": "Bone scan",
+        "C": "MRI",
+        "D": "Ultrasound",
+        "E": "Repeat X-ray after 10 days"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 7,
+      "question": "An 84-year-old woman was brought to the emergency department after a low-energy fall at home. She complains of severe pain in her right hip and inability to bear weight. On examination, her right lower limb is shortened and externally rotated. Pelvic X-ray (AP view) shows a comminuted intertrochanteric fracture of the right femur with varus displacement and evidence of osteopenic bone. What is the major determinant of postoperative prognosis in elderly hip fracture patients?",
+      "options": {
+        "A": "Surgical technique",
+        "B": "Pre-injury mobility and cognitive status",
+        "C": "Type of implant",
+        "D": "Blood transfusion requirement",
+        "E": "Length of hospital stay"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 8,
+      "question": "An 80-year-old woman presents after a low-energy fall at home. She complains of severe right hip pain and inability to stand. Her leg is externally rotated and shortened. Pelvic X-ray shows a comminuted fracture line extending from the greater to lesser trochanter, with an intact femoral neck and subcapital region. Which of the following is a common mechanical complication after fixation in intertrochanteric fractures?",
+      "options": {
+        "A": "Avascular necrosis",
+        "B": "Implant cut-out through the femoral head",
+        "C": "Sciatic nerve palsy",
+        "D": "Deep infection",
+        "E": "Periprosthetic fracture"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 9,
+      "vignette": "A 75-year-old woman underwent dynamic hip screw (DHS) fixation for a right intertrochanteric fracture 6 weeks ago. She now complains of persistent thigh pain, difficulty weight-bearing, and limb shortening. Follow-up X-ray shows collapse of the fracture site with lag screw migration through the femoral head.",
+      "question": "Which mechanism explains this?",
+      "options": {
+        "A": "Ischemic necrosis of femoral head",
+        "B": "Screw cut-through due to osteolysis",
+        "C": "Overcompression during fixation",
+        "D": "Excessive valgus alignment",
+        "E": "Trochanteric bursitis"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 10,
+      "vignette": "Same as question 9",
+      "question": "What is the best management for this patient?",
+      "options": {
+        "A": "Observation and physical therapy",
+        "B": "Hardware removal only",
+        "C": "Revision with intramedullary (proximal femoral) nail",
+        "D": "Conversion to hip arthroplasty",
+        "E": "Repeat DHS fixation"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 11,
+      "question": "A 66-year-old man presents with bilateral hand pain. The clinical examination and the radiograph shown in Figure 1 reveal diffuse osteoarthritis throughout the proximal interphalangeal (PIP) and distal interphalangeal (DIP) joints. His dominant index finger is the most symptomatic, and nonsurgical treatment, including bracing and cortisone injections, has failed. The patient elects PIP arthroplasty of the index finger. Compared with index arthrodesis, the expected outcome of index arthroplasty would be",
+      "options": {
+        "a": "a lower complication rate",
+        "b": "stronger pinch strength",
+        "c": "a higher reoperation rate",
+        "d": "less pain"
+      },
+      "correct_answer": "c"
+    },
+    {
+      "question_number": 12,
+      "question": "A 68-year-old woman presents with chronic bilateral knee pain and progressive difficulty walking for 5 years. Pain worsens when descending stairs and is relieved by rest. On examination, there is varus deformity of the right knee, mild crepitus, and decreased range of motion. Anteroposterior (AP) X-rays of both knees (supine) show marked medial compartment joint-space narrowing on the right, moderate on the left, subchondral sclerosis, and marginal osteophytes, especially on the right. No joint effusion or periarticular erosion. Which of the following best explains the predominant medial compartment involvement in primary knee osteoarthritis?",
+      "options": {
+        "A": "Repetitive valgus loading during gait",
+        "B": "Mechanical axis passes medial to the knee joint center",
+        "C": "Weakness of the lateral collateral ligament",
+        "D": "Greater meniscal vascularity in the medial meniscus",
+        "E": "Medial meniscus is more mobile than the lateral one"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 13,
+      "question": "A 66-year-old man with advanced medial compartment OA presents with varus deformity and pain localized to medial joint line. Radiographs show intact lateral and patellofemoral compartments. What is the ideal surgical option for this patient?",
+      "options": {
+        "a": "High tibial osteotomy (HTO)",
+        "b": "Unicompartmental knee arthroplasty (UKA)",
+        "c": "Total knee arthroplasty (TKA)",
+        "d": "Arthroscopic debridement",
+        "e": "Distal Femoral Osteotomy (DFO)"
+      },
+      "correct_answer": "b"
+    },
+    {
+      "question_number": 14,
+      "question": "A 34-year-old woman who underwent release of her first dorsal compartment at the wrist for de Quervain's tenosynovitis 3 months ago continues to report radial-sided wrist pain and tenderness similar to what she had prior to surgery. Examination appears classic for de Quervain's with a positive Finkelstein's test and continued pain with palpation over the first dorsal compartment. What is the likely source of her continued pain?",
+      "options": {
+        "a": "Tendon subluxation",
+        "b": "Intersection syndrome",
+        "c": "Injury to the dorsal radial sensory nerve",
+        "d": "Tendon injury to the abductor pollicis longus (APL) tendon",
+        "e": "Unreleased extensor pollicis brevis (EPB) tendon"
+      },
+      "correct_answer": "e"
+    },
+    {
+      "question_number": 15,
+      "question": "When evaluating a patient with suspected purulent flexor tenosynovitis in the thumb, the distal forearm and little finger are found to be swollen as well. The most likely anatomic explanation is the existence of a potential space in which of the following?",
+      "options": {
+        "A": "Through the carpal tunnel",
+        "B": "Across the midpalmar space",
+        "C": "Communicating with the subcutaneous tissue",
+        "D": "Superficial to the distal antebrachial fascia",
+        "E": "Between the fascia of the pronator quadratus and flexor digitorum profundus conjoined tendon sheaths"
+      },
+      "correct_answer": "E"
+    },
+    {
+      "question_number": 16,
+      "question": "A 70-year-old man comes with persistent pain and swelling in his right knee for 6 months. He had a total knee arthroplasty (TKA) done 4 years ago for osteoarthritis. He now notices a small sinus with discharge near the old surgical scar. He does not have fever, but walking is painful. On examination found sinus tract with mild pus discharge, knee warm and tender, painful range of motion, no gross instability. Laboratory marker: ESR: 70 mm/h, CRP: 30 mg/L. Joint aspiration: cloudy fluid, WBC 35,000/µL (85% neutrophils). Culture: Staphylococcus epidermidis. X-ray: radiolucent line around tibial component, but no implant loosening. What is the best management for this patient?",
+      "options": {
+        "A": "IV antibiotics only",
+        "B": "Debridement, antibiotics, and implant retention (DAIR)",
+        "C": "Two-stage revision arthroplasty",
+        "D": "One-stage revision arthroplasty",
+        "E": "Explant prosthesis and Fusion"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 17,
+      "question": "A 72-year-old man has had three operations for an infected total knee arthroplasty over the past 2 years. Despite two-stage revisions and long-term antibiotics, he continues to have pain, swelling, and occasional pus discharge. He now has poor soft tissue coverage, a stiff knee, and low functional demand (walks with a walker). What is the best management option now?",
+      "options": {
+        "A": "Repeat two-stage revision arthroplasty",
+        "B": "Long-term suppressive antibiotics",
+        "C": "Knee arthrodesis (fusion)",
+        "D": "Above-knee amputation immediately",
+        "E": "Re-Debridement Infection"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 18,
+      "question": "A 70-year-old man had a chronic periprosthetic joint infection after total knee arthroplasty (TKA), caused by Staphylococcus epidermidis. He was treated 3 months ago with first-stage surgery — implant removal, extensive debridement, and insertion of an antibiotic-loaded cement spacer, followed by 6 weeks of IV antibiotics. He now returns for reassessment before planned second-stage revision TKA. On examination the wound is well healed, no sinus, no redness or swelling, Knee is painless, spacer intact, no systemic symptoms. Laboratory tests show: ESR: 18 mm/h, CRP: 4 mg/L (both normalized), Joint aspiration: clear fluid, WBC <1000/µL, culture negative. What is the next best management step?",
+      "options": {
+        "A": "Continue antibiotics for 4 more weeks",
+        "B": "Perform repeat debridement",
+        "C": "Proceed with second-stage revision arthroplasty",
+        "D": "Leave cement spacer permanently",
+        "E": "Knee Fusion Surgery"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 19,
+      "vignette": "A 17-year-old man came with a complaint of being unable to straighten his left middle finger, a problem he had experienced since childhood. There was no history of trauma. There was a history of normal delivery. There was no family history of similar problems. The patient was a student with right hand dominant. From physical examination there is a flexion deformity of PIP joint with non correctable deformity, normal strength and sensation at middle finger. No history of pain.",
+      "question": "What is the possible diagnosis?",
+      "options": {
+        "a": "Trigger finger",
+        "b": "Camptodactyly",
+        "c": "Dupuytren disease",
+        "d": "Boutonniere deformity",
+        "e": "Stenosing tenosynovitis"
+      },
+      "correct_answer": "b"
+    },
+    {
+      "question_number": 20,
+      "vignette": "Same as question 19",
+      "question": "What is the pathophysiology for this abnormality?",
+      "options": {
+        "a": "Abnormal FDS insertion",
+        "b": "Abnormal FDP insertion",
+        "c": "Abnormal Terminal band",
+        "d": "Hiperlaxity of volar plate",
+        "e": "Anteriorisasi lateral band"
+      },
+      "correct_answer": "a"
+    },
+    {
+      "question_number": 21,
+      "question": "A 13-year-old boy was evaluated for leg length difference. His pelvis balanced when a 1-inch (2.54 cm) block was placed under his left foot. History revealed he had a left distal femur physeal fracture treated with casting at age 10. Radiographs show normal limb alignment, but his left distal femoral physis is closed and his left femur is 2.5 cm shorter than the right. All other physes are open. His bone age is equal to his chronologic age. What surgical treatments will best equalize his discrepancy?",
+      "options": {
+        "A": "Right distal femoral and proximal tibia/fibula epiphysiodesis",
+        "B": "Right distal femoral epiphysiodesis",
+        "C": "Right proximal tibia/fibula epiphysiodesis",
+        "D": "Left proximal tibia/fibula epiphysiodesis",
+        "E": "lengthening of left tibia"
+      },
+      "correct_answer": "A"
+    },
+    {
+      "question_number": 22,
+      "question": "Figure 1 is the radiograph of a 3-year-old female who was referred to the office by her pediatrician for evaluation of a leg-length discrepancy. Pregnancy and birth were uncomplicated, and medical history includes no chronic disease conditions. The patient has met all developmental milestones. Physical examination shows a positive Galeazzi sign and limited hip abduction on the left. Examination of the upper extremity and spine shows no abnormalities. The patient shows no signs of pain and walks with a nonantalgic short leg limp. What is the best next step?",
+      "options": {
+        "a": "Hip abduction brace",
+        "b": "Closed reduction with adductor tenotomy",
+        "c": "Open reduction alone",
+        "d": "Open reduction with femoral and/or pelvic osteotomy",
+        "e": "Skin traction"
+      },
+      "correct_answer": "d"
+    },
+    {
+      "question_number": 23,
+      "question": "A 60-year-old woman complains of hip pain and weakness for 6 months. She has difficulty rising from a chair and walks with a waddling gait. X-ray pelvis shows pseudofractures (Looser's zones) at the femoral neck. Lab tests: low vitamin D, low phosphate, high alkaline phosphatase. What is the most likely diagnosis?",
+      "options": {
+        "A": "Osteoporosis",
+        "B": "Osteomalacia",
+        "C": "Paget's disease",
+        "D": "Metastatic bone disease",
+        "E": "Rickets"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 24,
+      "question": "A 15-year-old boy with mild type I osteogenesis imperfecta (OI) has a midshaft radius/ulna fracture that is in bayonet apposition with loss of the radial bow and 40-degree apex volar and ulnar angulation. Closed reduction improves the angulation to 20 degrees; the bayonet apposition and loss of radial bow remains. His contralateral forearm has a normal appearance upon examination. What is the best treatment for this fracture?",
+      "options": {
+        "A": "Open reduction and plate fixation",
+        "B": "Open reduction and intramedullary rod fixation with casting",
+        "C": "Cast immobilization with expected remodeling of the fracture and near-full motion",
+        "D": "Cast immobilization, accepting malunion and some dysfunction because surgical treatment has a high rate of nonunion in OI",
+        "E": "bone marrow transplantation"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 25,
+      "question": "Figure 1 is the radiograph of a 4-year-old girl who is being evaluated for genu varum. She has a family history of bowed legs and short stature. She has a mutation in the PHEX gene. Identify the laboratory studies most consistent with this diagnosis?",
+      "options": {
+        "a": "Decreased phosphorus, increased serum alkaline phosphatase, normal calcium and vitamin D 25-OH",
+        "b": "Decreased phosphorus and calcium, increased serum alkaline phosphatase and increased PTH, decreased 1,25 OH vitamin D",
+        "c": "Increased phosphorus, increased calcium, decreased alkaline phosphatase",
+        "d": "Increased phosphorus, decreased calcium, increased alkaline phosphatase, and increased PTH"
+      },
+      "correct_answer": "a"
+    },
+    {
+      "question_number": 26,
+      "question": "A 16-year-old male who presents with a conventional high-gradeosteosarcoma of the left proximal tibia. Figures below are the anteroposterior and lateral radiographs and MRI scan (axial and sagital). Staging studies show no evidence of metastatic disease. At which stage is this patient according to the Enneking Musculoskeletal Tumor Society (MSTS) staging system for malignant bone tumors?",
+      "options": {
+        "A": "IA",
+        "B": "IB",
+        "C": "IIA",
+        "D": "IIB",
+        "E": "III"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 27,
+      "question": "A 14-year-old female presents with vague worsening pain in her left knee that has worsened over the past 3 months. She has refrained from sports and running because of the pain. She denies any inciting traumatic event or any recent illness. Radiographs are obtained and shown in Figure below. Which of the following diagnostic tests serves as the most appropriate next step in management?",
+      "options": {
+        "A": "Bone survey",
+        "B": "Contrast MRI of whole femur",
+        "C": "CT chest, abdomen, and pelvis",
+        "D": "Bone marrow biopsy",
+        "E": "Performing a biopsy utilizing fine needle aspiration"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 28,
+      "question": "A 47-year-old male presents with swelling and pain in the right wrist. The symptoms have progressed over the last 6 months and she has noted a decreased range of motion of the wrist joint. Figures below are the radiographs and MRI of the right wrist and Figure D shows the histology. What is the best treatment option for this patient?",
+      "options": {
+        "A": "Radiation",
+        "B": "En bloc excision with structural allograft reconstruction",
+        "C": "Extended Curettage with application of demineralized bone matrix and iliac crest bone marrow aspirate",
+        "D": "En bloc excision with wrist fusion using vascularized fibular autograft",
+        "E": "Extended Curettage, application of liquid nitrogen, polymethylmethacrylate"
+      },
+      "correct_answer": "E"
+    },
+    {
+      "question_number": 29,
+      "question": "A 25-year-old female presents with knee pain. Radiographs and histopathology are shown in Figures below. What is the most likely diagnosis and recommended staging study for further evaluation?",
+      "options": {
+        "A": "The diagnosis is giant cell tumor. Bone scan is necessary.",
+        "B": "The diagnosis is giant cell tumor. Chest radiograph and Lower leg contrast MRI are necessary.",
+        "C": "The diagnosis is giant cell tumor. No further staging study is necessary.",
+        "D": "The diagnosis is giant cell-rich osteosarcoma. Chest radiograph and lower leg contrast MRI are necessary.",
+        "E": "The diagnosis is giant cell-rich osteosarcoma. CT of the chest, abdomen, and pelvis is necessary."
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 30,
+      "question": "A 65-year-old female presents to your office with left thigh pain that has been worsening over the last several months. She reports that pain is worse with weight-bearing and sometimes wakes her up at night. On radiological examination of the femur, a lytic lesion was seen. Lytic bone lesions, commonly seen in metastatic bone disease or multiple myeloma, are due to which of the following mechanisms",
+      "options": {
+        "A": "RANK ligand action on neoplastic cells",
+        "B": "RANK ligand action on osteoclastic cells",
+        "C": "RANK action on neoplastic cells",
+        "D": "Osteoprotegrin action on osteoclastic cells",
+        "E": "RANK action on osteoblastic cells"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 31,
+      "question": "A 6-year-old child with diplegic cerebral palsy has maximum hip abduction of 20 degrees, a negative Thomas test, and mild hip subluxation as demonstrated by a migration index of 20%. The best treatment is bilateral",
+      "options": {
+        "A": "Adductor releases",
+        "B": "Adductor releases and psoas lengthenings",
+        "C": "Varus derotational osteotomies",
+        "D": "Pelvic osteotomies",
+        "E": "Varus derotational osteotomies with pelvic osteotomies"
+      },
+      "correct_answer": "A"
+    },
+    {
+      "question_number": 32,
+      "question": "A 3-month-old infant presents to your clinic with difficulty moving his extremities. The child had an uneventful prenatal course and birth, but since birth he has had poor head control and difficulty feeding. On physical exam, he is able to move all extremities, but he moves his upper extremities more than his lower extremities, and his hands more than his shoulders. He has no spasticity, but global weakness. The patient's deep tendon reflexes are absent, but he has tongue fasciculations. What is the cellular pathology and prognosis for this patient?",
+      "options": {
+        "a": "The patient has a nonprogressive injury to his brain, and he will likely require multiple orthopaedic surgeries in the future as a result of muscle imbalance",
+        "b": "The patient has an absent dystrophin protein and will likely require a wheelchair by the age of 15 and will die of cardiorespiratory problems by the age of 20",
+        "c": "The child will have a progressive loss of alpha-motor neurons in anterior horn of spinal cord. He will have difficulty walking, but will be able to sit independently and will likely live into the fifth decade of life",
+        "d": "The child will have a progressive loss of alpha-motor neurons in anterior horn of spinal cord and will unlikely live past the age of two",
+        "e": "The child will likely go on to develop a cavus foot and hammer toes, but he should live a full healthy life"
+      },
+      "correct_answer": "d"
+    },
+    {
+      "question_number": 33,
+      "question": "A 40-year-old man falls onto his right arm and complains of the inability to extend his right elbow. The injury is closed, and he is neurovascularly intact in the injured extremity. Radiographs show a 2 cm displaced transverse olecranon fracture. The muscle that causes the deforming force is innervated by a nerve that comes off of what structure of the brachial plexus?",
+      "options": {
+        "A": "Medial cord",
+        "B": "Lateral cord",
+        "C": "Posterior cord",
+        "D": "Superior trunk",
+        "E": "Middle trunk"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 34,
+      "question": "Figures 1 and 2 are the radiographs of a 6-year-old male who is brought to the emergency department after he sustained an isolated femoral shaft fracture after being struck by a car while riding a scooter. What is the most appropriate treatment?",
+      "options": {
+        "a": "Submuscular plating",
+        "b": "Immediate hip spica casting",
+        "c": "Flexible intramedullary nailing",
+        "d": "Locked intramedullary nailing with trochanteric entry",
+        "e": "Locking plating"
+      },
+      "correct_answer": "c"
+    },
+    {
+      "question_number": 35,
+      "question": "An 86-year-old female presents to the emergency department because she has had pain and inability to ambulate after she fell from a standing height. Medical history includes atrial fibrillation, diabetes mellitus, and pulmonary fibrosis requiring home oxygen. Anteroposterior and lateral radiographs as well as an axial CT scan of the left hip are shown in Figures 1 through 3. When considering surgical options for this patient, the most likely benefit of hemiarthroplasty over internal fixation is a decrease in",
+      "options": {
+        "A": "the rate of revision surgery",
+        "B": "surgical time",
+        "C": "length of stay",
+        "D": "the rate of pulmonary complications",
+        "E": "mobilitation time"
+      },
+      "correct_answer": "A"
+    },
+    {
+      "question_number": 36,
+      "question": "Following intra-articular fracture, the risk of post traumatic arthritis is correlated strongly with what risk factor?",
+      "options": {
+        "A": "Patient sex",
+        "B": "Duration of patient tobacco use",
+        "C": "Intra-articular fracture severity",
+        "D": "Axial versus torsional mechanisms",
+        "E": "Diaphysis fracture"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 37,
+      "question": "Figure below shows a radiograph of an active 30-year-old man who sustained an injury to his ring finger 1 week earlier. The most appropriate treatment is",
+      "options": {
+        "A": "Open reduction and internal fixation (ORIF)",
+        "B": "a mallet splint",
+        "C": "Repair of the terminal tendon",
+        "D": "Arthrodesis",
+        "E": "Arthroplasty"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 38,
+      "question": "A fracture of the hook of hamate is confirmed. You decide to proceed with open reduction and internal fixation with a headless screw. Which structure is at risk of injury during surgery?",
+      "options": {
+        "A": "Superficial branch of ulnar nerve",
+        "B": "Deep branch of ulnar nerve",
+        "C": "Nerve of Henle",
+        "D": "Common digital nerve to the fourth web",
+        "E": "Palmar cutaneous branch of the median nerve"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 39,
+      "question": "A 45-year-old man who is a smoker has a significant hemothorax and bilateral closed femoral fractures. On insertion of a chest tube, 1,100 mL of blood was returned. He has had 75 mL of chest tube output over the last 2 hours while being resuscitated in the ICU. His base deficit is now 2 and his urine output has been 3 mL/kg over the last hour. What is the next most appropriate step in management?",
+      "options": {
+        "A": "Continued skin traction",
+        "B": "Skeletal traction of both femurs",
+        "C": "External fixation of both femurs",
+        "D": "Intramedullary nailing of one femur and external fixation and delayed nailing for the other femur",
+        "E": "Intramedullary nailing of both femurs"
+      },
+      "correct_answer": "E"
+    },
+    {
+      "question_number": 40,
+      "question": "A 20-year-old man is brought to the emergency department after a high-speed motor vehicle accident. His initial blood pressure is 70/40 mm Hg. He is currently receiving intravenous fluids as well as blood. His Focused Assessment with Sonography for Trauma examination did not show any free fluid in his abdomen and his chest radiograph is unremarkable. An AP pelvis radiograph is shown in Figure below. What is the next most appropriate step in the management of his pelvic injury?",
+      "options": {
+        "A": "Inlet and outlet views of the pelvis to better delineate the injury",
+        "B": "Angiograph",
+        "C": "Laparotomy",
+        "D": "Open reduction and internal fixation of the pelvis",
+        "E": "Placement of a pelvic binder around the patient"
+      },
+      "correct_answer": "E"
+    },
+    {
+      "question_number": 41,
+      "question": "Which of the following findings best describes the acetabular fracture shown in Figure below?",
+      "options": {
+        "a": "Posterior column with articular impaction and a free fragment",
+        "b": "Anterior column with articular impaction",
+        "c": "Posterior wall with an intra-articular fragment",
+        "d": "Posterior wall with articular impaction and a free intra-articular fragment",
+        "e": "Posterior wall with articular impaction"
+      },
+      "correct_answer": "d"
+    },
+    {
+      "question_number": 42,
+      "question": "A 14-year-old boy sustained a 100% displaced distal radius Salter-Harris type II fracture. Neurologic examination demonstrates normal motor examination and two-point discrimination. He undergoes fracture reduction to the anatomic position with the application of a long arm cast. Postreduction he reports increasing hand and wrist pain with diminution of two-point discrimination to 10 mm over the index and middle fingers over the next several hours after surgery. The cast is bivalved and the padding released relieving all external pressure over the arm. Reevaluation reveals increasing sensory deficit over the affected area. What is the next most appropriate management intervention?",
+      "options": {
+        "A": "Cast removal and measurement of carpal canal pressure",
+        "B": "Immediate carpal tunnel release and pinning of the fracture",
+        "C": "Continued observation",
+        "D": "Surgical reduction and pinning of the fracture",
+        "E": "Electromyography/nerve conduction velocity studies"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 43,
+      "question": "Figure 1 shows the radiograph obtained from a 76-years old woman who has sharp pain in her groin, thigh, and buttocks that worsens with activity. She has been dealing with this pain for more than 1 year but is otherwise healthy. Recently, she has begun to notice night pain. The pain no longer responds to NSAIDs. She would like to be able to dance at her daughter's wedding in 4 months and wonders how best to proceed. What is the best next step?",
+      "options": {
+        "A": "Radiography-guided steroid injection followed by total hip arthroplasty 6 weeks later",
+        "B": "Total hip arthroplasty",
+        "C": "Physical therapy",
+        "D": "Referral to her spine surgeon",
+        "E": "Bipolar hip hemiarthroplasty"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 44,
+      "question": "Figures below are the radiographs of a 25-year-old woman whose pain has progressed during the last several years to pain with any activity and pain at night. What is the most appropriate treatment?",
+      "options": {
+        "A": "Proximal tibial osteotomy",
+        "B": "Distal femoral osteotomy",
+        "C": "Lateral unicompartmental arthroplasty",
+        "D": "Unicompartmental knee arthroplasty",
+        "E": "Total knee arthroplasty"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 45,
+      "question": "Figures below are the right femur radiograph and bone scan of a 71-year-old man with long-standing metastatic prostate cancer who has experienced increasing right thigh pain for 2 months. The pain is worse with activity and is alleviated with rest. He experienced similar pain in his left thigh 18 months ago and subsequently sustained a left subtrochanteric femur fracture after a low-energy twisting injury. He was successfully treated with an intramedullary nail. He had been receiving zoledronic acid for 4 years prior to the fracture. This patient's history includes heavy steroid use. His current symptoms are most likely the result of:",
+      "options": {
+        "A": "a prostaglandin-secreting prostate metastasis",
+        "B": "inhibition of osteoclastic function",
+        "C": "right L4 radiculopathy secondary to prostate metastasis",
+        "D": "direct inhibition of osteoclast prenylation"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 46,
+      "question": "Figure 8 is the bilateral standing alignment radiograph of a 2-year-old boy who has bowed legs. His mother states that he was born with bowed legs, and the deformity seems to have worsened since he started walking at 11 months of age. The metaphyseal-diaphyseal angles are 18 bilaterally. What is the best treatment option?",
+      "options": {
+        "A": "Observation",
+        "B": "Valgus-inducing knee-ankle-foot orthotic bracing",
+        "C": "Bilateral proximal tibia and fibula epiphysiodesis",
+        "D": "Immediate bilateral tibia and fibular valgus osteotomies with gradual correction with external fixators",
+        "E": "Immediate bilateral tibia and fibular valgus osteotomies with acute correction and internal fixation"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 47,
+      "question": "Which bacterial stage describes free-floating bacteria that bind to an inert substrate allowing for apoptosis and the creation of a biofilm matrix?",
+      "options": {
+        "A": "Planktonic",
+        "B": "Sessile",
+        "C": "Maturation",
+        "D": "Metabolic",
+        "E": "Dispersion"
+      },
+      "correct_answer": "A"
+    },
+    {
+      "question_number": 48,
+      "question": "A 50-year-old female has been diagnosed with osteomyelitis of her left tibia. The infection is isolated to the medullary canal of the bone, and her past medical history is significant for heavy smoking and chronic venous stasis. Based on the clinical staging of osteomyelitis, what would be her Cierney-Mader classification?",
+      "options": {
+        "A": "Stage 2A",
+        "B": "Stage 1B",
+        "C": "Stage 1C",
+        "D": "Stage 3B",
+        "E": "Stage 4C"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 49,
+      "question": "Figures A-D are the radiographs and CT images from a 32-year-old diabetic man who was treated with an intramedullary nail following an open tibial shaft fracture 13-months ago. He continues to have pain in the leg. Despite a course of IV antibiotics, his laboratory markers remain elevated. What is depicted by the arrow in figure D?",
+      "options": {
+        "A": "Involucrum",
+        "B": "Sequestrum",
+        "C": "Callus",
+        "D": "Avascular necrosis",
+        "E": "Malignant bone tumor"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 50,
+      "question": "A 2-year-old girl has L3-L4–level myelomeningocele. She is a full community ambulator with ankle-foot orthoses. She has had swelling and erythema of her right proximal tibia for 1 week. Her temperature is 37.7C. Radiographs show a mild periosteal reaction. Her erythrocyte sedimentation rate (ESR) is 40 mm/hr (reference range [rr], 0 to 20 mm/hr), and her C-reactive protein (CRP) level is 0.8 mg/L ([rr], 0.08 to 3.1 mg/L). What is the best next step?",
+      "options": {
+        "A": "Aspiration of the knee to rule out infection",
+        "B": "Empiric antibiotic treatment",
+        "C": "Open incision and drainage of osteomyelitis",
+        "D": "Immobilization in a splint for 3 weeks",
+        "E": "Immobilization in long-leg cast for 12 weeks"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 51,
+      "question": "Through 4 are the radiograph, magnetic resonance images, and photomicrograph of a biopsy specimen from a 42-year-old man with an insidious onset of left hip pain. Further imaging reveals no other lesions. What is the most appropriate initial treatment?",
+      "options": {
+        "A": "Diphosphonate or denosumab and observation with cementoplasty for refractory pain",
+        "B": "Chemotherapy and wide surgical resection",
+        "C": "Wide surgical resection alone",
+        "D": "Extended intralesional curettage and grafting",
+        "E": "Combination of Chemotherapy and targeted radiotherapy"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 52,
+      "question": "Antiosteoporosis medication should be considered for which of the following patients?",
+      "options": {
+        "A": "A 67-year-old man with an osteoporotic femoral neck fracture",
+        "B": "A 71-year-old man with a 15% 10-year probability of a major osteoporosis-related fracture based on the US-adapted World Health Organization (WHO) algorithm",
+        "C": "A 77-year-old woman with a T score of 0.8 and a compression fracture following a motor vehicle collision",
+        "D": "An 82-year-old woman with a T score of 1.3",
+        "E": "A 61-year-old woman with Z-Score of 0.5"
+      },
+      "correct_answer": "A"
+    },
+    {
+      "question_number": 53,
+      "question": "A researcher is working on Medication A, a drug FDA-approved for the treatment of osteoporosis in men and women. It is an anti-resorptive agent that inhibits the formation, function and survival of osteoclasts. It does not bind to calcium hydroxyapatite. At 1-year after the initial dose, tissue levels are non-detectable. It can be used in the presence of cancer metastases to bone. What is Medication A?",
+      "options": {
+        "A": "Denosumab",
+        "B": "Alendronate",
+        "C": "Abaloparatide",
+        "D": "Teriparatide",
+        "E": "Strontium ranelate"
+      },
+      "correct_answer": "A"
+    },
+    {
+      "question_number": 54,
+      "question": "A 25-year-old male presents to the emergency department after a lawnmower accident with traumatic loss of his great toe. On examination, his wound is grossly contaminated with soil. In addition to a cephalosporin and an aminoglycoside, penicillin is given. Which of the following is true with regards to the organism that penicillin is targeting in this injury?",
+      "options": {
+        "A": "Aerobic, Gram-positive rod",
+        "B": "Anaerobic, Gram-positive coccus",
+        "C": "Anaerobic, Gram-negative rod",
+        "D": "Catalase positive",
+        "E": "Possible cause botulism"
+      },
+      "correct_answer": "E"
+    },
+    {
+      "question_number": 55,
+      "question": "A 32-year-old female who presents to the trauma bay after falling off a roof. Paramedics state that she was initially complaining of back pain, but she now appears irritable and lethargic. She has received 2 liters of crystalloid since arriving in the trauma bay. Her blood pressure is now 76/42. A Foley catheter is placed, and her urine output is 12 ml/hour. What additional finding would suggest hemorrhagic shock over neurogenic shock?",
+      "options": {
+        "A": "Tachycardia",
+        "B": "Bradycardia",
+        "C": "Decreased cardiac output",
+        "D": "Vasodilation",
+        "E": "Warm dry skin"
+      },
+      "correct_answer": "A"
+    },
+    {
+      "question_number": 56,
+      "question": "A 37-year-old male arrives to the trauma slot following a high-speed motorcycle crash. His Glasgow Coma score is 14 and his only orthopaedic injury is exhibited in Figure A. His current vital signs are a BP of 90/60, HR 120, and a lactate of 2.5 mMol/L. Other findings include a grade 1 splenic laceration and bilateral pulmonary contusions seen on chest radiograph. Which of the following has been suggested as an indication to perform damage control orthopedic care?",
+      "options": {
+        "A": "HR >110",
+        "B": "Bilateral pulmonary contusions seen on chest radiograph",
+        "C": "SBP = 90mmHg",
+        "D": "Unilateral femur fracture",
+        "E": "Lactate = 2.5 mMol/L"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 57,
+      "question": "A 39-year-old female presents with the following motor vehicle crash with the injury seen in Figure A (immobilized in a pelvic binder). The iatrogenic neurologic injury most commonly caused by placement of the anterior construct for this injury, as shown in Figure B, would cause which of the following?",
+      "options": {
+        "A": "Weakness of hip flexion",
+        "B": "Weakness of ankle dorsiflexion",
+        "C": "Numbness of the medial thigh",
+        "D": "Numbness of the lateral thigh",
+        "E": "Numbness of the perineum"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 58,
+      "question": "A farmer is seen in the emergency department after falling out from tree onto the rice field. He is unable to bear weight. Exploration of a 0.5 cm laceration over the anterior tibia reveals bone. Radiographs reveal oblique displaced midshaft tibial and fibular fractures. Based on these findings, what is the most appropriate antibiotic prophylaxis?",
+      "options": {
+        "A": "Cephalosporin",
+        "B": "Cephalosporin and aminoglycoside",
+        "C": "Cephalosporin and penicillin",
+        "D": "Cephalosporin and vancomyacin",
+        "E": "Cephalosporin, aminoglycoside, and penicillin"
+      },
+      "correct_answer": "E"
+    },
+    {
+      "question_number": 59,
+      "question": "During an anterior approach to the shoulder for a reverse total shoulder arthroplasty (TSA) with a concomitant latissimus dorsi/teres major transfer, retractors are placed along the superficial surface of the latissimus dorsi. Which nerve is most at risk during exposure?",
+      "options": {
+        "A": "Musculocutaneous",
+        "B": "Axillary",
+        "C": "Radial",
+        "D": "Median",
+        "E": "Ulnar"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 60,
+      "question": "A 57-year-old male presents with worsening right ankle pain over the previous eight months. The patient has used an ankle gauntlet brace, received several corticosteroid injections, and taken scheduled NSAIDs, but his symptoms continue to worsen. Physical exam reveals limited ankle dorsiflexion and pain with plantar flexion that is limited to 20 degrees. There is no pain with ankle inversion or eversion. He does have a history of diabetes that is complicated by peripheral neuropathy. Current radiographs are depicted in figures A and B. What is the best treatment option for this patient?",
+      "options": {
+        "A": "Continued bracing and steroid injections",
+        "B": "Total ankle arthroplasty",
+        "C": "Ankle arthroscopy with debridement",
+        "D": "Tibiotalar arthrodesis",
+        "E": "Subtalar arthrodesis"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 61,
+      "question": "A 25-year-old man is brought to the emergency department following a motor vehicle accident. Extrication time was 2 hours, and in the field, he had a systolic blood pressure by palpation of 90 mmHg. Intravenous therapy was started, and on arrival to the emergency department his systolic blood pressure is 90 mmHg with a pulse rate of 130. Examination reveals a flail chest and a femoral diaphyseal fracture. Ultrasound of the abdomen is positive. The trauma surgeons take him to the operating room for an exploratory laparotomy. At the conclusion of the procedure, systolic pressure of 100 mmHg with a pulse rate of 110. Oxygen saturation is 90% on 100% oxygen, and the patient's temperature is 35 Celcius degrees. What is the recommended treatment of the femoral fracture at this time?",
+      "options": {
+        "A": "Reamed intramedullary nail",
+        "B": "Unreamed intramedullary nail",
+        "C": "Percutaneous plate fixation",
+        "D": "Skeletal traction",
+        "E": "External fixation"
+      },
+      "correct_answer": "E"
+    },
+    {
+      "question_number": 62,
+      "question": "A 42-year-old woman sustained a closed talar neck fracture in a motor vehicle accident. Which of the following is an avoidable complication of surgical treatment?",
+      "options": {
+        "a": "Posttraumatic arthritis of the subtalar joint",
+        "b": "Posttraumatic arthritis of the ankle joint",
+        "c": "Malunion of talus",
+        "d": "Osteonecrosis of the talus",
+        "e": "Complex regional pain syndrome"
+      },
+      "correct_answer": "c"
+    },
+    {
+      "question_number": 63,
+      "question": "A 20-year-old man used his fist to hit another man in the mouth. Examination 3 hours after the injury shows a 1-cm laceration over the third metacarpophalangeal joint. Treatment should consist of which of the following?",
+      "options": {
+        "A": "Superficial debridement and IV antibiotics",
+        "B": "Superficial debridement and oral antibiotics",
+        "C": "Immediate wound closure and oral antibiotics",
+        "D": "Exploration of the joint and IV antibiotics",
+        "E": "Superficial debridement, secondary closure, and IV antibiotics"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 64,
+      "question": "A 2-year-old boy will not bear weight after tripping over a curb. He is afebrile. Laboratory studies show a WBC count of 6,000/mm3 (normal 3,500 to 10,500/mm3) and an erythrocyte sedimentation rate of 10 mm/h (normal up to 20 mm/h). Examination reveals reproducible tenderness over the midshaft of the right tibia. AP and lateral radiographs of the right femur and tibia shows no obvious fracture line. What is the next most appropriate step in management?",
+      "options": {
+        "A": "Ca++, alkaline phosphatase, and vitamin D levels",
+        "B": "CT to rule out occult fracture",
+        "C": "USG",
+        "D": "Repeated X-ray after 2 week",
+        "E": "Skeletal survey"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 65,
+      "question": "A 23-year-old man has an isolated open tibial fracture without distal neurologic or vascular compromise following a motorcycle accident. After undergoing skeletal stabilization and several debridements, a clean 6x6-cm wound remains over the anteromedial surface of the distal third of the tibia. The tibia is exposed throughout the length of the wound and the periosteum has been stripped. What is the best option for wound management at this time?",
+      "options": {
+        "A": "Medial gastrocnemius muscle flap",
+        "B": "Splint-thickness skin graft",
+        "C": "Cross-leg gastrocnemius flap",
+        "D": "Soleus muscle flap",
+        "E": "Free muscle transfer"
+      },
+      "correct_answer": "E"
+    },
+    {
+      "question_number": 66,
+      "question": "A 25-year-old man has a midshaft femoral fracture with 25% comminution and is undergoing closed intramedullary nailing. Proximal locking is performed uneventfully; however, during distal locking screw insertion, only one of the screws is noted to have bone purchase. Which of the following procedures is the best solution to this problem?",
+      "options": {
+        "A": "Insert a small-diameter threaded pin at a different angle through the locking hole",
+        "B": "Insert a screw through the hole either anterior or posterior to the intramedullary nail locking hole",
+        "C": "Leave only one distal screw; this will provide adequate fixation",
+        "D": "Exchange the nail for one either longer or shorter and relock at a new level",
+        "E": "Insert methylmethacrylate cement into the hole and redrill when the cement hardens"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 67,
+      "question": "A 30-year-old man who sustained a tibial fracture with a peroneal nerve palsy 2 years ago now has foot drop and weak eversion of the foot. He reports success with stretching exercises, but he catches his toes when his foot tires. Examination reveals that the foot is plantigrade and supple. What is the most appropriate next step in management?",
+      "options": {
+        "A": "Achilles tendon lengthening",
+        "B": "Ankle-foot orthosis with dorsiflexion assist",
+        "C": "Posterior tibial tendon transfer to the cuboid",
+        "D": "Nerve grafting",
+        "E": "Anterior tibial tendon transfer to the cuboid"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 68,
+      "question": "A 12-year-old boy with a femoral fracture is planned to undergo closed reduction and stabilization using Titanium elastic nail. Upon measurement, the isthmus is 12 mm. What diameter of nail that is the best for that size?",
+      "options": {
+        "A": "2.0 mm",
+        "B": "2.5 mm",
+        "C": "3.0 mm",
+        "D": "3.5 mm",
+        "E": "4.0 mm"
+      },
+      "correct_answer": "E"
+    },
+    {
+      "question_number": 69,
+      "question": "What is the advantage of medial and lateral crossed pins compared to two lateral pins in the treatment of supracondylar humerus fractures?",
+      "options": {
+        "A": "Greater ultimate clinical arc of elbow motion",
+        "B": "Lower revision rate",
+        "C": "Lower incidence of ulnar nerve injury",
+        "D": "Greater experimental biomechanical stability",
+        "E": "More anatomic fracture reduction"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 70,
+      "question": "Regarding the meniscus repair:",
+      "options": {
+        "A": "After repair meniscus, patient should be non weightbearing for 6 weeks",
+        "B": "The meniscus repair is considered if the tear is in the inner side of the meniscus",
+        "C": "Repair meniscus can be performed only for tear in the lateral meniscus",
+        "D": "Meniscus repair can not be performed at the same time with ACL reconstruction",
+        "E": "Patients above 30 years of age may not have repaired meniscus"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 71,
+      "question": "Which of the following is considered the most common cause of a poor functional prognosis after an unstable posterior pelvic ring injury?",
+      "options": {
+        "A": "Malreduced sacroiliac joint",
+        "B": "Residual displacement causing a leg-length discrepancy of less than 1.0 cm",
+        "C": "Fracture nonunion",
+        "D": "Genitourinary dysfunction",
+        "E": "Persistent neurologic deficit"
+      },
+      "correct_answer": "A"
+    },
+    {
+      "question_number": 72,
+      "question": "48-year-old male patient had a burst fracture of L1 after a motorcycle accident 6 hours previously. On physical examination at the lower back some percussion tenderness was detected around the thoracolumbar area but no skin abnormality was noted. Neurological examination revealed mild radicular symptoms on L2 area. No other organ injury was detected. X ray showed burst fracture involving superior end plate and retropulsed fragment. MRI showed intact PLC. The choice of treatment for this patient",
+      "options": {
+        "A": "non-surgical with bedrest",
+        "B": "non-surgical with plaster jacket followed by bracing",
+        "C": "non-surgical with bracing only",
+        "D": "surgical anterior instrumentation",
+        "E": "surgical posterior instrumentation"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 73,
+      "question": "A 23-year-old woman is involved in a motorcycle accident. She sustains bilateral femur fractures (Abbreviated Injury Score [AIS]=3), an intra-abdominal injury (AIS=3), facial fractures (AIS=2), and a pulmonary injury (AIS=2). What is her Injury Severity Score (ISS)?",
+      "options": {
+        "A": "13",
+        "B": "18",
+        "C": "22",
+        "D": "27",
+        "E": "35"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 74,
+      "question": "A 27 year old man who was involved in a high-speed motor vehicle crash arrives at the trauma center with loss of consciousness, multiple posterior rib fractures, a left scapula body fracture, a left humerus fracture, bilateral femoral shaft fractures, and an open right ankle fracture-dislocation. Initial vital signs are a blood pressure of 88/50 mm Hg, a pulse of 120 bpm, and respirations of 22/min. His injury severity score is 28 and lactate levels are 2.7. CT scans of the head and abdomen are negative for hemorrhage, and after initial resuscitation the patient is cleared for surgery. Initial orthopaedic management should consist of débridement and irrigation of the right ankle with?",
+      "options": {
+        "A": "Intramedullary nailing of bilateral femurs, and intramedullary nailing of the left humerus",
+        "B": "External fixation of bilateral femurs, and splinting of the left humerus",
+        "C": "External fixation of bilateral femurs, and open reduction and internal fixation of the left humerus",
+        "D": "Intramedullary nailing of bilateral femurs, and open reduction and internal fixation of the left humerus",
+        "E": "External fixation of bilateral femurs, and intramedullary nailing of the left humerus"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 75,
+      "question": "A 40 year old man sustains a fracture-dislocation of C4-5. Examination reveals no motor or sensory function below the C5 level. All extremities are areflexic. The bulbocavernosus reflex is absent. The prognosis for this patient's neurologic recovery can be best determined by?",
+      "options": {
+        "A": "Myelography with CT",
+        "B": "Spinal cord-evoked potentials",
+        "C": "Repeat physical examinations",
+        "D": "MRI",
+        "E": "Electromyography and nerve conduction velocity studies"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 76,
+      "question": "The most critical factor in the prevention of chronic infection following severe open tibia fracture..?",
+      "options": {
+        "A": "adequate surgical debridement",
+        "B": "adequate antibiotic therapy",
+        "C": "although stability of internal fixation is critical, deep infection can occur with inadequate debridement",
+        "D": "do not remove all the necrotic tissue",
+        "E": "prompt soft-tissue coverage will salvage contamined"
+      },
+      "correct_answer": "A"
+    },
+    {
+      "question_number": 77,
+      "question": "What is the mechanism of antimicrobial action of aminoglycoside antibiotics..?",
+      "options": {
+        "A": "Alteration of bacterial cell membrane permeability",
+        "B": "Inhibition of bacterial protein synthesis",
+        "C": "Inhibition of bacterial metabolism",
+        "D": "Inhibition of bacterial cell wall synthesis",
+        "E": "Interference with bacterial nucleic acid synthesis or activity"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 78,
+      "question": "Which of the following is the most likely predictor of lower extremity amputation in diabetic foot disease?",
+      "options": {
+        "A": "Charcot's foot changes",
+        "B": "Decreased ABPI scores",
+        "C": "Decreased oxygen tension levels",
+        "D": "Diabetic foot ulceration",
+        "E": "HBA1C levels"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 79,
+      "question": "A 46-year-old woman has an 18-month history of plantar heel pain. She describes start-up symptoms that persist with activity throughout the day. Night splinting, custom inserts, cortisone injections, and physical therapy have failed. She has neutral-slight valgus hindfoot alignment. There is point tenderness over the plantar medial heel, a negative Tinel sign result, and a plantar heel spur as seen on radiographs. Ankle dorsiflexion is 15° less than neutral with the knee in extension and 10° with the knee in flexion. In addition to the treatment of the plantar fascia, what is the most appropriate next step?",
+      "options": {
+        "A": "Tarsal tunnel release",
+        "B": "Gastrocnemius recession",
+        "C": "Heel spur removal",
+        "D": "Achilles tendon lengthening",
+        "E": "Anterior ankle decompression"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 80,
+      "question": "A 12-year-old boy at 160 cm, 82 kg comes to the outpatient clinic with 2 months of left anterior knee pain without discrete injury. He has a slightly antalgic gait on the left, has a full knee range of motion, stable ligaments, and mild tenderness at his tibial tubercle. He has restricted hip internal rotation and worsening knee pain with hip motion. Knee radiographs are negative. What is the best next step in management?",
+      "options": {
+        "A": "Joint aspiration and synovial fluid analysis",
+        "B": "AP and frog-lateral pelvis radiographs",
+        "C": "Non-steroidal anti-inflammatory drugs and physical therapy for tibial tubercle apophysitis",
+        "D": "MRI of the left knee for evaluation of stress fracture",
+        "E": "Protected weight bearing with crutches and repeat evaluation in one week"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 81,
+      "question": "The orthopedic surgeon also found positive (+) Rheumatoid Factor (RF) in this patient. The following description is TRUE related with RF",
+      "options": {
+        "A": "Positive in 98% of rheumatoid arthritis case",
+        "B": "Should never be checked in synovitis stage",
+        "C": "It is a specific test to diagnose rheumatoid arthritis",
+        "D": "RF is low in Systemic Lupus Eritematous patients",
+        "E": "RF is related with B-cell activation that produce anti-IgG autoantibodies"
+      },
+      "correct_answer": "E"
+    },
+    {
+      "question_number": 82,
+      "question": "A 50-year-old carpenter has chronic pain over the lateral aspect of the elbow. He notes pain when using a hammer. On exam, he has pain with resisted wrist extension while the elbow is fully extended. Which muscle attachment is likely to be involved?",
+      "options": {
+        "A": "Anconeus",
+        "B": "Extensor carpi radialis brevis",
+        "C": "Distal biceps brachii",
+        "D": "Extensor pollicis longus",
+        "E": "Supinator"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 83,
+      "question": "A 34-year-old female has an insidious onset of heel pain when first getting out of bed and at the end of the day after prolonged standing. She works as a waitress and recently had bariatric surgery with a current BMI of 35. The physical exam is notable for tenderness with direct palpation of the anteromedial heel. She has a gastrocnemius contracture noted on Silverskiold testing. What is the most likely diagnosis?",
+      "options": {
+        "A": "Freiberg's infarction",
+        "B": "Plantar fasciitis",
+        "C": "Navicular stress fracture",
+        "D": "Anterior tarsal tunnel syndrome",
+        "E": "The first branch of the lateral plantar nerve entrapment"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 84,
+      "question": "A patient with rheumatoid arthritis has a rupture of the extensor digitorum communis to the fourth and fifth metacarpals. You are planning to perform an extensor indicis proprius (EIP) tendon transfer. What effect will which have on index finger extension?",
+      "options": {
+        "A": "No effect",
+        "B": "Index finger weakness",
+        "C": "Index metacarpophalangeal hyperextension",
+        "D": "Index metacarpophalangeal hyperflexion",
+        "E": "Index metacarpophalangeal ulnar deviation"
+      },
+      "correct_answer": "A"
+    },
+    {
+      "question_number": 85,
+      "question": "A 63-year-old man has a feeling of generalized clumsiness in his arms and hands, difficulty buttoning his shirt, and gradually worsening gait instability. During examination, his neck is gently passively flexed to end range while he is seated. The patient describes an electric shock-like sensation that radiates down the spine and into the extremities. This describes which of the following?",
+      "options": {
+        "A": "A positive Jackson sign",
+        "B": "A positive Lasegue sign",
+        "C": "A positive Lhermitte sign",
+        "D": "A positive Hoffmann sign",
+        "E": "A positive Spurling sign"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 86,
+      "question": "Marfan syndrome is an autosomal dominant disorder which results from a defective gene encoding for",
+      "options": {
+        "A": "Elastin",
+        "B": "Fibrillin",
+        "C": "Collagen type 1",
+        "D": "Collagen type 2",
+        "E": "Fibroblast Growth Factor Receptor 3 (FGFR3)"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 87,
+      "question": "What sign or symptom may occur with cubital tunnel syndrome that DOES NOT occur with Guyon neuropathy?",
+      "options": {
+        "A": "Clawing of small and ring finger",
+        "B": "An abnormal sensation of the dorsal ulnar hand",
+        "C": "Abnormal sensation in the volar ring and small fingers",
+        "D": "A weakness of the interosseous muscles",
+        "E": "A positive Froment sign"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 88,
+      "question": "Which of the following factors is most likely to contribute to pseudarthrosis in a patient who has undergone a single-level anterior decompression and fusion procedure for the treatment of cervical radiculopathy?",
+      "options": {
+        "A": "Use of allograft (instead of autograft)",
+        "B": "Fusion at the C3-C4 level",
+        "C": "Sagittal alignment",
+        "D": "Performance of an uninstrumented fusion (ie, no plate and screws)",
+        "E": "History of diabetes mellitus and tobacco use"
+      },
+      "correct_answer": "E"
+    },
+    {
+      "question_number": 89,
+      "question": "A 70-year-old woman has knee osteoarthritis which no longer manageable nonsurgically. Radiographs reveal a 30-degree mechanical axis deformity. When using the measured resection technique during total knee arthroplasty (TKA), the best way to avoid femoral malrotation is to reference the:",
+      "options": {
+        "A": "Hip-knee mechanical axis",
+        "B": "anteroposterior axis",
+        "C": "femoral intramedullary axis",
+        "D": "tibial intramedullary axis",
+        "E": "posterior condylar axis"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 90,
+      "question": "Which of the following is considered the primary indication for surgery for patient with hallux valgus..?",
+      "options": {
+        "A": "cosmetic appearance",
+        "B": "split-size shoe reqirements",
+        "C": "an intermetatarsal angle of greater than 150 between the first and second metatarsals",
+        "D": "symptoms that persist despite nonsurgical management",
+        "E": "arthritic changes in the first metatarsophalangeal joint"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 91,
+      "question": "A 73-years-old woman who return for her annual follow-up 14 years after undergoing total hip arthroplasty. The patient begins to experience pain, and a decision is made to proceed with surgical intervention. When performing a posterior approach to the hip, which structure protects the anterior retractor from causing damage to the femoral neurovascular structure?",
+      "options": {
+        "A": "Obturator externus",
+        "B": "Piriformis",
+        "C": "Psoas",
+        "D": "Rectus femoris",
+        "E": "Gemelus superior"
+      },
+      "correct_answer": "C"
+    },
+    {
+      "question_number": 92,
+      "question": "A 35-year-old man who has had a 6-month history of low back pain and tenderness now reports worsening pain and stiffness in the hips and entire back. An AP radiograph of the pelvis demonstrates a fusion of the sacroiliac joint bilaterally. What is the next most appropriate step in management?",
+      "options": {
+        "A": "Immediate hip arthroplasty",
+        "B": "Immediate bilateral sacroiliac joint aspiration and culture",
+        "C": "Anesthetic injections in both sacroiliac joints",
+        "D": "Anti-inflammatory medications, physical therapy, and HLA-B27 testing",
+        "E": "Sacroiliac fusion with plate fixation"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 93,
+      "question": "Which of the following symptoms is common in the early stages of osteoarthritis (OA) of the elbow?",
+      "options": {
+        "A": "Pain when carrying heavy objects with the elbow in extension",
+        "B": "Pain at a mid-arc range of motion",
+        "C": "Motion loss greater than 30 degrees",
+        "D": "Ulnar neuritis",
+        "E": "Pain even without motion"
+      },
+      "correct_answer": "A"
+    },
+    {
+      "question_number": 94,
+      "question": "A patient with a bone mineral density (BMD) T-score of -2.6 would be considered to have",
+      "options": {
+        "A": "Marginally decreased bone density",
+        "B": "Osteopenia",
+        "C": "Bone within normal limits for an elderly individual",
+        "D": "Osteoporosis",
+        "E": "Metastatic bone disease"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 95,
+      "question": "A 73-year-old woman has back and legs pain. Imaging reveals a lumbar degenerative scoliosis. Nonsurgical management, consisting of physical therapy, medications, and injections, has failed. During the surgical planning, dual-energy x-ray absorptiometry performed, and her T-score returns as -2.6. Intraoperative options to help reduce the risk of instrumentation failure include",
+      "options": {
+        "A": "Multilevel interbody fusion",
+        "B": "Teriparatide injection",
+        "C": "Iliac crest bone graft",
+        "D": "Augmentation of pedicle screws with polymethylmethacrylate (PMMA)"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 96,
+      "question": "Decreased sun exposure leads to decreased bone health via what mechanism?",
+      "options": {
+        "A": "Impaired ability of the liver to hydroxylate cholecalciferol",
+        "B": "Impaired absorption of calcium by the gastrointestinal (GI) tract",
+        "C": "Impaired ability of the kidneys to hydroxylate cholecalciferol",
+        "D": "Impaired parathyroid hormone (PTH) production by the parathyroid glands"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 97,
+      "question": "Compared with myodesis, osteomyoplasty offers which of the following advantages in transtibial amputation?",
+      "options": {
+        "A": "Enhanced end-bearing",
+        "B": "Early prosthetic fitting",
+        "C": "Decreased surgical morbidity",
+        "D": "Immediate weight bearing",
+        "E": "Fibular abduction"
+      },
+      "correct_answer": "A"
+    },
+    {
+      "question_number": 98,
+      "question": "A 20-year-old dancer has an atraumatic onset of midfoot pain. Radiographic findings are normal. Her body mass index is 18.5, and she has had 5 menstrual cycles during the past year. What is the long-term risk of no treatment?",
+      "options": {
+        "A": "Secondary infertility",
+        "B": "Secondary calcium deficiency",
+        "C": "Rebound uterine hypertrophy",
+        "D": "Irreversible loss of bone mineral density",
+        "E": "Functional hyperthyroidism"
+      },
+      "correct_answer": "D"
+    },
+    {
+      "question_number": 99,
+      "question": "What is the best reason to use an autograft (rather than an allograft) for anterior cruciate ligament (ACL) reconstruction in a young athlete?",
+      "options": {
+        "A": "Lower infection risk",
+        "B": "Lower graft rupture rate",
+        "C": "Better incorporation of the graft material",
+        "D": "Lower long-term risk for arthritis",
+        "E": "Lack of donor-site morbidity"
+      },
+      "correct_answer": "B"
+    },
+    {
+      "question_number": 100,
+      "question": "Reimplantation of a traumatically amputated limb requires all of the following EXCEPT:",
+      "options": {
+        "A": "Limb preservation",
+        "B": "Shortening of bone",
+        "C": "Delayed repair of nerves",
+        "D": "Immediate arterial and venous repair",
+        "E": "Angiograms"
+      },
+      "correct_answer": "E"
+    }
+  ]
+}

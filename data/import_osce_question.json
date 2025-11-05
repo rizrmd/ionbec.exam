@@ -1,0 +1,790 @@
+{
+  "exam": {
+    "title": "National Orthopedic & Traumatology Board Examination Part 1 - OSCE",
+    "date": "5 November 2025",
+    "stations": [
+      {
+        "question_number": 1,
+        "section": "Adult Recon",
+        "vignette": "A 79 years old woman. She complained about pain, swelling and sinus tract on the left knee joint after 2 years post total knee replacement procedure.",
+        "images": [
+          "X-ray of left knee (AP and lateral views) showing total knee replacement",
+          "Clinical photo of left knee with surgical incision and signs of inflammation/sinus tract"
+        ],
+        "lab_results": {
+          "Hemoglobin": "11.9 g/dl",
+          "Erithrocyte": "4,79 ml/ul",
+          "Leucocyte": "9.97 Th/uL",
+          "Thrombocyte": "336 Th/uL",
+          "CRP Quantitative": "20 mg/L",
+          "ESR": "1 hour 85 mm/hr",
+          "Culture": "Aerob and anaerob culture and sensitivity test Result: staphylococcus aureus (MRSA: positive)"
+        },
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "Please describe the clinical finding and mention possible diagnosis (30)",
+            "answer": "Based on the finding of staphylococcus aureus (MRSA: positive), CRP Quantitative 20 mg/L, ESR 1 hour 85 mm/hr[cite: 14]. Osteolytic in both femoral and tibial implant surface, implant loosening[cite: 15]. The possible diagnosis is Prosthetic Joint Infection[cite: 15]."
+          },
+          {
+            "part": "b",
+            "question_text": "Explain the MSIS criteria! (40)",
+            "answer": "• Major criteria (diagnosis can be made when 1 major criteria exist)\n  * sinus tract communicating with prosthesis\n  * pathogen isolated by culture from 2 separate tissue/fluid samples from the affected joint\n• Minor criteria (preoperative diagnosis)\n  * the scores below are added together to determine:\n  * ≥6 = infected; 2-5 = inconclusive; 0-1 = not infected - serum labs\n  * elevated CRP (>10 mg/L) or D-dimer (>860 ng/mL) - 2 poin\n  * elevated ESR (>30 mm/h) - 1 point - synovial fluid analysis\n  * elevated synovial WBC (>3,000 cells/μl) or leukocyte esterase - 3 points\n  * positive alpha-defensin - 3 points (most sensitive and specific marker for PJI)\n  * elevated synovial PMN (>80%) - 2 points\n  * elevated synovial CRP (>6.9 mg/L) - 1 point"
+          },
+          {
+            "part": "c",
+            "question_text": "Please describe about biofilm (30)",
+            "answer": "A biofilm is an architectural colony of microorganisms, within a matrix of extracellular polymeric substance that they produce[cite: 27]. Biofilm contains microbial cells adherent to one another and to a static surface (living or non-living)[cite: 28]. Bacterial biofilms are usually pathogenic in nature and can cause nosocomial infections[cite: 29]."
+          }
+        ]
+      },
+      {
+        "question_number": 2,
+        "section": "Adult Recon",
+        "vignette": "A 45-year-old woman came to your clinic with a painful right toe.",
+        "images": [
+          "Clinical photo of a foot with hallux valgus deformity",
+          "X-ray of a foot (AP view) showing hallux valgus deformity"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "What is the Diagnosis? (25)",
+            "answer": "Hallux valgus"
+          },
+          {
+            "part": "b",
+            "question_text": "What are the pathomechanism of the condition? (25)",
+            "answer": "adductor: adduksi phalanx,\nabductor: plantarflexi and pronasi MT"
+          },
+          {
+            "part": "c",
+            "question_text": "Describe the management! (25)",
+            "answer": "conservative, operatif (distal osteotomy, double osteotomy, shaft osteotomy)"
+          },
+          {
+            "part": "d",
+            "question_text": "Describe how you would explain to the patient how to prevent this condition!(25)",
+            "answer": "Avoid high heels, shoes are too narrow"
+          }
+        ]
+      },
+      {
+        "question_number": 3,
+        "section": "Adult Recon",
+        "vignette": "This is an x-ray of 41 years old women with pain on the left hip. The patient have autoimmune disease and consume steroid medicine routinely. No history of trauma[cite: 38].",
+        "images": [
+          "X-ray of pelvis (AP view) showing bilateral hips"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "What is your x-ray finding in this patient? (20)",
+            "answer": "Flattened femoral head\n• Narrowing hip joint space\n• Advanced degenerative changes"
+          },
+          {
+            "part": "b",
+            "question_text": "How do you classify this patology & please explain (20)",
+            "answer": "AVN of the left femoral head FICAT IV\nTable 2 Ficat and arlet classification system\nStage 0: Normal radiographs (silent hip)\nStage 1: Slight abnormality as patchy/opaque areas, minor osteopenia\nStage II: Sclerotic or cystic lesions (II a: No crescent sign, Il b: Crescent sign without flattening of the femoral head)\nStage III: Flattening of the femoral head or femoral head collapse\nStage IV: Femoral head collapse and osteoarthritis of the hip (joint space narrowing, osteophytes and acetabular changes)"
+          },
+          {
+            "part": "c",
+            "question_text": "What is the pathogenesis of this disease? (30)",
+            "answer": "Pathoanatomic cascade :\nCoagulation of the intraosseous microcirculation Venous thrombosis\nRetrograde arterial occlusion Intraosseous hypertension Decreased blood\nflow to femoral head AVN of femoral head Chondral fracture and collapse"
+          },
+          {
+            "part": "d",
+            "question_text": "What is your treatment for this patient? (30)",
+            "answer": "•\nIn this case Total Hip Replacement (THR)\nIndications\n  * younger patient with crescent sign or more advanced femoral head collapse, +/- acetabular DJD\n  * irreversible etiology (chronic steroid use)\n  * patients >40 with large lesions"
+          }
+        ]
+      },
+      {
+        "question_number": 4,
+        "section": "Adult Recon",
+        "vignette": "A 42-year-old female presents with right knee pain that occurs during physical activity.",
+        "images": [
+          "Long leg X-ray (scanogram)",
+          "X-ray of both knees (AP and lateral views)"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "Please describe the x-ray findings. (25)",
+            "answer": "Varus Knee\nDecrease in medial knee joint space\nOsteophyte"
+          },
+          {
+            "part": "b",
+            "question_text": "What are the management options for this patient? (25)",
+            "answer": "- Non operative\nThe aims of OA treatment include education, psychological support, alleviating pain and suppress inflammation, encouragement, correcting deformity, improve patients' function, strengthening muscle, and rehabilitation of the patient\n- Operative\nAlignment correction Surgery\nArthroplasty (Unicompartemental Knee Arthroplasty / Total Knee Arthroplasty)"
+          },
+          {
+            "part": "c",
+            "question_text": "The patient is planned to undergo High Tibial Osteotomy (HTO) procedure. Please describe the principle of this procedure. (25)",
+            "answer": "Re alignment osteotomy to correct angular deformities of the knee to prevent development or progression of unicompartmental osteoarthritis"
+          },
+          {
+            "part": "d",
+            "question_text": "How will HTO benefits the patient? (25)",
+            "answer": "Distributing forces more evenly across the knee surface.\nReduce loading pressure in the medial compartment of the knee"
+          }
+        ]
+      },
+      {
+        "question_number": 5,
+        "section": "Adult Recon",
+        "vignette": "A 27-year-old basketball player came with a history of injury during a match 2 months ago. He experienced pain and difficulty in achieving full range of motion even after one month of physical therapy.",
+        "images": [
+          "MRI of knee (sagittal view) with arrow pointing to meniscus tear"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "An MRI was ordered. Please describe the finding of the MRI pointed out by the arrow!(25)",
+            "answer": "Double PCL-sign"
+          },
+          {
+            "part": "b",
+            "question_text": "What is your diagnosis based on the chief complaint and MRI findings? (25)",
+            "answer": "Bucket-handle medial meniscus tear"
+          },
+          {
+            "part": "c",
+            "question_text": "If you were to perform a physical examination, please mention two special tests you would expect to find positive findings!(25)",
+            "answer": "Mention any two: - McMurray test - Thessaly test - Appley grind test"
+          },
+          {
+            "part": "d",
+            "question_text": "Please mention the three techniques that can be used to treat this condition ? (25)",
+            "answer": "Inside-out technique\nOutside in technique\nAll-inside technique"
+          }
+        ]
+      },
+      {
+        "question_number": 6,
+        "section": "Hand",
+        "vignette": "A 55-year-old man complains of numbness and tingling along his left little finger suffered since 1 year before. He had valgus deformity on his left elbow. Range of motion of the elbow is functional and painless. Physical exam is notable for the finding demonstrated in Figure a. Patient also have hypesthesia along the dorsal and palmar side of his left little finger. X-ray revealed no fracture.",
+        "images": [
+          "Clinical photo of both hands showing muscle atrophy and clawing on the left hand"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "Mention the clinical findings that you find (25)",
+            "answer": "Interosseus muscle atrophy\nHypothenar atrophy\nClawing at the left little finger"
+          },
+          {
+            "part": "b",
+            "question_text": "List special tests to confirm your diagnosis (25)",
+            "answer": "Froment sign\nWartenberg sign\nTinel sign over cubital tunnel\nElbow flexion test"
+          },
+          {
+            "part": "c",
+            "question_text": "Please mention your possible diagnosis and three differential diagnosis of this pathology? (25)",
+            "answer": "Ulnar nerve compression neuropathy at the elbow site (Cubital tunnel syndrome)\nC8/Th1 radicular compression\nUlnar nerve compression within Guyon Canal of the wrist\nThoracic Outlet Syndrome"
+          },
+          {
+            "part": "d",
+            "question_text": "Please mention three common sites of entrapment in the elbow area (25)",
+            "answer": "Between the two heads of FCU/aponeurosis\nWithin arcade of Struthers\nBetween Osborne's ligament and MCL"
+          }
+        ]
+      },
+      {
+        "question_number": 7,
+        "section": "Hand",
+        "vignette": "A 23 y.o. male trapped his hand in machinery for 2 hours and now feel excruriating pain despite analgetic administration and numbness over all fingers.",
+        "images": [
+          "Clinical photo of injured left hand (palmar view)",
+          "Clinical photo of injured left hand (dorsal view)",
+          "Clinical photo of injured left hand (lateral view)"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "What is the diagnosis? (25)",
+            "answer": "Compartment syndrome Left Hand"
+          },
+          {
+            "part": "b",
+            "question_text": "List all hand compartments? (25)",
+            "answer": "Hand compartments consist of hypothenar, thenar, adductor pollicis, 4 dorsal\ninterosseous, 3 volar (palmar) interosseous"
+          },
+          {
+            "part": "c",
+            "question_text": "Describe how to perform hand fasciotomy? what compartment release in each incision? (50)",
+            "answer": "Approach\n  * Make two longitudinal incisions on 2nd and 4th metacarpals\n  * To decompress volar/dorsal interossei and adductor compartment\n  * Make longitudinal incision radial side of 1st metacarpal\n  * To decompress thenar compartment\n  * Make longitudinal incision over ulnar side of 5th metacarpal\n  * To decompress hypothenar compartment\nTechnique\n  * first volar interosseous and adductor pollicis muscles are decompressed through blunt dissection along ulnar side of 2nd metacarpal\nPost-operative\n  * wounds left open until primary closure is possible\n  * if primary closure not possible, split-thickness skin grafting is used"
+          }
+        ]
+      },
+      {
+        "question_number": 8,
+        "section": "Hand",
+        "vignette": "Female, 50 years old, complained of right wrist pain accompanied by numbness in the thumb to ring finger. The patient has been experiencing pain for about 4 months, the patient also complained of weakness when gripping.",
+        "images": null,
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "What is your diagnosis? (25)",
+            "answer": "Carpal Tunnel Syndrome (CTS)"
+          },
+          {
+            "part": "b",
+            "question_text": "What are three (3) provocative tests to confirm the patient's diagnosis and how to do them? (25)",
+            "answer": "Durkan's test: pressing thumbs over the carpal tunnel and holding pressure\nPhalen test: wrist volar flexion against gravity for~60 sec produces symptoms\nTinel's test: tapping the median nerve over the volar carpal tunnel"
+          },
+          {
+            "part": "c",
+            "question_text": "List the carpal tunnel contents (25)",
+            "answer": "four flexor digitorum superficialis (FDS) tendons\nfour flexor digitorum profundus (FDP) tendons\nflexor pollicis longus (FPL)\nmedian nerve"
+          },
+          {
+            "part": "d",
+            "question_text": "What therapy do you recommend for this patient? How many ways to do it? (25)",
+            "answer": "Carpal tunnel release:\nOpen carpal tunnel release\nEndoscopic carpal tunnel release"
+          }
+        ]
+      },
+      {
+        "question_number": 9,
+        "section": "Hand",
+        "vignette": "Please see the picture and answer the questions based on the picture.",
+        "images": [
+          "Diagram of the brachial plexus with labels a, b, c, d"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "If this zone is injured/lession (mark with 'a') what motoric function will loss? (20)",
+            "answer": "• The structure marked with a is C7 root. C7 has function for elbow extension and wrist flexion"
+          },
+          {
+            "part": "b",
+            "question_text": "What is the structure name (mark with 'b') (20)",
+            "answer": "• Posterior cord"
+          },
+          {
+            "part": "c",
+            "question_text": "What is the effect of this structure (mark with 'c') on elbow function (30)",
+            "answer": "•\nC: musculocutaneous nerve\nCoracobrachialis (not function in elbow), biceps brachii and brachialis\n• Biceps brachii: elbow flexion and supination\n• Brachialis: elbow flexion"
+          },
+          {
+            "part": "d",
+            "question_text": "What is the effect of this structure (mark with 'd') on shoulder function (30)",
+            "answer": "D: axillary nerve deltoid and teres minor\nDeltoid: shoulder abduction from 15 to 90 degree\nTeres minor: stabilize shoulder joint, ER shoulder"
+          }
+        ]
+      },
+      {
+        "question_number": 10,
+        "section": "Hand",
+        "vignette": "A 32 years old male comes to polyclinic with inability to extend the wrist, thumb, and fingers since 1.5 years ago after suffering from humerus fracture. Patient is planned to have tendon transfer surgery. The clinical picture is depicted below.",
+        "images": [
+          "Clinical photo of an arm showing wrist drop"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "Mention the prerequisites for tendon transfer surgery! (50)",
+            "answer": "Donor-related\n  1. Adequate strength of the transferred tendon\n  2. Synergism\n  3. Expendable donor\n  4. Amplitude of the transferred tendon should be as near to the original tendon for which the transfer is being done\nRecipient-related\n  1. Tissue should be in equilibrium\n  2. Supple joints\n  3. Try to restore sensibility of distal organ before treatment\n  4. Arthrodesis/ joint procedure should be done before tendon transfer\n  5. The disorder should be non progressive one\nTechnique-related\n  1. One tendon, one function\n  2. Straight line of pull\n  3. Pass tendon below fascial plane\n  4. Insertion of tendon should be as close to the insertion of paralyzed tendon\n  * try to preserve nerve and vascular supply\n  5. Keep dissection to minimum"
+          },
+          {
+            "part": "b",
+            "question_text": "According to Starr and Tsuge, mention the preferred combinations of tendon transfer for wrist, thumb, and fingers extension! (50)",
+            "answer": "PT to ECRB\nFCR to EDC\nPL to re-routed EPL"
+          }
+        ]
+      },
+      {
+        "question_number": 11,
+        "section": "Pediatric",
+        "vignette": "A 11 yo boy had an antalgic gait since a few months ago. There was no history of hip major trauma. The gait got worst and he now barely walks. Left hips reveals significant limitations of internal rotation and abduction.",
+        "images": [
+          "X-ray of pelvis (AP view) showing left hip pathology"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "What is your clinical diagnosis? And please add the clasification for your clinical diagnosis (25)",
+            "answer": "Legg-calve-perthes disease, Herring classification B"
+          },
+          {
+            "part": "b",
+            "question_text": "Please describe radiological abnormality you see in the x ray (25)",
+            "answer": "1. break in shenton line\n2. decrease in height of the lateral part of the femoral head; sclerotic changes in the femoral head and acetabulum;\nflattening of the femoral head\n3. decreased of the joint space"
+          },
+          {
+            "part": "c",
+            "question_text": "How do you manage this problem? (25)",
+            "answer": "Containment principles to keep femoral head inside the acetabulum to achieve congruent femoral head when it regrows\n- Nonoperative: bed rest, NSAID, acitivity restriction, physical therapy\n- Operative: femoral varus derotational osteotomy"
+          },
+          {
+            "part": "d",
+            "question_text": "What do you think the prognosis of this case? Please explain your answer (25)",
+            "answer": "Poor, due to: (1) age more than 6 y.o, (2) Herring B"
+          }
+        ]
+      },
+      {
+        "question_number": 12,
+        "section": "Pediatric",
+        "vignette": "A two-year-old baby came to your clinic with clubfoot deformities.",
+        "images": [
+          "Clinical photo of an infant's legs and feet showing bilateral clubfoot"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "Name 3 differential diagnoses that may produce such deformities. (25)",
+            "answer": "Spina bifida, arthrogryposis, Cerebral palsy, Congenital absence of tibia, Idiopathic clubfoot."
+          },
+          {
+            "part": "b",
+            "question_text": "Please name the order of correction according to Ponseti? (25)",
+            "answer": "Cavus, adductus, varus, equinus"
+          },
+          {
+            "part": "c",
+            "question_text": "Name 3 difference between Kite technique and Ponseti technique? (50)",
+            "answer": "1. Method of Manipulation\n  Kite Technique: Focuses on correcting deformities one at a time, often starting with the forefoot adduction.\n  Ponseti Technique: Corrects all deformities simultaneously, except equinus (which is corrected last), with a focus on abducting the foot while maintaining the talus as a fulcrum.\n2. Fulcrum Point in Correction\n  Kite Technique: Uses the calcaneocuboid joint as the fulcrum during manipulation.\n  Ponseti Technique: Uses the head of the talus as the fulcrum for abducting the foot.\n3. Success Rate and Popularity\n  Kite Technique: Has a lower success rate and is largely considered outdated due to suboptimal outcomes and longer treatment durations.\n  Ponseti Technique: Has a higher success rate, is faster, less invasive, and is now the gold standard globally for clubfoot treatment."
+          }
+        ]
+      },
+      {
+        "question_number": 13,
+        "section": "Pediatric",
+        "vignette": "This is the pelvic X-ray AP view of 12 months old boy with a limping gait",
+        "images": [
+          "X-ray of pelvis (AP view) of a 12-month-old boy"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "A",
+            "question_text": "What is the diagnosis? (25)",
+            "answer": "• Developmental Dysplasia of the Left Hip"
+          },
+          {
+            "part": "B",
+            "question_text": "Please mention three risk factors for this condition! (25)",
+            "answer": "• Firstborn\n• Female\n• Breech Presentation\n• Oligohidramnion\n• Family history"
+          },
+          {
+            "part": "C",
+            "question_text": "Please mention three physical examination you could find positive in this case! (25)",
+            "answer": "• Klisic sign\n• Galeazzi sign\n• Decrease abduction\n• Leg length discrepancy"
+          },
+          {
+            "part": "D",
+            "question_text": "Please mention three obstacles to closed reduction in this condition! (25)",
+            "answer": "• Inverted labrum\n• Transverse acetabular ligament\n• Pulvinar\n• Elongated ligamentum teres"
+          }
+        ]
+      },
+      {
+        "question_number": 14,
+        "section": "Pediatric",
+        "vignette": "A 7years old girl with cerebral palsy spastic hemiplegic is walking with equinus gait. Physical examination showed left plantar flexed ankle, silverskiold test showed ankle dorsiflexed zero degree with knee extended and dorsiflexed 10 degree with the knee flexed.",
+        "images": null,
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "What is the purpose of flexing the knee on silverskiold test? (25)",
+            "answer": "Relaxing the gastrocnemius muscles"
+          },
+          {
+            "part": "b",
+            "question_text": "What is the interpretation of the silverskiold test for the patient? (25)",
+            "answer": "Isolated gastrocnemius contracture"
+          },
+          {
+            "part": "c",
+            "question_text": "Please explain the pathophysiology of equinus in this CP patient!(25)",
+            "answer": "Imbalance of dorsiflexors and plantar flexors, resulting in plantarflexion of the hindfoot relative to the ankle spasticity/contracture of the gastrocnemius"
+          },
+          {
+            "part": "d",
+            "question_text": "How do you manage this problem surgically Gastrocnemius lengthening?(25)",
+            "answer": "(Vulpius/strayer technique)"
+          }
+        ]
+      },
+      {
+        "question_number": 15,
+        "section": "Pediatric",
+        "vignette": "This is the elbow X-Ray AP View of 6 years with elbow pain after injury",
+        "images": [
+          "X-ray of right elbow (AP and lateral views)"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "What is the diagnosis? (25)",
+            "answer": "Closed fracture lateral condyle of right humerus"
+          },
+          {
+            "part": "b",
+            "question_text": "How do you classify this pathology? (25)",
+            "answer": "• Milch 1: fracture line lateral to trochlea groove (capitelum)\n• Milch 2: fracture to trochlea groove"
+          },
+          {
+            "part": "c",
+            "question_text": "What is the complication that could happened in the future, you should tell to parents? (25)",
+            "answer": "• Stiffness\n• Avascular necrosis\n• Nonunion, malunion\n• Growth arrest\n• Tardy ulnar nerve palsy"
+          },
+          {
+            "part": "d",
+            "question_text": "Please explain 2 theory mechanism of injury that could happened in this kind of fracture! (25)",
+            "answer": "Pull-off theory: avulsion fracture of the lateral condyle that results from the pull of the common extensors muscle\nPush off theory fall onto an outstretched hand causes impaction of the radial head into the lateral condyle causing fracture"
+          }
+        ]
+      },
+      {
+        "question_number": 16,
+        "section": "Spine",
+        "vignette": "A female, 17 years old, presented with complaints of a curved back, which he had been aware of for 3 years, with the complaints becoming more severe over the past year. He felt that his back tired easily. He denied complaints of shortness of breath and weakness in both legs.\nRadiographic measurements:\n- PRE BENDING: UPPER THORACIC 28°, MAIN THORACIC 55°, LUMBAL 30°\n- POST BENDING: UPPER THORACIC 23°, MAIN THORACIC 45°, LUMBAL 11°\n- LUMBAR MODIFIER: CSVL BETWEEN THE PEDICLES\n- THORACIC SAGITAL PROFILE: 35°\n- RISSER: V",
+        "images": [
+          "Full spine X-rays (AP, lateral, and bending views)"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "What is the diagnosis of this patient?(20)",
+            "answer": "according to the Lenke Classification Adolescent Idiopathic Scoliosis Lenke type 1A(N) Cobb 55° Risser V"
+          },
+          {
+            "part": "b",
+            "question_text": "How do you determine structural curve?(30)",
+            "answer": "The structural curves will be determined by measuring the cobb angle in AP & lateral erect view, side bending view. The curve considered as a structural curve if the cobb angle remains >25 degrees on supine bending view"
+          },
+          {
+            "part": "c",
+            "question_text": "If the patient requires surgery, please explain briefly of the evaluation and preparation must be done to the patient?(30)",
+            "answer": "• History and clinical presentation: patient activity, menarch status, family history\n• Physical examination Skin condition or cutaneous changes, Deformity, rib humb, pelvic tilt.\n• Adam forward bending test and limb length measurement.\n• Neurological Examination: motoric and sensoric evaluation, physiological and pathological reflexes, special tests to deternine any UMN or LMN pathology (if present)\n• Radiographic Measurement: Cobb angle, Balance Assesment (C7 Plumb line), Vertebral rotation (Nashmoe Method), Skeletal maturity (Risser Sign)\n• Inform Consent, Laboratorium test and implant preparation\n• Rehabilitatiom after surgery"
+          },
+          {
+            "part": "d",
+            "question_text": "To reduce the risk of surgical complications, what should you do?(20)",
+            "answer": "Operating Room preparation, Surgical Team Preparation (Orthopaedic, Anestesiologist, Neurologist), patient preparation (blood preparation) and IOM"
+          }
+        ]
+      },
+      {
+        "question_number": 17,
+        "section": "Spine",
+        "vignette": "Male, 40 years old, with complaints of back pain since 1 year ago. The pain radiated to the left leg, then became more severe and radiated to both soles of the feet with numbness. The pain worsen last 3 months. There was also weakness on his left thigh. T2 MRI, AXIAL VIEW AT LEVEL VERT L2-3",
+        "images": [
+          "T2 MRI, AXIAL VIEW AT LEVEL VERT L2-3"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "Please explain the pathophysiology of leg pain in this case!(30)",
+            "answer": "Nerve root compression. Inflammation leading to nerve root irritation (exiting root)"
+          },
+          {
+            "part": "b",
+            "question_text": "What is the most likely diagnosis for this patient?(20)",
+            "answer": "Left foraminal disc herniation of L2-3"
+          },
+          {
+            "part": "c",
+            "question_text": "Please explain the indication for surgery in this abnormality?(20)",
+            "answer": "• Progressive neurological deficit in the presence of cord compression.\n• Severe pain that failed with conservative treatment"
+          },
+          {
+            "part": "d",
+            "question_text": "How do you treat this patient?(30)",
+            "answer": "Treatment: surgery is recommended.\nOptions:\n  Open decompression diskectomy, or\n  Microdiscectomy, or\n  Endoscopic decompression and dikectomy, or\n  Decompression laminectomy & facetectomy with L2-3 instrumented fusion"
+          }
+        ]
+      },
+      {
+        "question_number": 18,
+        "section": "Spine",
+        "vignette": "Male 23 years old, complains of back pain since 4 months previously. The pain worsens within the past 2 months, and has the characteristic of attenuating in the evening. Currently, patient can still walk without any walking aid. History of extremity weakness or numbness is denied. Patient also noticed hump at her back. Defecation and urination is within normal limits. History of chronic cough (+) body weight loss (+) history of night sweat (+)",
+        "images": [
+          "MRI of thoracic spine (sagittal views)"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "What is the most likely diagnosis?(20)",
+            "answer": "Pathological fracture vert. thoracal 7th-8th dt susp. Spondylitis TB DDx pyogenic spondylitis DDx Spine metastasuis / MBD"
+          },
+          {
+            "part": "b",
+            "question_text": "Please mention laboratory and imaging diagnostic tools needed to help you establish the diagnosis?(30)",
+            "answer": "Complete blood count\ninfection marker\nBTA sputum\nIGRA (Interferon-y (IFN-γ)) test,\nPCR-TB,\nThorax x-ray to conclude the specific infection,\nThorax CT- Scan if needed\nHistopathological studies on tissue specimen"
+          },
+          {
+            "part": "c",
+            "question_text": "What is the indication of surgery for this kind of case?(30)",
+            "answer": "Severe deformity\nNeurological impairement\nLarge abscess\ninstability"
+          },
+          {
+            "part": "d",
+            "question_text": "Please explain 3 goals of the surgical management of this patient!(20)",
+            "answer": "• Surgical debridement\n• Spinal cord decompression\n• Correct kyphotic deformity"
+          }
+        ]
+      },
+      {
+        "question_number": 19,
+        "section": "Spine",
+        "vignette": "Female 60 years old, with complaints of lower back pain for the past 6 months. The pain has worsened over the past month. The leg pain worsens when the patient standing & improves with bending forward. The patient cannot walk far, and every 20 meters the patient stops. The pain also radiates to the right leg, accompanied by tingling and numbness. The patient also complains of weakness in the right leg. Defecation and urination are within normal limits.",
+        "images": [
+          "X-ray of lumbar spine (flexion and extension views)",
+          "MRI of lumbar spine (sagittal views)",
+          "MRI of lumbar spine (axial views at L4-5 and L5-S1) [cite: 337, 339]"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "Please explain why the leg pain worsened when the patient standing & improves with bending forward!(30)",
+            "answer": "Caused by thickening of flavum ligament. When the patient is in standing position/erect/extension position, there will be buckling of flavum ligament, causing decrease of spinal canal, compression of thecal sac and if progressive will lead to ischaemia. When the patient is in flexion position, flavum will be in tension, creating a relatively widened spinal canal."
+          },
+          {
+            "part": "b",
+            "question_text": "What is your diagnosis?(20)",
+            "answer": "Spinal canal stenosis L3-4, L4-5 with spondylolisthesis L5-S1"
+          },
+          {
+            "part": "c",
+            "question_text": "What is the red flag found in thios case?(20)",
+            "answer": "Motor weakness"
+          },
+          {
+            "part": "d",
+            "question_text": "What is your treatment suggestion for this patient? What is the reason?(30)",
+            "answer": "Decompression laminotomy, flavectomy, and decompression bilateral lateral recess L4-5, L5-S1, or\nDecompression laminotomy, flavectomy, and decompression bilateral lateral recess L4-5, L5-S1, and instrumented fusion L4-5, L5-S1"
+          }
+        ]
+      },
+      {
+        "question_number": 20,
+        "section": "Spine",
+        "vignette": "55-year-old male presented to the hospital with a one-year history of pain, tingling, and numbness in the neck, shoulder, arm, and hand, accompanied by gait disturbance. Clinical examination revealed spastic gait, positive Hoffman's sign, and thenar and hypothenar atrophy. Imaging findings are shown below:",
+        "images": [
+          "Cervical CT Scan Sagittal view"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "Describe the pathology found in this image!(30)",
+            "answer": "Cervical CT Scan Sagittal view:\na. Degenerations of cervical spine with spur formation on anterior part of vertebral bodies\nb. Narrowing disc space\nc. ossification on the posterior longitudinal ligament from C3 to C6"
+          },
+          {
+            "part": "b",
+            "question_text": "Mention three risk factors of pathology! (30)",
+            "answer": "• Associated with haplotypes in chromosome 6\n• Collagen a2 (XI) (COL1 1A2): Fibril forming minor collagen of chondrocytes\n• Retinoic X receptor ẞ (RXRB)\n• Mechanical stress\n• Diabetes\n• Hypoparatiroidism\n• Hypophosphatemia"
+          },
+          {
+            "part": "c",
+            "question_text": "What is your complete diagnosis based on clinical and imaging?(20)",
+            "answer": "Cervical spondylotic myelopathy due to OPLL"
+          },
+          {
+            "part": "d",
+            "question_text": "How to manage this patient?(20)",
+            "answer": "Operative: canal decompression followed by (may choose either one:)\n1. Anterior: Anterior approach with extirpation of the ossification\n2. Posterior: Laminectomy or laminoplasty with or without posterior instrumentation"
+          }
+        ]
+      },
+      {
+        "question_number": 21,
+        "section": "Oncology",
+        "vignette": "Male, 18-year-old, complaint of lump and intense pain in his left knee since 6 months ago. No history of prior trauma. Radiology and biopsy had been done.",
+        "images": [
+          "Clinical photo of legs, showing large lump on left knee",
+          "X-ray of left knee (AP and lateral views)",
+          "MRI of left knee (sagittal, coronal, axial views)",
+          "Chest X-ray (AP view)",
+          "Histopathology slide"
+        ],
+        "lab_results": "Hb 14; WBC 8; LED 19; ALP 105; Ca/P 9.5/3.5",
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "What is your complete diagnosis and staging of this case?(20)",
+            "answer": "Osteosarcoma of the Left Distal Femur Enneking IIB"
+          },
+          {
+            "part": "b",
+            "question_text": "Please explain about the prognostic factors of this case! (20)",
+            "answer": "Tumor stage: the most important prognostic indicator\nTumor size: larger tumors generally have a worse prognosis\nWide surgical margin: high risk of local recurrence with inadequate resection\nResponse to chemotherapy: correlating with a poor prognosis and a higher propensity for metastatic disease\nALP Level: pre-treatment ALP is associated with a high tumor burden and a worse prognosis\nThe presence of distant metastases"
+          },
+          {
+            "part": "c",
+            "question_text": "Please explain about the treatment plan in this case! (20)",
+            "answer": "Systemic control\n  Pain management with WHO step ladder protocol\n  Neoadjuvant and adjuvant chemotherapy\nLocal control\n  Surgical management of osteosarcoma wide resection with negative margin"
+          },
+          {
+            "part": "d",
+            "question_text": "Please explain the resection classification!(20)",
+            "answer": "Intralesional Excision\n  An excision performed within the tumor mass, involving partial removal or debulking. This procedure leaves macroscopic residual tumor tissue and the pseudocapsule in situ.\nMarginal Excision\n  A tumor dissection carried out through the reactive zone (pseudocapsule). This technique may result in microscopic residual disease.\nWide (En Bloc) Excision\n  An excision performed to remove the entire tumor, the pseudocapsule, and a complete cuff of surrounding normal tissue. This is the recommended technique for sarcomas, although the requisite thickness of the normal tissue margin remains a matter of controversy For soft tissue and bone sarcomas, a margin of 0.5-2 cm is generally accepted. This technique may still leave residual tumor cells in the event of skip metastases.\nRadical Excision\n  An excision involving the removal of the entire tumor mass along with the whole of anatomical compartment from which it arises. This technique eliminates the possibility of leaving residual skip metastases."
+          },
+          {
+            "part": "e",
+            "question_text": "Please explain about HUVOS grade!(20)",
+            "answer": "HUVOS grade is one of the pathological grading systems of tumor response to chemotherapy[cite: 401]. The Huvos grading system is divided into four tiers. Grades III and IV are characterized by extensive or complete tumor cell destruction, indicating necrosis greater than 90%. These grades are associated with a favorable prognosis and, consequently, better overall survival. Conversely, Grades I and II exhibit minimal tissue necrosis (less than 90%), correlating with a poor prognosis and a higher propensity for metastatic disease. The treatment plan is then adjusted based on this assessment: if the tumor demonstrates a good chemotherapeutic response (Huvos Grade III or IV), the current chemotherapy regimen is continued. However, if the response is poor (Huvos Grade I or II), the chemotherapy agents are typically modified or substituted.\n\nHuvos grade | Percent necrosis (%) | Histologic effect\n--- | --- | ---\nI | 0-50 | Little or no effect identified\nII | 51-90 | Areas of acellular tumor osteoid, necrotic, or fibrotic material attributable to the effect of chemotherapy, with other areas of histologically viable tumor\nIII | 91-99 | Predominant areas of acellular osteoid, necrotic, or fibrotic material attributable to the effect of chemotherapy, with only scattered foci of histologically viable tumor cells identified\nIV | 100 | No histologic evidence of viable tumor identified within the entire specimen"
+          }
+        ]
+      },
+      {
+        "question_number": 22,
+        "section": "Oncology",
+        "vignette": "Male, 38 years old, complaining of a lump on his right knee for 1 year. No history of trauma. Radiology and biopsy had been done.",
+        "images": null,
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "What is the diagnosis and staging of this patient?(20)",
+            "answer": "Giant Cell Tumor of the Right Distal Femur Campanacci grade III"
+          },
+          {
+            "part": "b",
+            "question_text": "Explain about the surgical method in this patient!(20)",
+            "answer": "Intralesional Excision Extended Curretage + Bone Graft/Bone Cement"
+          },
+          {
+            "part": "c",
+            "question_text": "Explain about recurrence rate in this this patient!(20)",
+            "answer": "Giant cell tumor has a high rate of recurrence of about 25-35%. Recurrence typically occurs within 3 years of curettage"
+          },
+          {
+            "part": "d",
+            "question_text": "Explain about metastase risk in this kind of case?(20)",
+            "answer": "Although it is classified as benign tumor, the nature of giant cell tumor is an aggressive tumor, so it still has risk for metastasis, with the lungs being the most common site, affecting an estimated 1% to 5% of cases"
+          },
+          {
+            "part": "e",
+            "question_text": "Explain about possibility of malignancy in this case?(20)",
+            "answer": "The risk of malignancy in a giant cell tumor (GCT) of bone is low, with an overall incidence reported to be between 1% and 2%. Malignant transformation is more likely to occur after multiple local recurrences or a GCT has been treated with radiation therapy, classifying it as a 'secondary' malignancy"
+          }
+        ]
+      },
+      {
+        "question_number": 23,
+        "section": "Oncology",
+        "vignette": "A 60-year-old female has pain in the left humerus when she lifts heavy objects. She has a history of mastectomy of the left breast carcinoma 1 year ago and is undergoing chemotherapy. X-ray is shown in the figure below.",
+        "images": [
+          "X-ray of left humerus showing a lytic lesion",
+          "Histopathology slide (adenocarcinoma)"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "What is the diagnosis? (25)",
+            "answer": "Lytic lesion of left shaft humerus ec MBD Ca mammae"
+          },
+          {
+            "part": "b",
+            "question_text": "Please elaborate on the score of this pathology using Mirel's score! (25)",
+            "answer": "Mirel score: Location (1) + Pain moderate (2) + Lytic Lesion (3) + >2/3 cortex (3) = 9"
+          },
+          {
+            "part": "c",
+            "question_text": "What is the appropriate treatment for this pathology?(25)",
+            "answer": "The comprehensive management plan is multi-modal, targeting both systemic disease and local structural integrity.\na. Systemic Treatment:\n  i. Analgesia (Pain Control)\n  ii. Chemotherapy (Disease Control)\n  iii. Bisphosphonates (Skeletal-Related Event (SRE) Prevention and Bone Stabilization)\nb. Local Treatment:\n  i. Limb Salvage Surgery with Intramedullary Nailing: This is the preferred method for immediate stabilization and pain relief in a high-risk lesion with a Mirel's score of 9."
+          },
+          {
+            "part": "d",
+            "question_text": "Please explain about the prognosis for this patient!(25)",
+            "answer": "The prognosis for metastatic breast cancer (MBC) is generally poor, with a 5-year relative survival rate of around 31-32%"
+          }
+        ]
+      },
+      {
+        "question_number": 24,
+        "section": "Oncology",
+        "vignette": "A 25-year-old male presented with a painless lump on the left middle finger. The overlying skin appeared normal.",
+        "images": [
+          "X-ray of left hand (AP view) showing lesion in proximal phalanx",
+          "Histopathology slide (chondroid matrix)"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "Explain the x-ray (25)",
+            "answer": "This is AP view X-ray of the manus. Patient identity, Date and place the X-ray was taken is not showed. This is a good quality X-ray because I can differentiate between hard tissue and soft tissue, From the X-ray I can see :\nNumber of lesion : single\nType: lytic lesion\nLocation: Head of proximal phalanx\nPattern: geographic\nBorder well-defined\nTransition zone: narrow\nCortical breakage: no\nPathological fracture: no\nSoft tissue involvement: no\nPeriosteal reaction: no\nSpecial appearance: no"
+          },
+          {
+            "part": "b",
+            "question_text": "Explain the pathologic finding (25)",
+            "answer": "small, bland chondroid cells in lacunar spaces\nno pleomorphism, mitoses, anaplasia, hyperchromasia or multinucleate cells"
+          },
+          {
+            "part": "c",
+            "question_text": "What is your diagnosis? (25)",
+            "answer": "Primary benign bone tumor of head of proximal phalanx of the left middle finger (enchondroma)"
+          },
+          {
+            "part": "d",
+            "question_text": "How will you manage this patient? (25)",
+            "answer": "Non operative :\n  Observation and followup every 6 months\nOperative: Intralesional curettage, open biopsy and bone grafting"
+          }
+        ]
+      },
+      {
+        "question_number": 25,
+        "section": "Oncology",
+        "vignette": "A 15-year-old girl presented to the clinic with a defromity of left limb.",
+        "images": [
+          "X-ray of left femur (AP view)",
+          "Long leg X-ray (scanogram)",
+          "Histopathology slide (woven bone in fibrous stroma)"
+        ],
+        "lab_results": null,
+        "sub_questions": [
+          {
+            "part": "a",
+            "question_text": "Please list 5 abnormalities on the X-ray femur area!(30)",
+            "answer": "• Multiple lytic lesions at meta diaphysis of left femur\n• Geographic distribution\n• Narrow zone of transition\n• No periosteal reaction\n• No Matrix\n• No Soft tissue involvement\n• Spesific of sheperd's crook deformity"
+          },
+          {
+            "part": "b",
+            "question_text": "List 2 characteristic patterns can be seen in this Histopathology examination.(20)",
+            "answer": "Chinese letter appearance\nAlphabet soup appearance"
+          },
+          {
+            "part": "c1",
+            "question_text": "What is the complete diagnosis for this patient? (15)",
+            "answer": "Fibrous dysplasia of the left femur"
+          },
+          {
+            "part": "c2",
+            "question_text": "What syndrome may be associated with this type of pathology?(15)",
+            "answer": "Mc Cune Albright syndrome"
+          },
+          {
+            "part": "d",
+            "question_text": "Please explain the management for this patient?(20)",
+            "answer": "•Systemic: Pain management, Bisphosphonate therapy\nLocal: Internal fixation"
+          }
+        ]
+      }
+    ]
+  }
+}

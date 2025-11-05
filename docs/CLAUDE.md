@@ -2,6 +2,23 @@
 - to query use local psql with server info in .env
 - when querying mysql use local mysql
 
+## File Organization Guidelines
+
+### IMPORTANT: Keep Root Directory Clean
+- **NEVER create files in the root directory** - only Laravel core files should remain there
+- All utility scripts go in appropriate `scripts/` subdirectories:
+  - `scripts/debug/` - Debug and analysis scripts
+  - `scripts/utils/` - Utility scripts
+  - `scripts/maintenance/` - Maintenance scripts
+  - `scripts/imports/` - Import scripts
+  - `scripts/shell/` - Shell scripts
+- All data files go in `data/` subdirectories:
+  - `data/csv/` - CSV files
+  - `data/sql/` - SQL backup files
+  - `data/` - JSON and other data files
+- Documentation goes in `docs/`
+- Backups go in `data/sql/`
+
 ## Route Generation Fix for Relative URLs
 
 ### Problem
@@ -37,3 +54,4 @@ ssh root@cf.avolut.com "docker exec app-okksscs4w0s8oc0go0k4cg8k bash -c 'cd /va
 - Always test with console logs to verify route helper is working
 - Check Ziggy config shows correct domain, not localhost
 - VERY IMPORTANT: do not run database seed, do not truncate any table.
+- **CRITICAL: Never create files in root directory - use proper organized folders!**
