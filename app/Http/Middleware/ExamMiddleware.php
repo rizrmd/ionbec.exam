@@ -18,7 +18,18 @@ class ExamMiddleware
     public function handle(Request $request, \Closure $next)
     {
         $examSession = Session::get('exam');
-        
+
+        // Check if this is a token login attempt or waiting room - allow it without session for token login
+        $routeName = $request->route() ? $request->route()->getName() : null;
+        if ($routeName === 'exam.token.login' || $routeName === 'exam.waiting-room') {
+            \Log::info('ExamMiddleware: Route detected, allowing without session check', [
+                'route_name' => $routeName,
+                'url' => $request->url(),
+                'method' => $request->method()
+            ]);
+            return $next($request);
+        }
+
         if (! $examSession) {
             \Log::info('ExamMiddleware: No exam session found', [
                 'session_id' => Session::getId(),
@@ -27,7 +38,7 @@ class ExamMiddleware
             ]);
             return redirect('/');
         }
-        
+
         \Log::info('ExamMiddleware: Exam session found', [
             'has_taker' => isset($examSession['taker']),
             'has_delivery' => isset($examSession['delivery'])

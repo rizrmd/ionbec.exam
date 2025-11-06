@@ -292,80 +292,220 @@ class ScoringController extends Controller
     #[Get('back-office/scoring/{delivery_hash}/exam/{attempt_hash}', name: 'back-office.scoring.exam')]
     public function scoringShow(Request $request, Delivery $delivery, Attempt $attempt): Response
     {
-        // Optimize with selective loading
-        $cacheKey = 'scoring_exam_' . $attempt->id;
-        
-        $data = Cache::remember($cacheKey, 300, function () use ($delivery, $attempt) {
-            $attempt->load('delivery.group:id,name');
-            
-            $attemptQuests = AttemptQuestion::query()
-                ->with('question:id,content,type')
-                ->where('attempt_id', $attempt->id)
-                ->get();
-            
-            $items = Item::query()
-                ->whereHas('exams', function ($q) use ($delivery) {
-                    $q->where('id', $delivery->exam_id);
-                })
-                ->with(['questions.answers', 'attachments'])
-                ->get();
-            
-            return [
-                'attempt' => $attempt,
-                'attemptQuests' => $attemptQuests,
-                'items' => $items
-            ];
-        });
+        try {
+            // Validate data integrity
+            if (!$delivery) {
+                throw new \Exception('Delivery not found');
+            }
 
-        return Inertia::render('BackOffice/Scoring/Exam', array_merge($data, [
-            'takerCode' => $attempt->taker_code,
-            'isInterview' => $delivery->is_interview,
-        ]));
+            if (!$attempt) {
+                throw new \Exception('Attempt not found');
+            }
+
+            if ($attempt->delivery_id !== $delivery->id) {
+                throw new \Exception('Attempt does not belong to this delivery');
+            }
+
+            // Load data with fallbacks
+            $data = $this->loadScoringData($delivery, $attempt);
+
+            return Inertia::render('BackOffice/Scoring/Exam', $data);
+
+        } catch (\Exception $e) {
+            // Log error and show user-friendly message
+            \Log::error('Scoring page error: ' . $e->getMessage());
+
+            return Inertia::render('BackOffice/Scoring/Exam', [
+                'error' => 'Unable to load scoring data: ' . $e->getMessage(),
+                'attempt' => $attempt,
+                'delivery' => $delivery,
+                'items' => collect(),
+                'attemptQuests' => collect(),
+                'takerCode' => $attempt->taker_code ?? 'UNKNOWN',
+                'isInterview' => $delivery->is_interview ?? false,
+                'hasAttemptQuestions' => false,
+            ]);
+        }
     }
 
     #[Post('back-office/scoring/submit-score', name: 'back-office.scoring.scoring-submit')]
     public function submitScore(Request $request): \Illuminate\Http\JsonResponse
     {
-        $request->validate([
-            'attempt_hash' => ['required', new ExistsByHash(Attempt::class)],
-            'corrects' => 'required|array',
-            'scores' => 'required|array',
-        ]);
+        try {
+            $request->validate([
+                'attempt_hash' => ['required', new ExistsByHash(Attempt::class)],
+                'corrects' => 'required|array',
+                'scores' => 'required|array',
+            ]);
 
-        $attempt = Attempt::byHash($request->attempt_hash);
+            $attempt = Attempt::byHash($request->attempt_hash);
 
-        // Use bulk update for better performance
-        $updates = [];
-        foreach ($request->corrects as $key => $correct) {
-            $question = Question::byHash($key);
-            $updates[] = [
-                'attempt_id' => $attempt->id,
-                'question_id' => $question->id,
-                'score' => $request->scores[$key],
-                'is_correct' => $correct,
-            ];
+            // Use upsert instead of update - creates if not exists
+            DB::transaction(function () use ($request, $attempt) {
+                foreach ($request->corrects as $questionHash => $correct) {
+                    $question = Question::byHash($questionHash);
+
+                    // Use updateOrCreate to create or update attempt_question
+                    AttemptQuestion::updateOrCreate(
+                        [
+                            'attempt_id' => $attempt->id,
+                            'question_id' => $question->id,
+                        ],
+                        [
+                            'score' => $request->scores[$questionHash] ?? 0,
+                            'is_correct' => $correct,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]
+                    );
+                }
+            });
+
+            // Clear related caches
+            $this->clearScoringCache($attempt);
+
+            return response()->json([
+                'success' => true,
+                'attempt' => $attempt->fresh(['attemptQuestions']),
+                'message' => 'Scores submitted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Submit score error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to submit scores: ' . $e->getMessage()
+            ], 500);
         }
+    }
 
-        // Batch update
-        DB::transaction(function () use ($updates, $attempt) {
-            foreach ($updates as $update) {
-                AttemptQuestion::where([
-                    ['attempt_id', $update['attempt_id']],
-                    ['question_id', $update['question_id']],
-                ])->update([
-                    'score' => $update['score'],
-                    'is_correct' => $update['is_correct']
-                ]);
-            }
-        });
-
-        // Clear related caches
+    private function clearScoringCache($attempt)
+    {
         Cache::forget('scoring_detail_' . $attempt->delivery_id . '_*');
         Cache::forget('scoring_exam_' . $attempt->id);
         Cache::forget('scoring_pdf_' . $attempt->id);
+    }
 
-        return response()->json([
-            'attempt' => $attempt,
-        ]);
+    /**
+     * Load scoring data with fallbacks for empty data
+     */
+    private function loadScoringData($delivery, $attempt): array
+    {
+        try {
+            // Load delivery relationships properly - bypass ClientScope
+            $delivery->load(['group:id,name', 'exam:id,name']);
+
+            // Debug logging
+            \Log::info("Loading scoring data", [
+                'delivery_id' => $delivery->id,
+                'exam_id' => $delivery->exam_id,
+                'attempt_id' => $attempt->id,
+                'delivery_name' => $delivery->name,
+                'exam_name' => $delivery->exam->name ?? 'Unknown'
+            ]);
+
+            // Always load items independently from attempt data - bypass ClientScope
+            $items = Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->whereHas('exams', function ($q) use ($delivery) {
+                    $q->where('id', $delivery->exam_id);
+                })
+                ->with(['questions.answers', 'attachments'])
+                ->get();
+
+            \Log::info("Items query result (with ClientScope bypass)", [
+                'items_count' => $items->count(),
+                'exam_id' => $delivery->exam_id,
+                'client_id' => $delivery->client_id
+            ]);
+
+            // If items empty, try direct query and convert to proper models
+            if ($items->isEmpty()) {
+                \Log::warning("Items empty, trying direct query");
+
+                $itemsData = \DB::table('items')
+                    ->join('exam_item', 'items.id', '=', 'exam_item.item_id')
+                    ->where('exam_item.exam_id', $delivery->exam_id)
+                    ->get()
+                    ->toArray();
+
+                \Log::info("Direct query result", [
+                    'items_count' => count($itemsData),
+                    'sample' => array_slice($itemsData, 0, 3)
+                ]);
+
+                // Convert to Item models - bypass ClientScope
+                $items = collect();
+                foreach ($itemsData as $itemData) {
+                    // Get the actual Item model with relationships - bypass ClientScope
+                    $itemModel = \App\Models\Exams\Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                        ->with(['questions.answers', 'attachments'])
+                        ->find($itemData->id);
+                    if ($itemModel) {
+                        $items->push($itemModel);
+                    } else {
+                        \Log::warning("Failed to load item model", ['item_id' => $itemData->id]);
+                    }
+                }
+
+                \Log::info("Converted models count", ['items_count' => $items->count()]);
+            }
+
+            // Load attempt questions (may be empty)
+            $attemptQuests = AttemptQuestion::query()
+                ->with('question:id,question,type')
+                ->where('attempt_id', $attempt->id)
+                ->get();
+
+            // Generate proper taker code if missing
+            $takerCode = $attempt->taker_code;
+            if (empty($takerCode)) {
+                try {
+                    $takerCode = \App\Models\Attempts\Attempt::getFormattedTakerCode(
+                        $attempt->attempted_by,
+                        $delivery->group_id,
+                        $delivery->group->code ?? 'UNKNOWN'
+                    );
+                    \Log::info("Generated taker code", [
+                        'attempt_id' => $attempt->id,
+                        'taker_id' => $attempt->attempted_by,
+                        'group_id' => $delivery->group_id,
+                        'group_code' => $delivery->group->code,
+                        'generated_code' => $takerCode
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::warning("Failed to generate taker code", [
+                        'error' => $e->getMessage(),
+                        'attempt_id' => $attempt->id
+                    ]);
+                    $takerCode = 'UNKNOWN-' . str_pad($attempt->attempted_by, 3, '0', STR_PAD_LEFT);
+                }
+            }
+
+            return [
+                'attempt' => $attempt,
+                'attemptQuests' => $attemptQuests,
+                'items' => $items,
+                'hasAttemptQuestions' => $attemptQuests->isNotEmpty(),
+                'takerCode' => $takerCode,
+                'isInterview' => $delivery->is_interview ?? false,
+                'delivery' => $delivery,
+            ];
+
+        } catch (\Exception $e) {
+            \Log::error('Error loading scoring data: ' . $e->getMessage());
+
+            // Return minimal data structure to prevent crashes
+            return [
+                'attempt' => $attempt,
+                'attemptQuests' => collect(),
+                'items' => collect(),
+                'hasAttemptQuestions' => false,
+                'takerCode' => $attempt->taker_code ?? 'UNKNOWN',
+                'isInterview' => $delivery->is_interview ?? false,
+                'delivery' => $delivery,
+                'error' => 'Failed to load some data: ' . $e->getMessage(),
+            ];
+        }
     }
 }

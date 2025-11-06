@@ -25,27 +25,38 @@ const props = defineProps({
   isInterview: {
     type: Boolean,
     default: false
+  },
+  hasAttemptQuestions: {
+    type: Boolean,
+    default: false
+  },
+  delivery: {
+    type: Object,
+    default: null
   }
 })
 
-const {items, attemptQuests, attempt, isInterview} = toRefs(props)
+const {items, attemptQuests, attempt, isInterview, hasAttemptQuestions} = toRefs(props)
 
-const answers = ref(attemptQuests.value);
+// Initialize with safe defaults
+const answers = ref(attemptQuests?.value || []);
 const scoredAnswers = computed(() => {
-  return answers.value.filter((a) => a.score > 0).map((a) => a.question.hash);
+  return answers.value.filter((a) => a.score > 0).map((a) => a.question?.hash);
 });
 
 const selectedItem = ref(null);
 
 const options = computed(() => {
   let data = [];
-  items.value.forEach((item, index) => {
-    data.push({
-      text: `#${index + 1} ${item.title}`,
-      value: item.hash,
-      index: index,
+  if (items?.value && Array.isArray(items.value)) {
+    items.value.forEach((item, index) => {
+      data.push({
+        text: `#${index + 1} ${item.title || 'Unnamed Item'}`,
+        value: item.hash,
+        index: index,
+      })
     })
-  })
+  }
   return data;
 });
 
@@ -64,15 +75,15 @@ watch(selectedItem, function (newVal, prevVal) {
 })
 
 const getItems = (newVal) => {
-  const item = items.value.find((item) => item.hash === newVal.value)
+  const item = items.value?.find((item) => item.hash === newVal.value)
   if (item) {
     questionData.value = item;
     scores.value = [];
-    if (item.item_type.value !== 'multiple-choice') {
-      item.questions.forEach((question) => {
-        const answer = answers.value.find((answer) => answer.question.hash === question.hash)
+    if (item.item_type?.value !== 'multiple-choice') {
+      item.questions?.forEach((question) => {
+        const answer = answers.value.find((answer) => answer.question?.hash === question.hash)
         scores.value[question.hash] = answer?.score ?? 0
-        notes.value[question.hash] = answer?.answer
+        notes.value[question.hash] = answer?.answer || ''
       })
     }
   }
@@ -208,7 +219,40 @@ const finishScore = async () => {
       <hr class="mt-8">
     </template>
     <template #default>
-      <div v-if="questionData !== null" class="mb-10">
+      <!-- Warning for no attempt questions -->
+      <div v-if="!hasAttemptQuestions && options.length > 0" class="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <ExclamationCircleIcon class="h-5 w-5 text-yellow-400" aria-hidden="true"/>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-yellow-800">
+              ⚠️ No answers recorded
+            </h3>
+            <div class="mt-2 text-sm text-yellow-700">
+              <p>This candidate has not answered any questions. You can input scores manually below.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state for no items -->
+      <div v-if="options.length === 0" class="text-center py-12">
+        <ExclamationCircleIcon class="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No exam items found</h3>
+        <p class="text-gray-500 mb-4">This exam may not have questions configured properly.</p>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+          <h4 class="font-medium text-blue-800 mb-2">Debug Information:</h4>
+          <ul class="text-sm text-blue-700 text-left">
+            <li>Items loaded: {{ items ? Object.keys(items).length : 0 }}</li>
+            <li>Attempt questions: {{ attemptQuests ? Object.keys(attemptQuests).length : 0 }}</li>
+            <li>Delivery ID: {{ attempt?.delivery_id }}</li>
+            <li>Exam ID: {{ attempt?.exam_id }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <div v-else-if="questionData !== null" class="mb-10">
         <div class="flex flex-col items-center gap-3 my-5">
           <div v-for="file in questionData.attachments" v-if="questionData.attachments.length >= 1"
                class="w-full flex gap-2 max-w-xl">

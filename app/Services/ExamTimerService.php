@@ -75,7 +75,7 @@ class ExamTimerService
         // 🔧 CRITICAL FIX: Handle automatic_start with fallback to attempt start time
         if ($delivery->automatic_start) {
             // If scheduled_at is reasonable (not too old and not too far in future), use it
-            $scheduledTime = $delivery->scheduled_at;
+            $scheduledTime = Carbon::parse($delivery->scheduled_at);
             $now = Carbon::now();
             $hoursDiff = abs($scheduledTime->diffInHours($now));
 
