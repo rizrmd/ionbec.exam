@@ -357,6 +357,18 @@ watch(rawAnswerVal, (newVal, oldVal) => {
   }
 }, { deep: true });
 
+// 🔍 DEBUG: Watch for attempt availability to start timer sync
+watch(attempt, (newAttempt, oldAttempt) => {
+  if (newAttempt && newAttempt.hash && (!oldAttempt || !oldAttempt.hash)) {
+    console.log('🎯 ATTEMPT DETECTED: Attempt became available - can start timer sync', {
+      attemptId: newAttempt.id,
+      attemptHash: newAttempt.hash,
+      examId: newAttempt.exam_id,
+      deliveryId: newAttempt.delivery_id
+    });
+  }
+}, { immediate: true });
+
 const submitAnswer = async (partial = false) => {
   if (submittingAnswer.value) return;
   submittingAnswer.value = true;
@@ -1138,25 +1150,39 @@ const updateTimerFromBackend = async (retryCount = 0, maxRetries = 2) => {
 
     const pingStart = Date.now();
 
-    const response = await axios.post(route('exam.timer'), {
-      attempt: attempt.value.hash,
-      ping: pingStart
+    // 🔒 FIX: Use correct GET endpoint instead of non-existent POST endpoint
+    const response = await axios.get(route('exam.timer.sync'), {
+      params: {
+        attempt_hash: attempt.value.hash
+      }
     });
 
     const pingEnd = Date.now();
     const latency = (pingEnd - pingStart) / 2;
 
-    if (response.data && typeof response.data.remaining === 'number') {
+    if (response.data && typeof response.data.remaining_seconds === 'number') {
       // Update timer display directly with backend time
-      const backendTime = Math.max(0, response.data.remaining);
+      const backendTime = Math.max(0, response.data.remaining_seconds);
       const formattedTime = formatTime(backendTime);
       timerCount.value = formattedTime;
 
       console.log('🕐 Timer: Updated from backend', {
         backendTime: backendTime,
         formattedTime: formattedTime,
-        latency: latency.toFixed(1)
+        latency: latency.toFixed(1),
+        expired: response.data.expired
       });
+
+      // Check if exam has expired according to server
+      if (response.data.expired) {
+        console.log('🕐 Timer: Server confirms exam expired, redirecting');
+        if (typeof Inertia !== 'undefined' && Inertia.visit) {
+          Inertia.visit(route('exam.finished'));
+        } else {
+          window.location.href = route('exam.finished');
+        }
+        return true;
+      }
 
       return true;
     } else {
@@ -1428,17 +1454,69 @@ onMounted(() => {
       if (timerInterval) {
         console.log('✅ Timer: Successfully initialized with', validRemainingSeconds, 'seconds');
         
-        // 🔧 SIMPLIFIED: Update timer directly from backend every 30 seconds
-        // No more local timer synchronization - just use backend time as source of truth
-        setInterval(async () => {
-          try {
-            console.log('🕐 Timer: Updating time from backend');
-            await updateTimerFromBackend();
-          } catch (error) {
-            console.error('🕐 Timer: Backend update error', error);
-            // Continue with current timer display if backend fails
+        // 🔧 FIXED: Only start backend sync when attempt is available
+        // Timer will sync with backend once we have a valid attempt hash
+        const startBackendSync = () => {
+          if (!attempt.value?.hash) {
+            console.log('🕐 Timer: No attempt available yet, will retry sync initialization');
+            return false;
           }
-        }, 30000);
+
+          console.log('🕐 Timer: Starting backend synchronization with attempt:', attempt.value.hash);
+
+          // 🔍 DEBUG: Test immediate sync call
+          setTimeout(async () => {
+            try {
+              console.log('🕐 Timer: TESTING - Immediate sync test');
+              const result = await updateTimerFromBackend();
+              console.log('🕐 Timer: TEST RESULT:', result);
+            } catch (error) {
+              console.error('🕐 Timer: TEST ERROR:', error);
+            }
+          }, 2000);
+
+          // Start periodic backend synchronization every 30 seconds
+          const syncInterval = setInterval(async () => {
+            try {
+              console.log('🕐 Timer: 30-second sync interval triggered at:', new Date().toISOString());
+              await updateTimerFromBackend();
+            } catch (error) {
+              console.error('🕐 Timer: Backend sync error', error);
+              // Continue with current timer display if backend fails
+            }
+          }, 30000);
+
+          console.log('🕐 Timer: Sync interval created:', syncInterval);
+
+          // Initial sync after 10 seconds to allow page to fully load
+          setTimeout(async () => {
+            try {
+              console.log('🕐 Timer: Initial backend sync at:', new Date().toISOString());
+              await updateTimerFromBackend();
+            } catch (error) {
+              console.error('🕐 Timer: Initial sync error', error);
+            }
+          }, 10000);
+
+          return true;
+        };
+
+        // Try to start sync immediately, or watch for attempt availability
+        if (!startBackendSync()) {
+          // Watch for attempt to be created/loaded
+          const watchForAttempt = setInterval(() => {
+            if (startBackendSync()) {
+              clearInterval(watchForAttempt);
+              console.log('🕐 Timer: Backend sync successfully started after attempt became available');
+            }
+          }, 2000);
+
+          // Stop watching after 2 minutes to prevent indefinite watching
+          setTimeout(() => {
+            clearInterval(watchForAttempt);
+            console.log('🕐 Timer: Stopped watching for attempt (timeout)');
+          }, 120000);
+        }
       } else {
         console.warn('⚠️ Timer: Failed to initialize interval');
       }

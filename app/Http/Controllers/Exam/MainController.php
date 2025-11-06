@@ -90,8 +90,8 @@ class MainController extends Controller
             return redirect()->route('exam.finished')->with('error', 'Invalid delivery data');
         }
         
-        // For both DEMO and normal sessions, reload delivery from database
-        // Use withoutGlobalScope for DEMO which may not have proper client_id
+        // Reload delivery from database
+        // Use withoutGlobalScope for deliveries which may not have proper client_id
         $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)
             ->where('id', $deliveryId)
             ->first();
@@ -112,7 +112,7 @@ class MainController extends Controller
         // WaitingRoomController now handles the redirect to exam when time expires
         // This prevents redirect loop between waiting-room and exam
 
-        // query taker and exam only when not in waiting-room.
+        // Query taker and exam only when not in waiting-room.
         $takerId = null;
         if (isset($dataSession['taker']) && $dataSession['taker']) {
             $taker = $dataSession['taker'];
@@ -184,15 +184,11 @@ class MainController extends Controller
             $taker ? $taker->id : null
         );
 
-        // Production: Always set to false (not demo session)
-        $isDemoSession = false;
-
         \Log::info('UNIFIED DATA SOURCE: Using Rust API to resolve hash conflicts', [
             'exam_id' => $exam->id,
             'delivery_id' => $delivery->id,
             'rust_success' => $examData['success'] ?? false,
-            'rust_items_count' => isset($examData['items']) ? count($examData['items']) : 0,
-            'is_demo_session' => $isDemoSession
+            'rust_items_count' => isset($examData['items']) ? count($examData['items']) : 0
         ]);
 
         if (($examData['success'] ?? false) && isset($examData['items'])) {
@@ -341,11 +337,9 @@ class MainController extends Controller
             }
         }
 
-        // 🔒 Initialize attempt variable to prevent undefined variable error
+        // 🔒 Initialize variables to prevent undefined variable errors
         $attempt = null;
-
-        // 🔒 UNIFIED TIMER: Use single timer calculation method
-        $remainingSeconds = app(ExamTimerService::class)->calculateRemainingSeconds($delivery, $attempt);
+        $remainingSeconds = 0; // Default to 0, will be calculated after attempt is available
 
         // 🔒 NEW: Enhanced data validation and structure fix
         \Log::info('MainController: Preparing frontend data structure', [
@@ -433,8 +427,14 @@ class MainController extends Controller
                     }
                 });
             }
-            
+
         }
+
+        // 🔒 UNIFIED TIMER: Calculate remaining seconds after attempt is available
+        $remainingSeconds = app(ExamTimerService::class)->calculateRemainingSeconds($delivery, $attempt);
+
+        // Update data array with calculated remaining seconds
+        $data['remainingSeconds'] = $remainingSeconds;
 
         // 🔒 NEW: Final validation of data structure before sending to frontend
         \Log::info('MainController: Final data validation before frontend render', [

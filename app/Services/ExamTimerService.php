@@ -20,15 +20,11 @@ class ExamTimerService
         $startTime = $this->determineStartTime($delivery, $attempt);
 
         if (!$startTime) {
-            // 🔧 DEMO MODE FIX: If no valid start time, check if this is a DEMO exam
-            if ($this->isDemoExam($delivery)) {
-                \Log::info('ExamTimerService: Using fallback for DEMO exam - returning full duration', [
-                    'delivery_id' => $delivery->id,
-                    'base_duration' => $baseDuration,
-                    'demo_fallback' => true
-                ]);
-                return $baseDuration * 60; // Return full duration in seconds
-            }
+            \Log::warning('ExamTimerService: No valid start time found', [
+                'delivery_id' => $delivery->id,
+                'attempt_id' => $attempt->id ?? null,
+                'base_duration' => $baseDuration
+            ]);
             return 0;
         }
 
@@ -47,32 +43,13 @@ class ExamTimerService
 
         return $remainingSeconds;
     }
-
-    /**
-     * Check if this is a DEMO/TEST exam that needs fallback handling
-     */
-    private function isDemoExam(Delivery $delivery): bool
-    {
-        $deliveryName = strtolower($delivery->name ?? '');
-
-        // 🔧 ENHANCEMENT: Configurable DEMO indicators with sensible defaults
-        $demoIndicators = config('exam.demo_keywords', ['demo', 'test', 'trial', 'try out']);
-
-        foreach ($demoIndicators as $indicator) {
-            if (strpos($deliveryName, $indicator) !== false) {
-                return true;
-            }
-        }
-
-        return false;
-    }
     
     /**
      * Determine the exam start time based on delivery type and attempt
      */
     private function determineStartTime(Delivery $delivery, Attempt $attempt = null): ?Carbon
     {
-        // 🔧 CRITICAL FIX: Handle automatic_start with fallback to attempt start time
+        // Handle automatic_start with fallback to attempt start time
         if ($delivery->automatic_start) {
             // If scheduled_at is reasonable (not too old and not too far in future), use it
             $scheduledTime = $delivery->scheduled_at ? Carbon::parse($delivery->scheduled_at) : null;
@@ -89,7 +66,7 @@ class ExamTimerService
 
             $hoursDiff = abs($scheduledTime->diffInHours($now));
 
-            // 🔧 ENHANCEMENT: Configurable validation threshold (default 24 hours)
+            // Configurable validation threshold (default 24 hours)
             $maxHoursDiff = config('exam.timer_max_hours_diff', 24);
 
             // Only use scheduled_at if it's within reasonable range (configurable max hours)
@@ -97,10 +74,10 @@ class ExamTimerService
                 return $scheduledTime;
             }
 
-            // 🔒 DEMO MODE FIX: For automatic_start with invalid scheduled time,
-            // use attempt start time instead (more reliable for DEMO/Testing)
+            // For automatic_start with future or invalid scheduled time,
+            // use attempt start time instead
             if ($attempt && $attempt->started_at) {
-                \Log::info('ExamTimerService: Using attempt start time instead of invalid scheduled time', [
+                \Log::info('ExamTimerService: Using attempt start time instead of scheduled time', [
                     'delivery_id' => $delivery->id,
                     'scheduled_at' => $scheduledTime ? $scheduledTime->toDateTimeString() : 'null',
                     'attempt_started_at' => $attempt->started_at->toDateTimeString(),
