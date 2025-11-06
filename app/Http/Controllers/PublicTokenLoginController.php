@@ -15,15 +15,6 @@ use Inertia\Response;
 class PublicTokenLoginController extends Controller
 {
     /**
-     * Display token login form
-     */
-    #[Get('/exam-login', name: 'exam.login.form')]
-    public function showForm(): Response
-    {
-        return Inertia::render('Public/ExamLogin');
-    }
-
-    /**
      * Handle token login
      */
     #[Get('/exam/{token}', name: 'exam.token.login')]
@@ -123,23 +114,6 @@ class PublicTokenLoginController extends Controller
 
         Log::info('PublicTokenLogin: Redirecting to exam directly');
         return redirect('/exam');
-    }
-
-    /**
-     * Handle POST token login from form
-     */
-    #[Post('/exam-login', name: 'exam.login.submit')]
-    public function tokenLoginPost(Request $request)
-    {
-        $request->validate([
-            'token' => 'required|string|min:3|max:10'
-        ]);
-
-        $token = strtoupper(trim($request->token));
-
-        Log::info('PublicTokenLogin: Form submission', ['token' => $token]);
-
-        return redirect()->route('exam.token.login', ['token' => $token]);
     }
 
     /**

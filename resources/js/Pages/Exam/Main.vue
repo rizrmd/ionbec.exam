@@ -369,6 +369,71 @@ watch(attempt, (newAttempt, oldAttempt) => {
   }
 }, { immediate: true });
 
+// 🕐 WAITING ROOM: Check if user should be redirected to waiting room
+const shouldShowWaitingRoom = computed(() => {
+  if (!delivery.value) return false;
+
+  const isAutomaticStart = !!delivery.value.automatic_start;
+  const hasScheduledTime = !!delivery.value.scheduled_at;
+
+  if (!isAutomaticStart || !hasScheduledTime) {
+    console.log('🕐 Waiting Room: Not required - automatic_start:', isAutomaticStart, 'scheduled_at:', hasScheduledTime);
+    return false;
+  }
+
+  const scheduledTime = new Date(delivery.value.scheduled_at);
+  const now = new Date();
+  const isInFuture = scheduledTime > now;
+
+  console.log('🕐 Waiting Room Check:', {
+    automatic_start: isAutomaticStart,
+    scheduled_at: delivery.value.scheduled_at,
+    scheduledTime: scheduledTime.toISOString(),
+    now: now.toISOString(),
+    isInFuture: isInFuture,
+    shouldWait: isAutomaticStart && isInFuture
+  });
+
+  return isAutomaticStart && isInFuture;
+});
+
+// 🕐 WAITING ROOM: Redirect to token login for proper session setup if needed
+const checkAndRedirectToWaitingRoom = () => {
+  if (shouldShowWaitingRoom.value) {
+    console.log('🕐 Waiting Room: Conditions met, redirecting to token login for proper session setup');
+
+    // Enhanced cleanup before redirect
+    try {
+      const localStorageKey = getLocalStorageKey('exam-state');
+      if (localStorageKey && typeof localStorageKey === 'string') {
+        localStorage.removeItem(localStorageKey);
+      }
+
+      const timerStateKey = getLocalStorageKey('timer-state');
+      if (timerStateKey && typeof timerStateKey === 'string') {
+        localStorage.removeItem(timerStateKey);
+      }
+      console.log('✅ Waiting Room: Cleaned up localStorage before redirect');
+    } catch (storageError) {
+      console.warn('⚠️ Waiting Room: Failed to remove localStorage keys', storageError);
+    }
+
+    // Redirect to home (/) so user can re-enter token and establish proper session
+    try {
+      console.log('🕐 Waiting Room: Redirecting to home for proper token entry');
+      window.location.href = '/';
+    } catch (redirectError) {
+      console.error('💥 Waiting Room: Redirect failed, using final fallback', redirectError);
+      window.location.href = '/';
+    }
+
+    return true; // Indicate that redirect was initiated
+  }
+
+  console.log('🕐 Waiting Room: No redirect needed - proceeding with exam');
+  return false;
+};
+
 const submitAnswer = async (partial = false) => {
   if (submittingAnswer.value) return;
   submittingAnswer.value = true;
@@ -1341,6 +1406,13 @@ const parseTimerCount = (timerString) => {
 };
 
 onMounted(() => {
+  // 🕐 WAITING ROOM: Check if user should be redirected to waiting room FIRST
+  console.log('🕐 WAITING ROOM: Checking if redirect is needed...');
+  if (checkAndRedirectToWaitingRoom()) {
+    console.log('🕐 WAITING ROOM: Redirect initiated, stopping exam initialization');
+    return; // Stop exam initialization if redirecting to waiting room
+  }
+
   // NEW: Initialize exam context isolation
   console.log('🔒 INITIALIZING EXAM CONTEXT ISOLATION');
   console.log('📊 Exam Context:', {
@@ -1877,6 +1949,22 @@ const markAsLater = (e, hash) => {
 
 <template>
   <ExamLayout :title="delivery.name" :taker="taker" :timer="timerCount">
+    <!-- 🕐 WAITING ROOM: Debug Status Indicator -->
+    <div v-if="shouldShowWaitingRoom" class="waiting-room-debug">
+      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
+          <span class="font-medium text-yellow-800">🕐 Early Access Detected</span>
+        </div>
+        <div class="text-sm text-yellow-700 mt-2">
+          <div>Automatic Start: {{ delivery?.automatic_start ? 'Yes' : 'No' }}</div>
+          <div>Scheduled Time: {{ delivery?.scheduled_at ? new Date(delivery.scheduled_at).toLocaleString() : 'Not set' }}</div>
+          <div>Current Time: {{ new Date().toLocaleString() }}</div>
+          <div class="font-medium mt-1">Redirecting to home for proper token entry...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- NEW: Loading Overlay - Non-intrusive -->
     <div v-if="loadingQuestions" class="loading-overlay">
       <div class="flex items-center gap-3">

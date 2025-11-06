@@ -16,7 +16,6 @@ class WaitingRoomController extends Controller
     public function index(): Response|\Illuminate\Http\RedirectResponse
     {
         $dataSession = Session::get('exam');
-
         $delivery = Delivery::query()->where('id', $dataSession['delivery']->id)->first();
 
         // Force redirect to exam if scheduled time has passed
