@@ -626,11 +626,14 @@ async fn load_exam_data(
         SELECT a.id, a.title, a.path, a.description, att.attachable_id as item_id
         FROM attachments a
         JOIN attachables att ON a.id = att.attachment_id
-        WHERE att.attachable_id = ANY($1) AND att.attachable_type = 'App\\Models\\Exams\\Item'
+        WHERE att.attachable_id IN (SELECT unnest($1::integer[])) AND att.attachable_type = 'App\\Models\\Exams\\Item'
         ORDER BY att.attachable_id, a.id ASC
     "#;
+
+    info!("Attachments SQL: {}", attachments_query);
     
     info!("Executing queries for {} questions and {} items", question_ids.len(), item_ids.len());
+    info!("Item IDs for attachments query: {:?}", &item_ids);
 
     // Execute answers and attachments queries in parallel
     let (answer_rows, attachment_rows) = tokio::try_join!(

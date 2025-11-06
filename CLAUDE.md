@@ -55,3 +55,4 @@ ssh root@cf.avolut.com "docker exec app-okksscs4w0s8oc0go0k4cg8k bash -c 'cd /va
 - Check Ziggy config shows correct domain, not localhost
 - VERY IMPORTANT: do not run database seed, do not truncate any table.
 - **CRITICAL: Never create files in root directory - use proper organized folders!**
+- to rebuild rust-service we just need to commit and push the project, it will automatically build the rust service

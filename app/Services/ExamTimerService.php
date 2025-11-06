@@ -75,8 +75,18 @@ class ExamTimerService
         // 🔧 CRITICAL FIX: Handle automatic_start with fallback to attempt start time
         if ($delivery->automatic_start) {
             // If scheduled_at is reasonable (not too old and not too far in future), use it
-            $scheduledTime = Carbon::parse($delivery->scheduled_at);
+            $scheduledTime = $delivery->scheduled_at ? Carbon::parse($delivery->scheduled_at) : null;
             $now = Carbon::now();
+
+            // If no scheduled time, return null to handle gracefully
+            if (!$scheduledTime) {
+                \Log::warning('ExamTimerService: No scheduled time available', [
+                    'delivery_id' => $delivery->id,
+                    'automatic_start' => $delivery->automatic_start
+                ]);
+                return null;
+            }
+
             $hoursDiff = abs($scheduledTime->diffInHours($now));
 
             // 🔧 ENHANCEMENT: Configurable validation threshold (default 24 hours)
@@ -92,7 +102,7 @@ class ExamTimerService
             if ($attempt && $attempt->started_at) {
                 \Log::info('ExamTimerService: Using attempt start time instead of invalid scheduled time', [
                     'delivery_id' => $delivery->id,
-                    'scheduled_at' => $scheduledTime->toDateTimeString(),
+                    'scheduled_at' => $scheduledTime ? $scheduledTime->toDateTimeString() : 'null',
                     'attempt_started_at' => $attempt->started_at->toDateTimeString(),
                     'hours_diff' => $hoursDiff
                 ]);
@@ -102,7 +112,7 @@ class ExamTimerService
             // If no attempt or invalid scheduled time, return null to handle gracefully
             \Log::warning('ExamTimerService: Invalid scheduled time and no attempt available', [
                 'delivery_id' => $delivery->id,
-                'scheduled_at' => $scheduledTime->toDateTimeString(),
+                'scheduled_at' => $scheduledTime ? $scheduledTime->toDateTimeString() : 'null',
                 'automatic_start' => $delivery->automatic_start
             ]);
             return null;

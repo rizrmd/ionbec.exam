@@ -74,6 +74,7 @@ return [
             'prefix_indexes' => true,
             'schema' => 'public',
             'sslmode' => 'prefer',
+            'timezone' => env('APP_TIMEZONE', 'Asia/Jakarta'),
         ],
 
         'sqlsrv' => [
