@@ -148,8 +148,20 @@ class ScoringController extends Controller
                     $attemptArray['taker_code'] = $customTakerCode;
                     $allAttempts->push((object) $attemptArray);
                 } else {
-                    // Normal attempt - add as is
-                    $allAttempts->push($existingAttempt);
+                    // Normal attempt - ensure taker_code is properly set
+                    $groupData = DB::table('groups')->where('id', $delivery->group_id)->first();
+                    $groupCode = $groupData ? $groupData->code : 'UNKNOWN';
+
+                    $takerCode = \App\Models\Attempts\Attempt::getFormattedTakerCode(
+                        $existingAttempt->attempted_by,
+                        $delivery->group_id,
+                        $groupCode
+                    );
+
+                    // Convert to object and set proper taker_code
+                    $attemptArray = $existingAttempt->toArray();
+                    $attemptArray['taker_code'] = $takerCode;
+                    $allAttempts->push((object) $attemptArray);
                 }
             }
             
