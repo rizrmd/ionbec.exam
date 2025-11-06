@@ -629,6 +629,14 @@ const getQuestions = async (index) => {
       const questions = responseData.questions;
       const attempt = responseData.attempt;
 
+      // 🔥 CRITICAL FIX: Handle attachments from API response
+      if (responseData.attachments && Array.isArray(responseData.attachments)) {
+        console.log('🔗 ATTACHMENTS: Using attachments from API response', responseData.attachments.length);
+        item.attachments = responseData.attachments;
+      } else {
+        console.log('🔗 ATTACHMENTS: No attachments in API response, using item attachments', item.attachments?.length || 0);
+      }
+
       // Load questions into the item
       item.questions = questions;
 

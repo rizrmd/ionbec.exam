@@ -293,7 +293,21 @@ class MainController extends Controller
                     // Convert attachments array
                     if (isset($item->attachments) && is_array($item->attachments)) {
                         $item->attachments = collect($item->attachments)->map(function ($attachmentData) {
-                            return (object) $attachmentData;
+                            $attachment = (object) $attachmentData;
+
+                            // 🔥 CRITICAL FIX: Add URL attribute for Rust API attachments
+                            // This ensures consistency with database attachments that have URL accessor
+                            if (isset($attachment->id) && !isset($attachment->url)) {
+                                $attachment->url = route('attachment.stream', $attachment->id);
+                            }
+
+                            \Log::info('🔗 ATTACHMENT URL: Generated for Rust attachment', [
+                                'attachment_id' => $attachment->id ?? 'missing',
+                                'generated_url' => $attachment->url ?? 'not_generated',
+                                'path' => $attachment->path ?? 'no_path'
+                            ]);
+
+                            return $attachment;
                         });
                     }
 
@@ -619,6 +633,7 @@ class MainController extends Controller
                     'hash' => $actualHash,
                     'item_name' => $rustItem['name'] ?? 'No name',
                     'questions_count' => count($rustQuestions),
+                    'has_attachments' => isset($rustItem['attachments']) ? count($rustItem['attachments']) : 0,
                     'unified_with_index' => true
                 ]);
 
@@ -629,6 +644,27 @@ class MainController extends Controller
                 // This ensures frontend receives the same hash it requested for matching
                 foreach ($rustQuestions as &$question) {
                     $question['item_hash'] = $actualHash;
+                }
+
+                // 🔥 CRITICAL FIX: Process Rust API attachments and add URLs
+                $processedAttachments = [];
+                if (isset($rustItem['attachments']) && is_array($rustItem['attachments'])) {
+                    $processedAttachments = collect($rustItem['attachments'])->map(function ($attachmentData) {
+                        $attachment = (object) $attachmentData;
+
+                        // Add URL attribute for consistency with database attachments
+                        if (isset($attachment->id) && !isset($attachment->url)) {
+                            $attachment->url = route('attachment.stream', $attachment->id);
+                        }
+
+                        \Log::info('🔗 ATTACHMENT URL: Generated for Rust attachment in getQuestions', [
+                            'attachment_id' => $attachment->id ?? 'missing',
+                            'generated_url' => $attachment->url ?? 'not_generated',
+                            'path' => $attachment->path ?? 'no_path'
+                        ]);
+
+                        return $attachment;
+                    })->toArray();
                 }
 
                 // 🔒 CRITICAL: Also add item_hash to attempt questions for green indicator matching
@@ -648,6 +684,7 @@ class MainController extends Controller
                 return response()->json([
                     'questions' => $rustQuestions,
                     'attempt' => $attempt,
+                    'attachments' => $processedAttachments, // 🔥 Add processed attachments
                     'using_rust_api' => true,
                     'unified_data_source' => true
                 ]);
@@ -945,9 +982,10 @@ class MainController extends Controller
             }
         }
 
-        //        $item->load('attachments');
+        // 🔥 CRITICAL FIX: Load attachments for database fallback
+        $item->load('attachments');
 
-        //        hiding is_correct_answer column
+        // hiding is_correct answer column
         $questions->each(function ($question, $questionKey) use ($questions) {
             $questions[$questionKey]->answers->each(function ($answer, $answerKey) use ($questions, $questionKey) {
                 unset($questions[$questionKey]->answers[$answerKey]->is_correct_answer);
@@ -984,14 +1022,29 @@ class MainController extends Controller
             'green_indicator_ready' => $attempt && $attempt->questions ? true : false
         ]);
 
+        // 🔥 CRITICAL FIX: Include attachments in database fallback response
+        $attachments = [];
+        if ($item->attachments && $item->attachments->count() > 0) {
+            $attachments = $item->attachments->map(function ($attachment) {
+                \Log::info('🔗 ATTACHMENT URL: Database attachment with URL', [
+                    'attachment_id' => $attachment->id,
+                    'attachment_url' => $attachment->url,
+                    'path' => $attachment->path
+                ]);
+                return $attachment;
+            })->toArray();
+        }
+
         return response()->json([
             'questions' => $questions,
             'attempt' => $attempt,
+            'attachments' => $attachments, // 🔥 Add attachments to response
             'using_rust_api' => false,
             'using_database_fallback' => true,
             'debug_info' => [
                 'hash_used' => $actualHash,
                 'item_id' => $item->id,
+                'attachments_count' => count($attachments),
                 'attempt_questions_with_item_hash' => $attempt && $attempt->questions ? $attempt->questions->contains('item_hash') : false
             ]
         ]);
