@@ -29,8 +29,7 @@ class ExamLogController extends Controller
                 'attempt_id' => 'nullable|integer|exists:attempts,id',
                 'session_key' => 'required|string|max:255',
                 'tab_count' => 'nullable|integer|min:1',
-                'notes' => 'nullable|string',
-                'event_type' => 'required|string|max:50'
+                'notes' => 'nullable|string'
             ]);
 
             // Get location data
