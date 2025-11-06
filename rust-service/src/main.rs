@@ -629,6 +629,8 @@ async fn load_exam_data(
         WHERE att.attachable_id = ANY($1) AND att.attachable_type = 'App\\Models\\Exams\\Item'
         ORDER BY att.attachable_id, a.id ASC
     "#;
+
+    info!("Attachments SQL: {}", attachments_query);
     
     info!("Executing queries for {} questions and {} items", question_ids.len(), item_ids.len());
     info!("Item IDs for attachments query: {:?}", &item_ids);

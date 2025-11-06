@@ -1,8 +1,8 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+$app = require_once __DIR__ . '/../../bootstrap/app.php';
 
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 
@@ -10,8 +10,8 @@ $kernel->bootstrap();
 
 echo "=== Testing Token Flow Debug ===\n";
 
-// Test with the future scheduled delivery token
-$token = 'ykTcA';
+// Test with the future scheduled delivery token (converted to uppercase like the controller does)
+$token = 'YKTCA';
 
 echo "Testing token: $token\n";
 
