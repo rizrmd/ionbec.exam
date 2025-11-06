@@ -99,19 +99,41 @@ const uniqueQuestionsDone = computed(() => {
   return uniqueHashes.size;
 })
 
+// 🔧 FIXED: Create computed properties for better reactivity
+const buttonColorMap = computed(() => {
+  const colorMap = new Map();
+
+  // Build color map with proper priority
+  items.value.forEach((item) => {
+    item.questions.forEach((question) => {
+      const isCurrent = currentItem.value && currentItem.value.item_hash === item.hash;
+      const isLater = later.value && later.value.includes(question.hash);
+      const isDone = done.value && done.value.includes(question.hash);
+      const isSkipped = skipped.value && skipped.value.includes(question.hash);
+
+      let colorClass;
+      if (isCurrent) {
+        colorClass = 'bg-blue-600 text-white';
+      } else if (isLater) {
+        // Later status takes priority over done and skipped
+        colorClass = 'bg-red-600 text-white';
+      } else if (isDone) {
+        colorClass = 'bg-green-600 text-white';
+      } else if (isSkipped) {
+        colorClass = 'bg-yellow-400 text-white';
+      } else {
+        colorClass = 'bg-gray-100 hover:bg-blue-600 hover:text-white';
+      }
+
+      colorMap.set(question.hash, colorClass);
+    });
+  });
+
+  return colorMap;
+});
+
 const btnColor = (currentItem, item, question) => {
-  if (currentItem !== null && currentItem.item_hash === item.hash) {
-    return 'bg-blue-600 text-white'
-  } else if (checkDoneQuest(question.hash)) {
-    // Done status takes priority over everything else
-    return 'bg-green-600 text-white'
-  } else if (later.value.indexOf(question.hash) !== -1) {
-    return 'bg-red-600 text-white'
-  } else if (checkSkippedQuest(question.hash)) {
-    return 'bg-yellow-400 text-white'
-  } else {
-    return 'bg-gray-100 hover:bg-blue-600 hover:text-white'
-  }
+  return buttonColorMap.value.get(question.hash) || 'bg-gray-100 hover:bg-blue-600 hover:text-white';
 }
 </script>
 

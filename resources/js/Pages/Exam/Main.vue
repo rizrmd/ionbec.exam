@@ -434,7 +434,7 @@ const checkAndRedirectToWaitingRoom = () => {
   return false;
 };
 
-const submitAnswer = async (partial = false) => {
+const submitAnswer = async (partial = false, specificQuestionHash = null) => {
   if (submittingAnswer.value) return;
   submittingAnswer.value = true;
 
@@ -449,8 +449,16 @@ const submitAnswer = async (partial = false) => {
   });
 
   if (Object.keys(currentAnswers).length >= 1) {
-    let newAnswers = {
-      ...currentAnswers // Safe computed property access
+    // 🔒 CRITICAL FIX: For partial submissions with specific question, only submit that question's answer
+    let newAnswers;
+    if (partial && specificQuestionHash && currentAnswers[specificQuestionHash]) {
+      newAnswers = {
+        [specificQuestionHash]: currentAnswers[specificQuestionHash]
+      };
+    } else {
+      newAnswers = {
+        ...currentAnswers // Safe computed property access
+      };
     }
 
     // check if essay null
@@ -468,18 +476,27 @@ const submitAnswer = async (partial = false) => {
       })
     }
 
-    Object.keys(newAnswers).forEach(key => {
+    // 🔒 CRITICAL FIX: Only process specific question for partial submissions to preserve "mark as later" state
+    const questionsToProcess = specificQuestionHash && partial ? [specificQuestionHash] : Object.keys(newAnswers);
+
+    questionsToProcess.forEach(key => {
+      // Only process if this question actually has an answer in newAnswers
+      if (!newAnswers[key]) return;
+
       // Add to done quests if not already there
       addToStateArray(doneQuests.value, key)
 
       // Remove from skipped quests if answered
       removeFromStateArray(skippedQuests.value, key)
 
-      // Remove from later quests if answered
-      removeFromStateArray(laterQuests.value, key)
-      // Also uncheck the checkbox
-      if (laters.value[key]) {
-        laters.value[key] = false;
+      // 🔒 CRITICAL FIX: Only remove from later quests if this is NOT a partial submission OR if this is the specific question being answered
+      // This preserves "mark as later" state for other questions when answering a different question
+      if (!partial || key === specificQuestionHash) {
+        removeFromStateArray(laterQuests.value, key)
+        // Also uncheck the checkbox
+        if (laters.value[key]) {
+          laters.value[key] = false;
+        }
       }
     })
 
@@ -953,7 +970,7 @@ const selectAnswer = function (answerHash, questionHash) {
       });
       // Fallback: store answer directly using questionHash using safe function
       safeSetAnswer(questionHash, answerHash);
-      submitAnswer(true);
+      submitAnswer(true, questionHash); // Pass specific question hash
       return;
     }
 
@@ -974,7 +991,7 @@ const selectAnswer = function (answerHash, questionHash) {
       });
       // Fallback: store answer directly using questionHash using safe function
       safeSetAnswer(questionHash, answerHash);
-      submitAnswer(true);
+      submitAnswer(true, questionHash); // Pass specific question hash
       return;
     }
 
@@ -1014,7 +1031,7 @@ const selectAnswer = function (answerHash, questionHash) {
       alsoHasItemHash: currentQuestion.item_hash ? !!currentAnswers[currentQuestion.item_hash] : 'N/A'
     });
 
-    submitAnswer(true);
+    submitAnswer(true, questionHash); // Pass specific question hash
 
   } catch (error) {
     safeConsoleError('💥 selectAnswer: Critical error occurred', {
@@ -1041,7 +1058,7 @@ const selectAnswer = function (answerHash, questionHash) {
         // Try to submit answer with additional safety
         try {
           if (typeof submitAnswer === 'function') {
-            submitAnswer(true);
+            submitAnswer(true, questionHash);
           } else {
             safeConsoleWarn('⚠️ submitAnswer function not available');
           }
@@ -2046,7 +2063,7 @@ const markAsLater = (e, hash) => {
                   </div>
                 </div>
                 <div class="mt-4" v-else>
-                  <Editor class="my-2" v-model="answerVal[question.hash]" @blur="submitAnswer(true)" />
+                  <Editor class="my-2" v-model="answerVal[question.hash]" @blur="() => submitAnswer(true, question.hash)" />
                 </div>
 
                 <div class="text-xs text-gray-500" v-if="question.type?.name === 'multiple-choice' && question.answers.length <= 0">
