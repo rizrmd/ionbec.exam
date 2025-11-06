@@ -690,10 +690,11 @@ async fn load_exam_data(
     let mut attachments_by_item: std::collections::HashMap<i32, Vec<ExamAttachment>> = std::collections::HashMap::new();
     for attachment_row in attachment_rows {
         let item_id: i32 = attachment_row.get("item_id");
+        let attachment_id: String = attachment_row.get("id");
         let attachment = ExamAttachment {
-            id: attachment_row.get("id"),
+            id: attachment_id.clone(),
             filename: attachment_row.get::<Option<String>, _>("title").unwrap_or_default(),
-            url: attachment_row.get::<Option<String>, _>("path").unwrap_or_default(),
+            url: format!("/attachment/stream/{}", attachment_id),
             description: attachment_row.get("description"),
         };
         attachments_by_item.entry(item_id).or_default().push(attachment);
