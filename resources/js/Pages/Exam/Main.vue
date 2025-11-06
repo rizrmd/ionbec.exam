@@ -594,9 +594,6 @@ const getQuestions = async (index) => {
       answerState: currentAnswers
     }
 
-    // Initialize image error handling states
-    initializeImageStates(item.attachments);
-
     vignetteData.value = item.is_vignette ? item.content : null
 
     // Only add to skipped if not already done or skipped
@@ -717,9 +714,6 @@ const getQuestions = async (index) => {
       attachments: item.attachments,
       loading: false // NEW: Remove loading flag
     };
-
-    // Initialize image error handling states
-    initializeImageStates(item.attachments);
 
     lastLoadedIndex.value = index;
     console.log('✅ Successfully loaded questions for index:', index);
@@ -1132,8 +1126,71 @@ const startTimer = (duration) => {
   }
 }
 
-// 🔒 ENHANCED: Robust timer synchronization with retry mechanism
+// 🔧 SIMPLIFIED: Simple backend time update (no complex synchronization)
+const updateTimerFromBackend = async (retryCount = 0, maxRetries = 2) => {
+  try {
+    console.log('🕐 Timer: Getting time from backend', { attempt: retryCount + 1, maxRetries });
+
+    if (!attempt.value?.hash) {
+      console.warn('⚠️ Timer: No attempt hash available, skipping update');
+      return false;
+    }
+
+    const pingStart = Date.now();
+
+    const response = await axios.post(route('exam.timer'), {
+      attempt: attempt.value.hash,
+      ping: pingStart
+    });
+
+    const pingEnd = Date.now();
+    const latency = (pingEnd - pingStart) / 2;
+
+    if (response.data && typeof response.data.remaining === 'number') {
+      // Update timer display directly with backend time
+      const backendTime = Math.max(0, response.data.remaining);
+      const formattedTime = formatTime(backendTime);
+      timerCount.value = formattedTime;
+
+      console.log('🕐 Timer: Updated from backend', {
+        backendTime: backendTime,
+        formattedTime: formattedTime,
+        latency: latency.toFixed(1)
+      });
+
+      return true;
+    } else {
+      console.warn('⚠️ Timer: Invalid backend response', response.data);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Timer: Backend update failed', {
+      error: error.message,
+      status: error.response?.status
+    });
+
+    if (retryCount < maxRetries) {
+      const backoffMs = 1000 * (retryCount + 1);
+      console.log(`🕐 Timer: Retrying in ${backoffMs}ms...`);
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
+      return updateTimerFromBackend(retryCount + 1, maxRetries);
+    }
+
+    return false;
+  }
+};
+
+// Helper function to format time as MM:SS
+const formatTime = (seconds) => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+// 🔒 DEPRECATED: Legacy sync function - replaced by updateTimerFromBackend for simpler approach
 const syncTimerWithServer = async (retryCount = 0, maxRetries = 3) => {
+  console.warn('🕐 Timer: Using deprecated syncTimerWithServer - consider migrating to updateTimerFromBackend');
+
   try {
     console.log('🕐 Timer: Starting sync attempt', { attempt: retryCount + 1, maxRetries });
 
@@ -1171,17 +1228,19 @@ const syncTimerWithServer = async (retryCount = 0, maxRetries = 3) => {
       return true;
     }
 
-    // Adjust local timer if significant drift (> 5 seconds)
+    // Adjust local timer if significant drift (> 30 seconds for stable UX)
     const currentTimerSeconds = parseTimerCount(timerCount.value);
     const drift = Math.abs(currentTimerSeconds - adjustedTime);
 
-    if (drift > 5) {
+    // 🔧 FIX: Disable timer restarts entirely - let backend timer updates handle synchronization
+    // The periodic updateTimerFromBackend() calls will keep the timer in sync without jumps
+    if (false && drift > 300) { // Disabled - never trigger timer restarts
       console.log('🕐 Timer: Significant drift detected, adjusting', {
         local: currentTimerSeconds,
         server: adjustedTime,
         drift: drift
       });
-      // Restart timer with server time
+      // Restart timer with server time only for major discrepancies
       return startTimer(adjustedTime);
     }
 
@@ -1369,17 +1428,15 @@ onMounted(() => {
       if (timerInterval) {
         console.log('✅ Timer: Successfully initialized with', validRemainingSeconds, 'seconds');
         
-        // 🔒 ENHANCED: Start periodic timer sync with error handling
+        // 🔧 SIMPLIFIED: Update timer directly from backend every 30 seconds
+        // No more local timer synchronization - just use backend time as source of truth
         setInterval(async () => {
           try {
-            console.log('🕐 Timer: Performing periodic sync with server');
-            const wasRestarted = await syncTimerWithServer();
-            if (wasRestarted) {
-              console.log('🕐 Timer: Restarted due to server sync');
-            }
+            console.log('🕐 Timer: Updating time from backend');
+            await updateTimerFromBackend();
           } catch (error) {
-            console.error('🕐 Timer: Periodic sync error', error);
-            // Don't throw error, just log it and continue
+            console.error('🕐 Timer: Backend update error', error);
+            // Continue with current timer display if backend fails
           }
         }, 30000);
       } else {
@@ -1714,81 +1771,7 @@ const modalImage = ref(false);
 const modalImageContent = ref(null);
 const showScenarioModal = ref(false);
 
-// Image error handling states
-const imageLoadingStates = ref({});
-const imageErrorStates = ref({});
-
-// Initialize image states when question data loads
-const initializeImageStates = (attachments) => {
-  if (!attachments || !Array.isArray(attachments)) return;
-
-  attachments.forEach(file => {
-    if (file.id) {
-      imageLoadingStates.value[file.id] = true;
-      imageErrorStates.value[file.id] = false;
-    }
-  });
-};
-
-// Handle successful image load
-const handleImageLoad = (file) => {
-  if (file.id) {
-    imageLoadingStates.value[file.id] = false;
-    imageErrorStates.value[file.id] = false;
-    console.log('✅ Image loaded successfully:', file.id);
-  }
-};
-
-// Handle image loading error
-const handleImageError = (event, file) => {
-  if (file.id) {
-    imageLoadingStates.value[file.id] = false;
-    imageErrorStates.value[file.id] = true;
-
-    // Log error for debugging
-    console.error('❌ Image failed to load:', {
-      id: file.id,
-      url: file.url,
-      description: file.description,
-      error: event.target?.error
-    });
-
-    // Send error notification to support/debug
-    notification({
-      type: 'error',
-      title: 'Image Loading Error',
-      message: `Failed to load image: ${file.description || 'Question image'}`,
-      timeout: 5000
-    });
-  }
-};
-
-// Retry loading image
-const retryImageLoad = (file) => {
-  if (file.id) {
-    imageErrorStates.value[file.id] = false;
-    imageLoadingStates.value[file.id] = true;
-
-    // Force reload by adding timestamp
-    const img = new Image();
-    const retryUrl = `${file.url}?retry=${Date.now()}`;
-
-    img.onload = () => {
-      handleImageLoad(file);
-      // Update the DOM image src
-      const domImg = document.querySelector(`img[src*="${file.url}"]`);
-      if (domImg) {
-        domImg.src = retryUrl;
-      }
-    };
-
-    img.onerror = () => {
-      handleImageError({ target: img }, file);
-    };
-
-    img.src = retryUrl;
-  }
-};
+// Simplified image handling - just basic display
 
 const zoomImage = (url, alt) => {
   modalImage.value = true;
@@ -1843,35 +1826,12 @@ const markAsLater = (e, hash) => {
         <div class="flex flex-col items-center gap-3 my-5">
           <div v-for="file in questionData.attachments" v-if="questionData.attachments.length >= 1" class="w-full flex gap-2 max-w-xl">
             <div class="flex-auto flex justify-center items-center">
-              <!-- Image with error handling -->
-              <div class="relative">
-                <img
-                  :src="file.url"
-                  :alt="file.description"
-                  class="rounded-lg cursor-pointer hover:shadow-md max-w-full h-auto"
-                  @click="() => zoomImage(file.url)"
-                  @error="(e) => handleImageError(e, file)"
-                  @load="() => handleImageLoad(file)"
-                />
-                <!-- Loading state -->
-                <div v-if="imageLoadingStates[file.id]" class="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
-                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                </div>
-                <!-- Error state -->
-                <div v-if="imageErrorStates[file.id]" class="absolute inset-0 flex flex-col items-center justify-center bg-red-50 border-2 border-red-200 rounded-lg p-4">
-                  <svg class="w-12 h-12 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  <p class="text-red-600 text-sm text-center font-medium">Image not available</p>
-                  <p class="text-red-500 text-xs text-center mt-1">{{ file.description || 'Question image' }}</p>
-                  <button
-                    @click="() => retryImageLoad(file)"
-                    class="mt-2 px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors"
-                  >
-                    Retry
-                  </button>
-                </div>
-              </div>
+              <img
+                :src="file.url"
+                :alt="file.description"
+                class="rounded-lg cursor-pointer hover:shadow-md max-w-full h-auto"
+                @click="() => zoomImage(file.url)"
+              />
             </div>
           </div>
         </div>
