@@ -11,7 +11,7 @@ class RustService
 
     public function __construct()
     {
-        $this->baseUrl = env('RUST_SERVICE_URL', 'http://rust-service:3000');
+        $this->baseUrl = env('RUST_SERVICE_URL', 'http://rust-service-okksscs4w0s8oc0go0k4cg8k:3000');
     }
 
     /**

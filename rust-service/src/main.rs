@@ -595,7 +595,9 @@ async fn load_exam_data(
     }
     
     let item_ids: Vec<i32> = item_rows.iter().map(|row| row.get::<i32, _>("id")).collect();
-    
+
+    info!("Found {} item IDs: {:?}", item_ids.len(), item_ids);
+
     // 2. Load all questions for these items in one query
     let questions_query = r#"
         SELECT 
@@ -628,11 +630,15 @@ async fn load_exam_data(
         ORDER BY att.attachable_id, a.id ASC
     "#;
     
+    info!("Executing queries for {} questions and {} items", question_ids.len(), item_ids.len());
+
     // Execute answers and attachments queries in parallel
     let (answer_rows, attachment_rows) = tokio::try_join!(
         sqlx::query(answers_query).bind(&question_ids).fetch_all(pool),
         sqlx::query(attachments_query).bind(&item_ids).fetch_all(pool)
     )?;
+
+    info!("Successfully loaded {} answers and {} attachments", answer_rows.len(), attachment_rows.len());
     
     // Group data by their parent IDs
     let mut answers_by_question: std::collections::HashMap<i32, Vec<ExamAnswer>> = std::collections::HashMap::new();

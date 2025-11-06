@@ -196,9 +196,24 @@ class MainController extends Controller
         ]);
 
         if (($examData['success'] ?? false) && isset($examData['items'])) {
-            // UNIFIED: Always use Rust API data for both DEMO and normal sessions
-            $items = collect($examData['items']);
-            \Log::info('RUST API: Using unified data source', ['items_count' => $items->count()]);
+            // Check if Rust API returned attachments
+            $rustHasAttachments = false;
+            foreach ($examData['items'] as $item) {
+                if (isset($item['attachments']) && !empty($item['attachments'])) {
+                    $rustHasAttachments = true;
+                    break;
+                }
+            }
+
+            if ($rustHasAttachments) {
+                // Rust API has attachments, use it
+                $items = collect($examData['items']);
+                \Log::info('RUST API: Using unified data source', ['items_count' => $items->count()]);
+            } else {
+                // Rust API missing attachments, use database fallback
+                \Log::warning('RUST API: Missing attachments, falling back to database', ['items_count' => count($examData['items'])]);
+                $items = $exam->items()->with(['attachments', 'questions.answers'])->orderByPivot('order')->get();
+            }
 
             // Debug first item structure to verify hashes are present
             if ($items->count() > 0) {
