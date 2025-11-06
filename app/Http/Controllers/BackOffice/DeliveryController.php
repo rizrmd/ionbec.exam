@@ -283,7 +283,16 @@ class DeliveryController extends Controller
         $question = Question::query()->whereIn('id', $baseDetail['questionId']);
 
         $question->when($request->input('query') ?? false, function ($query, $queryString) {
-            $query->where('question', 'like', "%{$queryString}%");
+            $query->where(function ($q) use ($queryString) {
+                // Search in question text
+                $q->where('questions.question', 'like', "%{$queryString}%");
+
+                // Also search in item content if it's a vignette
+                $q->orWhereHas('item', function ($itemQuery) use ($queryString) {
+                    $itemQuery->where('items.is_vignette', true)
+                             ->where('items.content', 'like', "%{$queryString}%");
+                });
+            });
         });
 
         $paginatedQuestions = $question->paginate($request->input('perPage', 15))->withQueryString();

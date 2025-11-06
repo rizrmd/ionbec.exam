@@ -631,6 +631,7 @@ async fn load_exam_data(
     "#;
     
     info!("Executing queries for {} questions and {} items", question_ids.len(), item_ids.len());
+    info!("Item IDs for attachments query: {:?}", &item_ids);
 
     // Execute answers and attachments queries in parallel
     let (answer_rows, attachment_rows) = tokio::try_join!(
