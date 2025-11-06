@@ -6,6 +6,7 @@ use App\Models\ExamSessionLog;
 use App\Services\GeolocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 class ExamLogController extends Controller
@@ -103,7 +104,11 @@ class ExamLogController extends Controller
             'today_logs' => ExamSessionLog::whereDate('created_at', today())->count(),
         ];
 
-        return view('admin.exam-logs', compact('logs', 'stats'));
+        return Inertia::render('BackOffice/ExamLogs/Index', [
+            'logs' => $logs,
+            'stats' => $stats,
+            'filters' => $request->only(['date_from', 'date_to', 'ip_address', 'suspicious_only'])
+        ]);
     }
 
     /**

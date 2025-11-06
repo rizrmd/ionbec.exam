@@ -143,8 +143,9 @@ const getDefaultSidebarNavigation = () => [
   },
   {
     name: 'Exam Logs',
-    href: '/admin/exam-logs',
+    href: route('admin.exam-logs'),
     icon: ClipboardListIcon,
+    routeGroup: 'admin.exam-logs',
     current: false,
     allowed: ['administrator', 'root'],
   },
