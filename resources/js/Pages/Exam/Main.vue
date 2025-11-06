@@ -418,13 +418,13 @@ const checkAndRedirectToWaitingRoom = () => {
       console.warn('⚠️ Waiting Room: Failed to remove localStorage keys', storageError);
     }
 
-    // Redirect to home (/) so user can re-enter token and establish proper session
+    // Redirect to waiting room so user can wait for proper exam start time
     try {
-      console.log('🕐 Waiting Room: Redirecting to home for proper token entry');
-      window.location.href = '/';
+      console.log('🕐 Waiting Room: Redirecting to waiting room for proper exam access');
+      window.location.href = '/exam/waiting-room';
     } catch (redirectError) {
       console.error('💥 Waiting Room: Redirect failed, using final fallback', redirectError);
-      window.location.href = '/';
+      window.location.href = '/exam/waiting-room';
     }
 
     return true; // Indicate that redirect was initiated

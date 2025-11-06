@@ -17,104 +17,104 @@ class PublicTokenLoginController extends Controller
     /**
      * Handle token login
      */
-    #[Get('/exam/{token}', name: 'exam.token.login')]
-    public function tokenLogin(string $token)
-    {
-        Log::info('PublicTokenLogin: Attempting login with token', ['token' => $token]);
+    // #[Get('/exam/{token}', name: 'exam.token.login')]
+    // public function tokenLogin(string $token)
+    // {
+    //     Log::info('PublicTokenLogin: Attempting login with token', ['token' => $token]);
 
-        // Find delivery_taker record with this token
-        $deliveryTaker = \DB::table('delivery_taker')
-            ->where('token', strtoupper($token))
-            ->first();
+    //     // Find delivery_taker record with this token
+    //     $deliveryTaker = \DB::table('delivery_taker')
+    //         ->where('token', strtoupper($token))
+    //         ->first();
 
-        if (!$deliveryTaker) {
-            Log::warning('PublicTokenLogin: Token not found', ['token' => $token]);
-            return redirect()->route('exam.login.form')
-                ->with('error', 'Invalid token. Please check your token and try again.');
-        }
+    //     if (!$deliveryTaker) {
+    //         Log::warning('PublicTokenLogin: Token not found', ['token' => $token]);
+    //         return redirect()->route('exam.login.form')
+    //             ->with('error', 'Invalid token. Please check your token and try again.');
+    //     }
 
-        // Get delivery details
-        $delivery = Delivery::find($deliveryTaker->delivery_id);
-        if (!$delivery) {
-            Log::error('PublicTokenLogin: Delivery not found', ['delivery_id' => $deliveryTaker->delivery_id]);
-            return redirect()->route('exam.login.form')
-                ->with('error', 'Delivery not found. Please contact administrator.');
-        }
+    //     // Get delivery details
+    //     $delivery = Delivery::find($deliveryTaker->delivery_id);
+    //     if (!$delivery) {
+    //         Log::error('PublicTokenLogin: Delivery not found', ['delivery_id' => $deliveryTaker->delivery_id]);
+    //         return redirect()->route('exam.login.form')
+    //             ->with('error', 'Delivery not found. Please contact administrator.');
+    //     }
 
-        // Get taker details
-        $taker = Taker::find($deliveryTaker->taker_id);
-        if (!$taker) {
-            Log::error('PublicTokenLogin: Taker not found', ['taker_id' => $deliveryTaker->taker_id]);
-            return redirect()->route('exam.login.form')
-                ->with('error', 'Taker not found. Please contact administrator.');
-        }
+    //     // Get taker details
+    //     $taker = Taker::find($deliveryTaker->taker_id);
+    //     if (!$taker) {
+    //         Log::error('PublicTokenLogin: Taker not found', ['taker_id' => $deliveryTaker->taker_id]);
+    //         return redirect()->route('exam.login.form')
+    //             ->with('error', 'Taker not found. Please contact administrator.');
+    //     }
 
-        // Check if delivery is still active (not expired)
-        if ($delivery->ended_at && now()->isAfter($delivery->ended_at)) {
-            Log::warning('PublicTokenLogin: Delivery expired', [
-                'delivery_id' => $delivery->id,
-                'token' => $token,
-                'ended_at' => $delivery->ended_at
-            ]);
-            return redirect()->route('exam.login.form')
-                ->with('error', 'This exam has expired. The exam ended at ' . $delivery->ended_at->format('Y-m-d H:i:s'));
-        }
+    //     // Check if delivery is still active (not expired)
+    //     if ($delivery->ended_at && now()->isAfter($delivery->ended_at)) {
+    //         Log::warning('PublicTokenLogin: Delivery expired', [
+    //             'delivery_id' => $delivery->id,
+    //             'token' => $token,
+    //             'ended_at' => $delivery->ended_at
+    //         ]);
+    //         return redirect()->route('exam.login.form')
+    //             ->with('error', 'This exam has expired. The exam ended at ' . $delivery->ended_at->format('Y-m-d H:i:s'));
+    //     }
 
-        // Check if already logged in
-        if ($deliveryTaker->is_login) {
-            Log::info('PublicTokenLogin: Already logged in', [
-                'taker_id' => $taker->id,
-                'delivery_id' => $delivery->id,
-                'token' => $token
-            ]);
-        } else {
-            // Mark as logged in
-            \DB::table('delivery_taker')
-                ->where('delivery_id', $delivery->delivery_id)
-                ->where('taker_id', $delivery->taker_id)
-                ->update(['is_login' => true]);
+    //     // Check if already logged in
+    //     if ($deliveryTaker->is_login) {
+    //         Log::info('PublicTokenLogin: Already logged in', [
+    //             'taker_id' => $taker->id,
+    //             'delivery_id' => $delivery->id,
+    //             'token' => $token
+    //         ]);
+    //     } else {
+    //         // Mark as logged in
+    //         \DB::table('delivery_taker')
+    //             ->where('delivery_id', $delivery->delivery_id)
+    //             ->where('taker_id', $delivery->taker_id)
+    //             ->update(['is_login' => true]);
 
-            Log::info('PublicTokenLogin: Marked as logged in', [
-                'taker_id' => $taker->id,
-                'delivery_id' => $delivery->id,
-                'token' => $token
-            ]);
-        }
+    //         Log::info('PublicTokenLogin: Marked as logged in', [
+    //             'taker_id' => $taker->id,
+    //             'delivery_id' => $delivery->id,
+    //             'token' => $token
+    //         ]);
+    //     }
 
-        // Clear any existing exam session
-        Session::forget('exam');
+    //     // Clear any existing exam session
+    //     Session::forget('exam');
 
-        // Set exam session data
-        Session::put('exam', [
-            'token' => $token,
-            'taker' => $taker,
-            'delivery' => $delivery,
-            'admin' => null,
-        ]);
+    //     // Set exam session data
+    //     Session::put('exam', [
+    //         'token' => $token,
+    //         'taker' => $taker,
+    //         'delivery' => $delivery,
+    //         'admin' => null,
+    //     ]);
 
-        Log::info('PublicTokenLogin: Session created', [
-            'taker_id' => $taker->id,
-            'taker_name' => $taker->name,
-            'delivery_id' => $delivery->id,
-            'delivery_name' => $delivery->name,
-            'token' => $token,
-            'scheduled_at' => $delivery->scheduled_at,
-            'automatic_start' => $delivery->automatic_start
-        ]);
+    //     Log::info('PublicTokenLogin: Session created', [
+    //         'taker_id' => $taker->id,
+    //         'taker_name' => $taker->name,
+    //         'delivery_id' => $delivery->id,
+    //         'delivery_name' => $delivery->name,
+    //         'token' => $token,
+    //         'scheduled_at' => $delivery->scheduled_at,
+    //         'automatic_start' => $delivery->automatic_start
+    //     ]);
 
-        // Check if should redirect to waiting room or directly to exam
-        if ($delivery->automatic_start && strtotime($delivery->scheduled_at) > strtotime('now')) {
-            Log::info('PublicTokenLogin: Redirecting to waiting room', [
-                'scheduled_at' => $delivery->scheduled_at,
-                'current_time' => now(),
-                'time_diff_minutes' => (strtotime($delivery->scheduled_at) - strtotime('now')) / 60
-            ]);
-            return redirect()->route('exam.waiting-room');
-        }
+    //     // Check if should redirect to waiting room or directly to exam
+    //     if ($delivery->automatic_start && strtotime($delivery->scheduled_at) > strtotime('now')) {
+    //         Log::info('PublicTokenLogin: Redirecting to waiting room', [
+    //             'scheduled_at' => $delivery->scheduled_at,
+    //             'current_time' => now(),
+    //             'time_diff_minutes' => (strtotime($delivery->scheduled_at) - strtotime('now')) / 60
+    //         ]);
+    //         return redirect()->route('exam.waiting-room');
+    //     }
 
-        Log::info('PublicTokenLogin: Redirecting to exam directly');
-        return redirect('/exam');
-    }
+    //     Log::info('PublicTokenLogin: Redirecting to exam directly');
+    //     return redirect('/exam');
+    // }
 
     /**
      * Handle logout
@@ -136,7 +136,7 @@ class PublicTokenLoginController extends Controller
 
         Session::forget('exam');
 
-        return redirect()->route('exam.login.form')
+        return redirect('/')
             ->with('success', 'You have been logged out successfully.');
     }
 }
