@@ -143,21 +143,10 @@ Route::middleware(['throttle:60,1'])->group(function () {
     Route::post('/api/exam/log-multiple-tabs', [App\Http\Controllers\ExamLogController::class, 'store']);
 });
 
-// Admin Routes - TEMPORARILY OPEN for debugging
-Route::prefix('admin')->name('admin.')->group(function () {
+// Admin Routes - Protected for admin only
+Route::middleware(['auth', 'admin.only'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/exam-logs', [App\Http\Controllers\ExamLogController::class, 'index'])->name('exam-logs');
     Route::get('/exam-logs/export', [App\Http\Controllers\ExamLogController::class, 'export'])->name('exam-logs.export');
     Route::get('/exam-logs/{log}', [App\Http\Controllers\ExamLogController::class, 'show'])->name('exam-logs.show');
     Route::delete('/exam-logs/{log}', [App\Http\Controllers\ExamLogController::class, 'destroy'])->name('exam-logs.delete');
 });
-
-// TEMPORARY: Protected AdminOnly routes (commented out)
-// Route::middleware(['auth', 'admin.only'])->prefix('admin')->name('admin.')->group(function () {
-//     Route::get('/exam-logs', [App\Http\Controllers\ExamLogController::class, 'index'])->name('exam-logs');
-//     Route::get('/exam-logs/export', [App\Http\Controllers\ExamLogController::class, 'export'])->name('exam-logs.export');
-//     Route::get('/exam-logs/{log}', [App\Http\Controllers\ExamLogController::class, 'show'])->name('exam-logs.show');
-//     Route::delete('/exam-logs/{log}', [App\Http\Controllers\ExamLogController::class, 'destroy'])->name('exam-logs.delete');
-// });
-
-// DEBUG: Temporary route without middleware for testing
-Route::get('/debug-admin', [App\Http\Controllers\ExamLogController::class, 'debugAdmin'])->name('debug.admin');

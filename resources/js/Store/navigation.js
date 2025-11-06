@@ -141,6 +141,13 @@ const getDefaultSidebarNavigation = () => [
     current: false,
     allowed: ['administrator'],
   },
+  {
+    name: 'Exam Logs',
+    href: '/admin/exam-logs',
+    icon: ClipboardListIcon,
+    current: false,
+    allowed: ['administrator', 'root'],
+  },
 ]
 
 const getDefaultUserNavigation = () => [
