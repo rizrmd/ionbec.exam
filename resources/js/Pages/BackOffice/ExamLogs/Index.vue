@@ -292,7 +292,7 @@ onMounted(() => {
                     {{ log.isp ? log.isp.substring(0, 30) + (log.isp.length > 30 ? '...' : '') : '-' }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link :href="route('admin.exam-logs.show', log)"
+                    <Link :href="`/admin/exam-logs/${log.id}`"
                           class="text-blue-600 hover:text-blue-900 inline-flex items-center">
                       <EyeIcon class="h-4 w-4"/>
                       <span class="ml-1">View</span>
