@@ -626,7 +626,7 @@ async fn load_exam_data(
         SELECT a.id, a.title, a.path, a.description, att.attachable_id as item_id
         FROM attachments a
         JOIN attachables att ON a.id = att.attachment_id
-        WHERE att.attachable_id = ANY($1) AND att.attachable_type = 'App\\Models\\Exams\\Item'
+        WHERE att.attachable_id = ANY($1::integer[]) AND att.attachable_type = 'App\\Models\\Exams\\Item'
         ORDER BY att.attachable_id, a.id ASC
     "#;
 
