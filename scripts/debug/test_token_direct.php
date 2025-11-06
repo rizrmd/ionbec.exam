@@ -6,7 +6,7 @@ date_default_timezone_set('Asia/Jakarta');
 echo "=== Direct Token Logic Test ===\n";
 
 // Test with direct database query to avoid Carbon issues
-$token = 'YKTCA'; // Uppercase version
+$token = 'ykTcA'; // Correct case format
 
 echo "Testing token: $token\n";
 
@@ -26,9 +26,9 @@ try {
 
     echo "✅ Database connected with Asia/Jakarta timezone\n";
 
-    // Get delivery_taker
+    // Get delivery_taker (case-sensitive like PublicTokenLoginController)
     $stmt = $pdo->prepare("SELECT dt.*, d.name as delivery_name, d.scheduled_at, d.automatic_start FROM delivery_taker dt JOIN deliveries d ON dt.delivery_id = d.id WHERE UPPER(dt.token) = ?");
-    $stmt->execute([$token]);
+    $stmt->execute([strtoupper($token)]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$result) {

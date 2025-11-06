@@ -622,24 +622,36 @@ async fn load_exam_data(
         ORDER BY question_id, id ASC
     "#;
     
-    let attachments_query = r#"
+      // Build a dynamic query to avoid parameter binding issues with arrays
+    let item_ids_str = item_ids.iter()
+        .map(|id| id.to_string())
+        .collect::<Vec<_>>()
+        .join(",");
+
+    let attachments_query = format!(
+        r#"
         SELECT a.id, a.title, a.path, a.description, att.attachable_id as item_id
         FROM attachments a
         JOIN attachables att ON a.id = att.attachment_id
-        WHERE att.attachable_id IN (SELECT unnest($1::integer[])) AND att.attachable_type = 'App\\Models\\Exams\\Item'
+        WHERE att.attachable_id IN ({}) AND att.attachable_type = 'App\\Models\\Exams\\Item'
         ORDER BY att.attachable_id, a.id ASC
-    "#;
+    "#, item_ids_str);
 
     info!("Attachments SQL: {}", attachments_query);
     
     info!("Executing queries for {} questions and {} items", question_ids.len(), item_ids.len());
     info!("Item IDs for attachments query: {:?}", &item_ids);
 
-    // Execute answers and attachments queries in parallel
-    let (answer_rows, attachment_rows) = tokio::try_join!(
-        sqlx::query(answers_query).bind(&question_ids).fetch_all(pool),
-        sqlx::query(attachments_query).bind(&item_ids).fetch_all(pool)
-    )?;
+    // Execute answers and attachments queries
+    let answer_rows = sqlx::query(answers_query)
+        .bind(&question_ids)
+        .fetch_all(pool)
+        .await?;
+
+    // Execute attachments query without parameters (using dynamic query)
+    let attachment_rows = sqlx::query(&attachments_query)
+        .fetch_all(pool)
+        .await?;
 
     info!("Successfully loaded {} answers and {} attachments", answer_rows.len(), attachment_rows.len());
     
