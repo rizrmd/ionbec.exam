@@ -13,6 +13,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use sqlx::Row;
 use harsh::Harsh;
 use std::sync::OnceLock;
+use url::Url;
 
 // Laravel hashid configuration
 const HASH_LENGTH: usize = 8;
@@ -123,18 +124,23 @@ async fn main() {
 
     info!("Starting Ionbec Rust Service");
 
-    // Get base URL for attachment URLs
+    // Use relative URL base for attachments - works across all domains
     let base_url = std::env::var("ASSET_URL").unwrap_or_else(|_| {
         std::env::var("APP_URL").unwrap_or_else(|_| {
-            "https://medxamion.com".to_string()
+            "".to_string() // Empty string for relative URLs
         })
     });
 
-    // Fallback to ensure we always have a valid base URL
+    // Convert to relative URL (remove domain, keep just path or empty)
     let base_url = if base_url.is_empty() {
-        "https://medxamion.com".to_string()
+        "".to_string() // Will generate URLs like "/attachment/stream/123"
     } else {
-        base_url
+        // Extract path from full URL if provided, or use empty for relative
+        if let Ok(parsed) = Url::parse(&base_url) {
+            parsed.path().trim_end_matches('/').to_string()
+        } else {
+            "".to_string()
+        }
     };
 
     info!("Using base URL for attachments: {}", base_url);
