@@ -84,6 +84,7 @@ mod csv_processor;
 struct AppState {
     redis_client: Option<redis::Client>,
     db_pool: Option<sqlx::PgPool>,
+    base_url: String,
 }
 
 #[derive(Serialize)]
@@ -121,6 +122,22 @@ async fn main() {
         .init();
 
     info!("Starting Ionbec Rust Service");
+
+    // Get base URL for attachment URLs
+    let base_url = std::env::var("ASSET_URL").unwrap_or_else(|_| {
+        std::env::var("APP_URL").unwrap_or_else(|_| {
+            "https://medxamion.com".to_string()
+        })
+    });
+
+    // Fallback to ensure we always have a valid base URL
+    let base_url = if base_url.is_empty() {
+        "https://medxamion.com".to_string()
+    } else {
+        base_url
+    };
+
+    info!("Using base URL for attachments: {}", base_url);
 
     // Initialize database connection using Laravel .env variables
     let db_pool = if let (Ok(host), Ok(port), Ok(database), Ok(username), Ok(password)) = (
@@ -174,6 +191,7 @@ async fn main() {
     let state = Arc::new(AppState {
         redis_client,
         db_pool,
+        base_url,
     });
 
     // Build router
@@ -547,7 +565,7 @@ async fn load_exam_data_handler(
             StatusCode::SERVICE_UNAVAILABLE
         })?;
     
-    match load_exam_data(pool, payload.exam_id, payload.delivery_id, payload.taker_id).await {
+    match load_exam_data(pool, payload.exam_id, payload.delivery_id, payload.taker_id, &state.base_url).await {
         Ok(items) => {
             let load_time = start.elapsed().as_millis();
             info!("Loaded {} items in {}ms", items.len(), load_time);
@@ -571,6 +589,7 @@ async fn load_exam_data(
     exam_id: i32,
     _delivery_id: i32,
     _taker_id: Option<i32>,
+    base_url: &str,
 ) -> Result<Vec<ExamItem>, sqlx::Error> {
     // Load all data in 4 optimized queries instead of N+1 queries
     
@@ -648,13 +667,40 @@ async fn load_exam_data(
         .fetch_all(pool)
         .await?;
 
-    // Execute attachments query without parameters (using dynamic query)
-    let attachment_rows = sqlx::query(&attachments_query)
-        .fetch_all(pool)
-        .await?;
+    // Execute attachments query using parameterized queries with UNNEST
+    info!("Executing attachment query using parameterized UNNEST approach...");
 
-    info!("Successfully loaded {} answers and {} attachments", answer_rows.len(), attachment_rows.len());
-    
+    let attachment_query = r#"
+        SELECT a.id::text, a.title, a.path, a.description, att.attachable_id as item_id
+        FROM attachments a
+        JOIN attachables att ON a.id = att.attachment_id
+        WHERE att.attachable_id = ANY($1) AND att.attachable_type = $2
+        ORDER BY att.attachable_id, a.id ASC
+    "#;
+
+    info!("Executing parameterized attachment query for {} item IDs", item_ids.len());
+    info!("Query: {}", attachment_query);
+    info!("Item IDs: {:?}", &item_ids);
+    info!("Attachable type: App\\Models\\Exams\\Item");
+
+    let attachment_rows = sqlx::query(attachment_query)
+        .bind(&item_ids)
+        .bind("App\\Models\\Exams\\Item")
+        .fetch_all(pool)
+        .await;
+
+    let attachment_rows = match attachment_rows {
+        Ok(rows) => {
+            info!("Successfully loaded {} answers and {} attachments", answer_rows.len(), rows.len());
+            info!("Attachment query returned {} rows", rows.len());
+            rows
+        }
+        Err(e) => {
+            info!("Error executing parameterized attachment query: {:?}", e);
+            return Err(e);
+        }
+    };
+
     // Group data by their parent IDs
     let mut answers_by_question: std::collections::HashMap<i32, Vec<ExamAnswer>> = std::collections::HashMap::new();
     for answer_row in answer_rows {
@@ -709,15 +755,18 @@ async fn load_exam_data(
     }
     
     let mut attachments_by_item: std::collections::HashMap<i32, Vec<ExamAttachment>> = std::collections::HashMap::new();
-    for attachment_row in attachment_rows {
+    info!("Processing {} attachment rows...", attachment_rows.len());
+    for (index, attachment_row) in attachment_rows.iter().enumerate() {
         let item_id: i32 = attachment_row.get("item_id");
         let attachment_id: String = attachment_row.get("id");
+        info!("Processing attachment row {}: item_id={}, attachment_id={}", index, item_id, attachment_id);
         let attachment = ExamAttachment {
             id: attachment_id.clone(),
             filename: attachment_row.get::<Option<String>, _>("title").unwrap_or_default(),
-            url: format!("/attachment/stream/{}", attachment_id),
+            url: format!("{}/attachment/stream/{}", base_url, attachment_id),
             description: attachment_row.get("description"),
         };
+        info!("Created attachment for item {}: {}", item_id, attachment_id);
         attachments_by_item.entry(item_id).or_default().push(attachment);
     }
     
