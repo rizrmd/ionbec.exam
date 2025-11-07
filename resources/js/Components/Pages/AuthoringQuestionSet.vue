@@ -1,7 +1,7 @@
 <script setup>
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import {ChevronLeftIcon, TrashIcon, TrendingUpIcon, PlusIcon, XCircleIcon, CheckIcon, ChevronUpIcon, ChevronDownIcon, PhotographIcon} from '@heroicons/vue/outline'
-import {toRefs, reactive, computed, ref, onMounted, watch} from "vue";
+import {toRefs, reactive, computed, ref, onMounted, onUnmounted, watch} from "vue";
 import route from "@/Libs/ziggy";
 import {Link, useForm} from '@inertiajs/inertia-vue3'
 import JetConfirmationModal from '@/Jetstream/ConfirmationModal'
@@ -69,6 +69,9 @@ const formContent = useForm({
   deleted_questions: [],
   deleted_answers: [],
 })
+
+const isSubmitting = ref(false)
+const submitTimeout = ref(null)
 
 if (item.value !== undefined) {
   formContent.hash = item.value.hash;
@@ -150,13 +153,40 @@ const makeCorrectAnswer = (questionIndex, answerIndex) => {
 }
 
 const updateContent = () => {
-  formContent.questions = itemQuestions.value;
-  formContent.post(route('back-office.question-set.create-or-update'), {
-    onSuccess: () => {
-      formContent.deleted_answers = [];
-      formContent.deleted_questions = [];
-    }
-  })
+  // Prevent double submissions and debounce rapid clicks
+  if (isSubmitting.value) {
+    return;
+  }
+
+  // Clear any existing timeout
+  if (submitTimeout.value) {
+    clearTimeout(submitTimeout.value);
+  }
+
+  // Set a short debounce to prevent accidental double-clicks
+  submitTimeout.value = setTimeout(() => {
+    isSubmitting.value = true;
+
+    formContent.questions = itemQuestions.value;
+    formContent.post(route('back-office.question-set.create-or-update'), {
+      onSuccess: () => {
+        formContent.deleted_answers = [];
+        formContent.deleted_questions = [];
+        // Reset submission state after successful save
+        isSubmitting.value = false;
+      },
+      onError: () => {
+        // Reset submission state on error
+        isSubmitting.value = false;
+      },
+      onFinish: () => {
+        // Reset submission state after request completes (as a fallback)
+        setTimeout(() => {
+          isSubmitting.value = false;
+        }, 500);
+      }
+    });
+  }, 200); // 200ms debounce
 }
 
 const prevUrl = ref(null);
@@ -231,6 +261,13 @@ const typeChanged = (e) => {
     formContent.is_vignette = true;
   }
 }
+
+// Cleanup timeout on component unmount
+onUnmounted(() => {
+  if (submitTimeout.value) {
+    clearTimeout(submitTimeout.value);
+  }
+})
 </script>
 
 <template>
@@ -290,7 +327,7 @@ const typeChanged = (e) => {
       </div>
 
       <div class="flex flex-col sm:flex-row gap-2 sm:gap-5 mt-4">
-        <div class="w-full sm:w-5/12 xl:w-4/12">
+        <div class="w-full sm:w-5/12 xl:w-4/12 sm:sticky sm:top-4 sm:h-fit sm:max-h-screen sm:overflow-y-auto">
           <div class="shadow ring-1 ring-black ring-opacity-5 rounded-lg bg-white p-3">
 
             <div class="pb-4 mb-4 border-b border-gray-200 space-y-3">
@@ -390,8 +427,25 @@ const typeChanged = (e) => {
             <Message v-if="item == null" message="Save first before adding image & questions."/>
           </div>
           <div class="h-1 bg-gray-200 my-4"></div>
-          <button class="w-full flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 my-2" @click="updateContent">
-            Save Changes
+          <button
+            class="w-full flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 my-2 transition-all duration-200"
+            :class="[
+              isSubmitting
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+            ]"
+            :disabled="isSubmitting || formContent.processing"
+            @click="updateContent">
+            <span v-if="isSubmitting" class="flex items-center">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Saving...
+            </span>
+            <span v-else>
+              Save Changes
+            </span>
           </button>
         </div>
 

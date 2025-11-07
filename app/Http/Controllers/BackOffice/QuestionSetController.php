@@ -231,7 +231,18 @@ class QuestionSetController extends Controller
         }
 
         foreach ($request->questions as $index => $data) {
-            $question = null === $data['hash'] ? new Question() : Question::byHash($data['hash']);
+            if (null === $data['hash']) {
+                // Check if question with same content already exists to prevent duplicates
+                $existingQuestion = Question::where('item_id', $item->id)
+                    ->where('question', $data['question'])
+                    ->where('order', $index + 1)
+                    ->first();
+
+                $question = $existingQuestion ?: new Question();
+            } else {
+                $question = Question::byHash($data['hash']);
+            }
+
             $question->item_id = $item->id;
             $question->type = $item->type;
             $question->question = $data['question'];
@@ -255,13 +266,21 @@ class QuestionSetController extends Controller
             $question->categories()->sync($categoriesData);
 
             foreach ($data['answers'] as $ans) {
-                //                if (!($ans['hash'] === null && $ans['answer'] === null)) {
-                $answer = (null === $ans['hash']) ? new Answer() : Answer::byHash($ans['hash']);
+                if (null === $ans['hash']) {
+                    // Check if answer with same content already exists to prevent duplicates
+                    $existingAnswer = Answer::where('question_id', $question->id)
+                        ->where('answer', $ans['answer'])
+                        ->first();
+
+                    $answer = $existingAnswer ?: new Answer();
+                } else {
+                    $answer = Answer::byHash($ans['hash']);
+                }
+
                 $answer->question_id = $question->id;
                 $answer->answer = $ans['answer'];
                 $answer->is_correct_answer = $ans['is_correct_answer'];
                 $answer->save();
-                //                }
             }
         }
 
