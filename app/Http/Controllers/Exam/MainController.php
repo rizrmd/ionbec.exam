@@ -49,6 +49,9 @@ class MainController extends Controller
             'delivery_class' => isset($dataSession['delivery']) && is_object($dataSession['delivery']) ? get_class($dataSession['delivery']) : 'not_object'
         ]);
 
+        // Determine if this is a demo session
+        $isDemoSession = isset($dataSession['demo']) && $dataSession['demo'] === true;
+
         // Check if session exists and has delivery
         if (!isset($dataSession['delivery']) || !$dataSession['delivery']) {
             \Log::error('MainController: No delivery in session', [
