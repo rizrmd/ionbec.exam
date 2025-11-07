@@ -187,18 +187,43 @@ class Attempt extends Model
             // Default to 2 hours if delivery not found
             return $this->started_at->addHours(2);
         }
-        
+
         if ($delivery->is_anytime) {
             return $this->started_at->addMinutes($delivery->duration + $this->extra_minute);
         }
 
-        // Ensure ended_at is a Carbon instance
-        $endedAt = $delivery->ended_at;
-        if (is_string($endedAt)) {
-            $endedAt = \Carbon\Carbon::parse($endedAt);
+        // 🔒 CRITICAL FIX: Handle automatic_start correctly
+        // For automatic_start deliveries, ALWAYS use actual start time when user starts
+        // The scheduled_at is just the earliest possible start time, not the timer start
+        if ($delivery->automatic_start) {
+            \Log::info('CRITICAL FIX: Automatic start timing calculation', [
+                'attempt_id' => $this->id,
+                'delivery_id' => $delivery->id,
+                'automatic_start' => $delivery->automatic_start,
+                'scheduled_at' => $delivery->scheduled_at,
+                'started_at' => $this->started_at->toDateTimeString(),
+                'duration' => $delivery->duration,
+                'extra_minute' => $this->extra_minute,
+                'calculated_expires_at' => $this->started_at->addMinutes($delivery->duration + $this->extra_minute)->toDateTimeString()
+            ]);
+
+            return $this->started_at->addMinutes($delivery->duration + $this->extra_minute);
         }
 
-        return $endedAt->addMinutes($this->extra_minute);
+        // For manual_start deliveries (not automatic_start and not anytime),
+        // the exam duration starts when the user actually starts the exam
+        \Log::info('CRITICAL FIX: Manual start timing calculation', [
+            'attempt_id' => $this->id,
+            'delivery_id' => $delivery->id,
+            'automatic_start' => $delivery->automatic_start ?? false,
+            'is_anytime' => $delivery->is_anytime,
+            'started_at' => $this->started_at->toDateTimeString(),
+            'duration' => $delivery->duration,
+            'extra_minute' => $this->extra_minute,
+            'calculated_expires_at' => $this->started_at->addMinutes($delivery->duration + $this->extra_minute)->toDateTimeString()
+        ]);
+
+        return $this->started_at->addMinutes($delivery->duration + $this->extra_minute);
     }
 
     /**
