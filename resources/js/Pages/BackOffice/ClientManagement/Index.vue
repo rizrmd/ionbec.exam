@@ -122,7 +122,7 @@
                         title="Clone client">
                         <DocumentDuplicateIcon class="h-5 w-5" aria-hidden="true"/>
                       </button>
-                      <Link 
+                      <Link
                         :href="route('back-office.clients.edit', client.id)"
                         class="text-blue-600 hover:text-blue-900"
                         title="Edit client">

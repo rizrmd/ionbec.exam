@@ -9,6 +9,7 @@ use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Dentro\Yalr\Attributes\Get;
 use Dentro\Yalr\Attributes\Post;
@@ -109,8 +110,8 @@ class UserManagementController extends Controller
         
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,NULL,id,client_id,' . $clientId],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,NULL,id,client_id,' . $clientId],
+            'username' => ['required', 'string', 'max:255', Rule::unique('users')->where('client_id', $clientId)],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->where('client_id', $clientId)],
             'password' => ['required', 'confirmed', Password::defaults()],
             'role_ids' => ['array'],
             'role_ids.*' => ['exists:roles,id'],
@@ -199,8 +200,8 @@ class UserManagementController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $user->id . ',id,client_id,' . $clientId],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id . ',id,client_id,' . $clientId],
+            'username' => ['required', 'string', 'max:255', Rule::unique('users')->where('client_id', $clientId)->ignore($user->id)],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->where('client_id', $clientId)->ignore($user->id)],
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'role_ids' => ['array'],
             'role_ids.*' => ['exists:roles,id'],

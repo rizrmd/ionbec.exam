@@ -30,6 +30,12 @@ class AllowedRoleMiddleware
         }, $request->user()->load(['roles' => function ($query) {
             $query->withoutGlobalScopes();
         }])->roles->toArray());
+
+        // Root role has access to everything
+        if (in_array('root', $roles)) {
+            return $next($request);
+        }
+
         $allowed = explode('|', $rolesAllowed);
 
         if (0 === count(array_intersect($allowed, $roles))) {

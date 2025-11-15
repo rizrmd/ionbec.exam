@@ -9,6 +9,12 @@
             class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
             View Client
           </Link>
+          <button
+            @click="confirmDelete"
+            class="inline-flex items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+            <TrashIcon class="h-5 w-5 mr-2" aria-hidden="true"/>
+            Delete Client
+          </button>
           <Link
             :href="route('back-office.clients.index')"
             class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
@@ -174,16 +180,46 @@
       </div>
     </template>
   </dashboard-layout>
+
+  <!-- Delete Confirmation Modal -->
+  <JetConfirmationModal :show="isDeleting">
+    <template #title>
+      Delete Client {{ client.name }}
+    </template>
+
+    <template #content>
+      This action cannot be undone. All data associated with this client will be permanently deleted.
+    </template>
+
+    <template #footer>
+      <div class="flex justify-end">
+        <button
+          class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          type="button"
+          @click="cancelDelete">Cancel
+        </button>
+        <button
+          class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          type="submit"
+          :disabled="deleteForm.processing"
+          @click="performDelete">
+          Yes, Delete Client
+        </button>
+      </div>
+    </template>
+  </JetConfirmationModal>
 </template>
 
 <script setup>
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import { PlusIcon, TrashIcon } from '@heroicons/vue/outline'
 import { useForm, Link } from "@inertiajs/inertia-vue3"
+import { computed, ref } from 'vue'
 import JetValidationErrors from '@/Jetstream/ValidationErrors'
 import JetLabel from '@/Jetstream/Label'
 import JetInput from '@/Jetstream/Input'
 import JetCheckbox from '@/Jetstream/Checkbox'
+import JetConfirmationModal from '@/Jetstream/ConfirmationModal'
 
 const props = defineProps({
   client: {
@@ -226,11 +262,32 @@ const removeDomain = (index) => {
 const submit = () => {
   // Filter out empty domains
   const filteredDomains = form.domains.filter(domain => domain && domain.trim() !== '')
-  
+
   form.transform((data) => ({
     ...data,
     domains: filteredDomains,
     _method: 'PUT'
   })).post(route('back-office.clients.update', props.client.id))
+}
+
+// Delete functionality
+const deleteForm = useForm({})
+const deletingClient = ref(false)
+const isDeleting = computed(() => deletingClient.value)
+
+const confirmDelete = () => {
+  deletingClient.value = true
+}
+
+const cancelDelete = () => {
+  deletingClient.value = false
+}
+
+const performDelete = () => {
+  deleteForm.delete(route('back-office.clients.destroy', props.client.id), {
+    onSuccess: () => {
+      deletingClient.value = false
+    }
+  })
 }
 </script>
