@@ -29,6 +29,9 @@ class RedirectIfAuthenticated
                     if (in_array('administrator', $roles)) {
                         return redirect()->route('back-office.dashboard');
                     }
+                    if (in_array('scorer', $roles)) {
+                        return redirect()->route('back-office.dashboard');
+                    }
 
                     return redirect()->route('back-office.scoring.index');
                 }
