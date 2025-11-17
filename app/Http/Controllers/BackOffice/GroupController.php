@@ -81,7 +81,7 @@ class GroupController extends Controller
                 $query->where('id', $group->id);
             });
         } else {
-            return $query;
+            return $query->where('client_id', auth()->user()->client_id);
         }
     }
 
