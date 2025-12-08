@@ -76,15 +76,26 @@ class QuestionSetController extends Controller
         });
 
         // Sorting logic
-        $sortBy = $request->input('sort', 'created_at');
+        $sortBy = $request->input('sort', 'updated_at');
         $sortOrder = $request->input('order', 'desc');
 
         \Log::info('QuestionSet Sorting', ['sort' => $sortBy, 'order' => $sortOrder]);
 
-        if (in_array($sortBy, ['title', 'created_at']) && in_array($sortOrder, ['asc', 'desc'])) {
-            $itemQuery->orderBy($sortBy, $sortOrder);
+        $allowedSorts = ['title', 'created_at', 'updated_at'];
+        if (in_array($sortBy, $allowedSorts) && in_array($sortOrder, ['asc', 'desc'])) {
+            if ($sortBy === 'title') {
+                // Natural sorting: extract number from end of title and sort numerically
+                $itemQuery->orderByRaw("
+                    CAST(
+                        SUBSTRING(title FROM '([0-9]+)$')
+                        AS INTEGER
+                    ) {$sortOrder} NULLS LAST
+                ");
+            } else {
+                $itemQuery->orderBy($sortBy, $sortOrder);
+            }
         } else {
-            $itemQuery->latest('created_at');
+            $itemQuery->orderBy('updated_at', 'desc');
         }
 
         return inertia('BackOffice/QuestionSet/Index', [

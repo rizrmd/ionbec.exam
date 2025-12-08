@@ -43,7 +43,7 @@ const {payload, types, tests} = toRefs(props)
 const filters = reactive({
   query: null,
   type: null,
-  sort: 'created_at',
+  sort: 'updated_at',
   order: 'desc',
 })
 
@@ -91,7 +91,7 @@ onMounted(() => {
   filters.query = urlParams.query
   filters.type = urlParams.type || null
   filters.is_vignette = urlParams.is_vignette || null
-  filters.sort = urlParams.sort || 'created_at'
+  filters.sort = urlParams.sort || 'updated_at'
   filters.order = urlParams.order || 'desc'
 })
 
@@ -110,6 +110,18 @@ const sortBy = (column) => {
 const getSortIcon = (column) => {
   if (filters.sort !== column) return '↕'
   return filters.order === 'asc' ? '↑' : '↓'
+}
+
+const formatDate = (dateString) => {
+  if (!dateString) return '-'
+  const date = new Date(dateString)
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
 }
 
 const filteredTests = computed(() => {
@@ -193,6 +205,9 @@ const filteredTests = computed(() => {
                   <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900" scope="col">QUESTIONS</th>
                   <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 text-center" scope="col">TYPE</th>
                   <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 text-center" scope="col">VIGNETTE</th>
+                  <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" scope="col" @click="sortBy('updated_at')">
+                    LAST UPDATED <span class="text-gray-400">{{ getSortIcon('updated_at') }}</span>
+                  </th>
                   <th class="relative py-3.5 pl-3 pr-4 sm:pr-6" scope="col">
                     <span class="sr-only">Edit</span>
                   </th>
@@ -220,6 +235,9 @@ const filteredTests = computed(() => {
                       <XCircleIcon v-else aria-hidden="true" class="-mx-1 h-5 w-5 text-orange-600"/>
                     </div>
                   </td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    {{ formatDate(item.updated_at) }}
+                  </td>
                   <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 flex justify-end">
                     <Link :href="route('back-office.question-set.detail', {item_hash: item.hash, name: 'back-office.question-set.index', params: 'page', values: payload.current_page})" class="text-blue-600 hover:text-blue-900">
                       <PencilAltIcon aria-hidden="true" class="-mx-1 h-5 w-5 cursor-pointer"/>
@@ -227,12 +245,12 @@ const filteredTests = computed(() => {
                   </td>
                 </tr>
                 <tr v-if="(filters.query !== null || filters.type !== null || filters.is_vignette !== null) && payload.data.length === 0">
-                  <td colspan="6">
+                  <td colspan="7">
                     <div class="text-center w-full my-4">Data Not Found.</div>
                   </td>
                 </tr>
                 <tr v-else-if="payload.data.length === 0">
-                  <td colspan="6">
+                  <td colspan="7">
                     <div class="text-center w-full my-4">Empty, please create Question Set.</div>
                   </td>
                 </tr>
