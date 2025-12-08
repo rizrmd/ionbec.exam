@@ -43,6 +43,8 @@ const {payload, types, tests} = toRefs(props)
 const filters = reactive({
   query: null,
   type: null,
+  sort: 'created_at',
+  order: 'desc',
 })
 
 const search = () => {
@@ -89,7 +91,24 @@ onMounted(() => {
   filters.query = urlParams.query
   filters.type = urlParams.type || null
   filters.is_vignette = urlParams.is_vignette || null
+  filters.sort = urlParams.sort || 'created_at'
+  filters.order = urlParams.order || 'desc'
 })
+
+const sortBy = (column) => {
+  if (filters.sort === column) {
+    filters.order = filters.order === 'asc' ? 'desc' : 'asc'
+  } else {
+    filters.sort = column
+    filters.order = 'asc'
+  }
+  search()
+}
+
+const getSortIcon = (column) => {
+  if (filters.sort !== column) return '↕'
+  return filters.order === 'asc' ? '↑' : '↓'
+}
 
 const filteredTests = computed(() => {
   let exams = [];
@@ -166,7 +185,9 @@ const filteredTests = computed(() => {
                 <thead class="bg-gray-50">
                 <tr>
                   <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 w-20" scope="col">NO</th>
-                  <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900" scope="col">TITLE</th>
+                  <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" scope="col" @click="sortBy('title')">
+                    TITLE <span class="text-gray-400">{{ getSortIcon('title') }}</span>
+                  </th>
                   <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900" scope="col">QUESTIONS</th>
                   <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 text-center" scope="col">TYPE</th>
                   <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 text-center" scope="col">VIGNETTE</th>

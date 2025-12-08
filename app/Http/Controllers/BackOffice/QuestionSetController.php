@@ -75,7 +75,15 @@ class QuestionSetController extends Controller
             $query->where('is_vignette', 'true' === $vignette);
         });
 
-        $itemQuery->latest('created_at');
+        // Sorting logic
+        $sortBy = $request->input('sort', 'created_at');
+        $sortOrder = $request->input('order', 'desc');
+
+        if (in_array($sortBy, ['title', 'created_at']) && in_array($sortOrder, ['asc', 'desc'])) {
+            $itemQuery->orderBy($sortBy, $sortOrder);
+        } else {
+            $itemQuery->latest('created_at');
+        }
 
         return inertia('BackOffice/QuestionSet/Index', [
             'countMultipleChoice' => $multipleChoice,
