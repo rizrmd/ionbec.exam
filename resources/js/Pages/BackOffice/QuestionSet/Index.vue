@@ -96,12 +96,14 @@ onMounted(() => {
 })
 
 const sortBy = (column) => {
+  console.log('Sorting by:', column, 'Current:', filters.sort, filters.order)
   if (filters.sort === column) {
     filters.order = filters.order === 'asc' ? 'desc' : 'asc'
   } else {
     filters.sort = column
     filters.order = 'asc'
   }
+  console.log('New sort:', filters.sort, filters.order)
   search()
 }
 

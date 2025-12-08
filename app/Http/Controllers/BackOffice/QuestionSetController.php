@@ -79,6 +79,8 @@ class QuestionSetController extends Controller
         $sortBy = $request->input('sort', 'created_at');
         $sortOrder = $request->input('order', 'desc');
 
+        \Log::info('QuestionSet Sorting', ['sort' => $sortBy, 'order' => $sortOrder]);
+
         if (in_array($sortBy, ['title', 'created_at']) && in_array($sortOrder, ['asc', 'desc'])) {
             $itemQuery->orderBy($sortBy, $sortOrder);
         } else {
