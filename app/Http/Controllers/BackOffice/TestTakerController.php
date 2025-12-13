@@ -17,6 +17,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\ResetPasswordTestTaker;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 use Veelasky\LaravelHashId\Rules\ExistsByHash;
 use App\Jobs\Takers\Verification as TakerVerification;
 
@@ -83,9 +84,18 @@ class TestTakerController extends Controller
     #[Post('/back-office/test-taker', name: 'back-office.test-taker.store')]
     public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
+        $clientId = auth()->user()->client_id ?? session('client_id');
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:takers',
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('takers')->where(function ($query) use ($clientId) {
+                    return $query->where('client_id', $clientId);
+                })
+            ],
             'password' => 'max:255|min:8',
             'groups' => 'array',
         ]);
@@ -118,9 +128,19 @@ class TestTakerController extends Controller
     #[Put('/back-office/test-taker/{taker_hash}', name: 'back-office.test-taker.update')]
     public function update(Request $request, Taker $taker): \Illuminate\Http\RedirectResponse
     {
+        $clientId = auth()->user()->client_id ?? session('client_id');
+
         $validation = [
             'name' => 'required|string|max:255',
-            'email' => 'required|email'.(($taker->email !== $request->email) ? '|unique:takers' : null),
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('takers')
+                    ->ignore($taker->id)
+                    ->where(function ($query) use ($clientId) {
+                        return $query->where('client_id', $clientId);
+                    })
+            ],
             'groups' => 'array',
         ];
         $request->validate($validation);

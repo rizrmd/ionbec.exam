@@ -133,7 +133,7 @@ class QuestionSetController extends Controller
     #[Get('back-office/question-set/{item_hash}', name: 'back-office.question-set.detail')]
     public function detail(Request $request, Item $item): Response
     {
-        $questionQuery = Question::query()->where('item_id', $item->id)->with(['answers', 'categories'])->orderBy('order', 'ASC');
+        $questionQuery = Question::query()->where('item_id', $item->id)->with(['answers', 'categories', 'attachments'])->orderBy('order', 'ASC');
         $questions = $questionQuery->clone()->get();
 
         $questionIds = $questionQuery->clone()->pluck('id');
