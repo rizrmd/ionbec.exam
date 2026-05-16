@@ -117,6 +117,8 @@
                                         <th>Time</th>
                                         <th>Candidate</th>
                                         <th>Session Key</th>
+                                        <th>Event</th>
+                                        <th>Tab ID</th>
                                         <th>IP Address</th>
                                         <th>Location</th>
                                         <th>Tab Count</th>
@@ -127,7 +129,7 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($logs as $log)
-                                        <tr class="{{ $log->is_suspicious() ? 'table-danger' : '' }}">
+                                        <tr class="{{ $log->isSuspicious() ? 'table-danger' : '' }}">
                                             <td>{{ $log->created_at->format('M j, Y H:i:s') }}</td>
                                             <td>
                                                 @if ($log->attempt && $log->attempt->taker)
@@ -147,18 +149,26 @@
                                             <td>
                                                 <code class="small">{{ substr($log->session_key, 0, 20) }}...</code>
                                             </td>
+                                            <td>{{ $log->event_type ?: '-' }}</td>
+                                            <td>
+                                                @if ($log->tab_id)
+                                                    <code class="small">{{ \Illuminate\Support\Str::limit($log->tab_id, 16) }}</code>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
                                             <td>
                                                 <code>{{ $log->ip_address }}</code>
                                                 @if ($log->ip_address)
                                                     <br>
                                                     <small class="text-muted">
-                                                        {{ \App\Services\GeolocationService::isSuspiciousIp($log->ip_address) ? '🚨 Suspicious' : '✅ Normal' }}
+                                                        {{ app(\App\Services\GeolocationService::class)->isSuspiciousIp($log->ip_address) ? '🚨 Suspicious' : '✅ Normal' }}
                                                     </small>
                                                 @endif
                                             </td>
                                             <td>{{ $log->formatted_location }}</td>
                                             <td>
-                                                <span class="badge {{ $log->tab_count_color }}">
+                                                <span class="badge {{ $log->bootstrap_tab_count_color }}">
                                                     {{ $log->tab_count }} tab{{ $log->tab_count > 1 ? 's' : '' }}
                                                 </span>
                                             </td>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Attempts\Attempt;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,9 +12,14 @@ class ExamSessionLog extends Model
     use HasFactory;
 
     protected $fillable = [
+        'client_id',
         'attempt_id',
         'session_key',
         'tab_count',
+        'event_type',
+        'tab_id',
+        'client_timestamp',
+        'server_timestamp',
         'ip_address',
         'country',
         'city',
@@ -23,6 +29,8 @@ class ExamSessionLog extends Model
     ];
 
     protected $casts = [
+        'client_timestamp' => 'datetime',
+        'server_timestamp' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -32,7 +40,12 @@ class ExamSessionLog extends Model
      */
     public function attempt(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Attempts\Attempt::class);
+        return $this->belongsTo(Attempt::class);
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
     }
 
     /**
@@ -126,6 +139,22 @@ class ExamSessionLog extends Model
     }
 
     /**
+     * Get Bootstrap badge color for Blade admin pages.
+     */
+    public function getBootstrapTabCountColorAttribute(): string
+    {
+        if ($this->tab_count === 1) {
+            return 'bg-success';
+        }
+
+        if ($this->tab_count === 2) {
+            return 'bg-warning text-dark';
+        }
+
+        return 'bg-danger';
+    }
+
+    /**
      * Get session information
      */
     public function getSessionInfoAttribute(): array
@@ -133,6 +162,10 @@ class ExamSessionLog extends Model
         return [
             'session_key' => $this->session_key,
             'tab_count' => $this->tab_count,
+            'event_type' => $this->event_type,
+            'tab_id' => $this->tab_id,
+            'client_timestamp' => $this->client_timestamp?->toISOString(),
+            'server_timestamp' => $this->server_timestamp?->toISOString(),
             'duration' => $this->created_at->diffForHumans(),
             'is_suspicious' => $this->isSuspicious(),
         ];

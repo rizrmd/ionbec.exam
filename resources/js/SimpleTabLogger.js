@@ -11,9 +11,13 @@ export class SimpleTabLogger {
         this.config = {
             logEndpoint: '/api/exam/log-multiple-tabs',
             checkInterval: 5000, // 5 seconds
-            heartbeatInterval: 30000, // 30 seconds
+            heartbeatInterval: 120000, // 2 minutes
+            flushInterval: 15000, // batch client-side, keep single-log request shape
+            minEventInterval: 10000,
+            maxQueueSize: 50,
             maxRetries: 3,
             retryDelay: 1000,
+            debug: false,
             ...config
         };
 
@@ -22,8 +26,11 @@ export class SimpleTabLogger {
         this.logQueue = [];
         this.isOnline = navigator.onLine;
         this.retryCount = 0;
+        this.lastEventAt = {};
+        this.eventListeners = [];
+        this.retryTimeouts = [];
 
-        console.log('SimpleTabLogger initialized', {
+        this.debugLog('SimpleTabLogger initialized', {
             attemptId: this.attemptId,
             sessionKey: this.sessionKey,
             tabId: this.tabId
@@ -39,12 +46,14 @@ export class SimpleTabLogger {
         // Start monitoring
         this.startTabMonitoring();
         this.startHeartbeat();
+        this.startQueueFlush();
 
         // Setup event listeners
         this.setupEventListeners();
 
         // Initial log
         this.logEvent('exam_started', 'Tab logger initialized');
+        this.flushLogQueue();
     }
 
     generateSessionKey() {
@@ -71,7 +80,7 @@ export class SimpleTabLogger {
             const existingTabData = localStorage.getItem(storageKey);
             if (existingTabData) {
                 const existing = JSON.parse(existingTabData);
-                console.log('Existing tab detected:', existing);
+                this.debugLog('Existing tab detected:', existing);
 
                 if (existing.tabId !== this.tabId) {
                     this.tabCount++;
@@ -135,42 +144,75 @@ export class SimpleTabLogger {
         }, this.config.heartbeatInterval);
     }
 
+    startQueueFlush() {
+        this.flushInterval = setInterval(() => {
+            this.flushLogQueue();
+        }, this.config.flushInterval);
+    }
+
     setupEventListeners() {
         // Page visibility
-        document.addEventListener('visibilitychange', () => {
+        this.addEventListener(document, 'visibilitychange', () => {
             const isVisible = !document.hidden;
             this.logEvent('visibility_change', isVisible ? 'Page became visible' : 'Page became hidden');
         });
 
         // Window focus/blur
-        window.addEventListener('focus', () => {
+        this.addEventListener(window, 'focus', () => {
             this.logEvent('window_focus', 'Window gained focus');
         });
 
-        window.addEventListener('blur', () => {
+        this.addEventListener(window, 'blur', () => {
             this.logEvent('window_blur', 'Window lost focus');
         });
 
         // Network connectivity
-        window.addEventListener('online', () => {
+        this.addEventListener(window, 'online', () => {
             this.isOnline = true;
             this.logEvent('network_online', 'Connection restored');
             this.flushLogQueue();
         });
 
-        window.addEventListener('offline', () => {
+        this.addEventListener(window, 'offline', () => {
             this.isOnline = false;
             this.logEvent('network_offline', 'Connection lost');
         });
 
         // Before unload - clean up
-        window.addEventListener('beforeunload', () => {
+        this.addEventListener(window, 'beforeunload', () => {
             this.logEvent('tab_closing', `Tab ${this.tabId} is closing`);
-            this.cleanup();
+            this.flushWithBeacon();
+            this.cleanup(false);
         });
     }
 
+    addEventListener(target, eventName, handler) {
+        target.addEventListener(eventName, handler);
+        this.eventListeners.push({ target, eventName, handler });
+    }
+
+    shouldThrottle(eventType, notes) {
+        const now = Date.now();
+        const key = `${eventType}:${notes}`;
+        const noisyEvents = ['heartbeat', 'visibility_change', 'window_focus', 'window_blur'];
+
+        if (!noisyEvents.includes(eventType)) {
+            return false;
+        }
+
+        if (this.lastEventAt[key] && now - this.lastEventAt[key] < this.config.minEventInterval) {
+            return true;
+        }
+
+        this.lastEventAt[key] = now;
+        return false;
+    }
+
     logEvent(eventType, notes = '') {
+        if (this.shouldThrottle(eventType, notes)) {
+            return;
+        }
+
         const logEntry = {
             attempt_id: this.attemptId,
             session_key: this.sessionKey,
@@ -182,22 +224,27 @@ export class SimpleTabLogger {
             user_agent: navigator.userAgent
         };
 
-        // Add to queue or send immediately
-        if (this.isOnline) {
-            this.sendLog(logEntry);
-        } else {
-            this.logQueue.push(logEntry);
+        this.logQueue.push(logEntry);
+        if (this.logQueue.length > this.config.maxQueueSize) {
+            this.logQueue.splice(0, this.logQueue.length - this.config.maxQueueSize);
         }
 
-        console.log('TabLogger Event:', eventType, notes);
+        if (this.isOnline) {
+            this.flushLogQueue();
+        }
+
+        this.debugLog('TabLogger Event:', eventType, notes);
     }
 
     async sendLog(logEntry) {
         try {
             const response = await fetch(this.config.logEndpoint, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': this.getCsrfToken()
                 },
                 body: JSON.stringify(logEntry)
@@ -205,22 +252,23 @@ export class SimpleTabLogger {
 
             if (response.ok) {
                 this.retryCount = 0; // Reset retry count on success
-                const result = await response.json();
-                console.log('Log sent successfully:', result);
+                this.debugLog('Log sent successfully');
             } else {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
         } catch (error) {
             console.warn('Failed to send log entry:', error);
-            this.logQueue.push(logEntry);
+            this.logQueue.unshift(logEntry);
 
             // Retry logic
             if (this.retryCount < this.config.maxRetries) {
                 this.retryCount++;
-                setTimeout(() => {
+                const retryTimeout = setTimeout(() => {
+                    this.retryTimeouts = this.retryTimeouts.filter((id) => id !== retryTimeout);
                     this.retryFailedLogs();
                 }, this.config.retryDelay * this.retryCount);
+                this.retryTimeouts.push(retryTimeout);
             }
         }
     }
@@ -233,6 +281,9 @@ export class SimpleTabLogger {
 
         for (const log of logs) {
             await this.sendLog(log);
+            if (!this.isOnline) {
+                break;
+            }
         }
     }
 
@@ -240,12 +291,29 @@ export class SimpleTabLogger {
         await this.retryFailedLogs();
     }
 
+    flushWithBeacon() {
+        if (!navigator.sendBeacon || this.logQueue.length === 0) return;
+
+        const logs = [...this.logQueue];
+        this.logQueue = [];
+
+        logs.forEach((log) => {
+            const payload = new Blob([JSON.stringify(log)], { type: 'application/json' });
+            navigator.sendBeacon(this.config.logEndpoint, payload);
+        });
+    }
+
     getCsrfToken() {
         const token = document.querySelector('meta[name="csrf-token"]');
         return token ? token.getAttribute('content') : '';
     }
 
-    cleanup() {
+    cleanup(sendClosingLog = true) {
+        if (sendClosingLog) {
+            this.logEvent('tab_closing', `Tab ${this.tabId} is closing`);
+            this.flushWithBeacon();
+        }
+
         // Clear intervals
         if (this.tabCheckInterval) {
             clearInterval(this.tabCheckInterval);
@@ -253,6 +321,16 @@ export class SimpleTabLogger {
         if (this.heartbeatInterval) {
             clearInterval(this.heartbeatInterval);
         }
+        if (this.flushInterval) {
+            clearInterval(this.flushInterval);
+        }
+        this.retryTimeouts.forEach(clearTimeout);
+        this.retryTimeouts = [];
+
+        this.eventListeners.forEach(({ target, eventName, handler }) => {
+            target.removeEventListener(eventName, handler);
+        });
+        this.eventListeners = [];
 
         // Remove tab from localStorage
         try {
@@ -285,6 +363,12 @@ export class SimpleTabLogger {
 
     forceMultipleTabCheck() {
         this.checkForMultipleTabs();
+    }
+
+    debugLog(...args) {
+        if (this.config.debug) {
+            console.log(...args);
+        }
     }
 
     // Static method for easy initialization

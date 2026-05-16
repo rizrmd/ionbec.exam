@@ -18,7 +18,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Log Details #{{ $log->id }}</h5>
-                    @if ($log->is_suspicious())
+                    @if ($log->isSuspicious())
                         <span class="badge bg-danger">
                             <i class="fas fa-exclamation-triangle"></i> Suspicious Activity
                         </span>
@@ -45,10 +45,26 @@
                                 <tr>
                                     <td><strong>Tab Count:</strong></td>
                                     <td>
-                                        <span class="badge {{ $log->tab_count_color }}">
+                                        <span class="badge {{ $log->bootstrap_tab_count_color }}">
                                             {{ $log->tab_count }} tab{{ $log->tab_count > 1 ? 's' : '' }}
                                         </span>
                                     </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Event Type:</strong></td>
+                                    <td>{{ $log->event_type ?: 'Legacy event' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tab ID:</strong></td>
+                                    <td>{{ $log->tab_id ?: '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Client Timestamp:</strong></td>
+                                    <td>{{ $log->client_timestamp?->format('Y-m-d H:i:s') ?: '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Server Timestamp:</strong></td>
+                                    <td>{{ $log->server_timestamp?->format('Y-m-d H:i:s') ?: '-' }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Notes:</strong></td>
@@ -65,7 +81,7 @@
                                     <td><strong>IP Address:</strong></td>
                                     <td>
                                         <code>{{ $log->ip_address }}</code>
-                                        @if (\App\Services\GeolocationService::isSuspiciousIp($log->ip_address))
+                                        @if ($log->ip_address && app(\App\Services\GeolocationService::class)->isSuspiciousIp($log->ip_address))
                                             <br><span class="text-danger">🚨 Suspicious IP</span>
                                         @endif
                                     </td>
@@ -164,8 +180,9 @@
                                         <thead>
                                             <tr>
                                                 <th>Time</th>
+                                                <th>Event</th>
+                                                <th>Tab ID</th>
                                                 <th>Tab Count</th>
-                                                <th>Event Type</th>
                                                 <th>Notes</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -174,6 +191,7 @@
                                             @php
                                                 $relatedLogs = \App\Models\ExamSessionLog::where('session_key', $log->session_key)
                                                     ->where('id', '!=', $log->id)
+                                                    ->when(!auth()->user()?->isRoot(), fn ($query) => $query->where('client_id', auth()->user()?->client_id))
                                                     ->orderBy('created_at', 'desc')
                                                     ->limit(10)
                                                     ->get();
@@ -182,8 +200,10 @@
                                                 @foreach ($relatedLogs as $relatedLog)
                                                     <tr>
                                                         <td>{{ $relatedLog->created_at->format('H:i:s') }}</td>
+                                                        <td>{{ $relatedLog->event_type ?: '-' }}</td>
+                                                        <td>{{ $relatedLog->tab_id ?: '-' }}</td>
                                                         <td>
-                                                            <span class="badge {{ $relatedLog->tab_count_color }}">
+                                                            <span class="badge {{ $relatedLog->bootstrap_tab_count_color }}">
                                                                 {{ $relatedLog->tab_count }}
                                                             </span>
                                                         </td>
@@ -198,7 +218,7 @@
                                                 @endforeach
                                             @else
                                                 <tr>
-                                                    <td colspan="5" class="text-center text-muted">
+                                                    <td colspan="6" class="text-center text-muted">
                                                         No related logs found
                                                     </td>
                                                 </tr>

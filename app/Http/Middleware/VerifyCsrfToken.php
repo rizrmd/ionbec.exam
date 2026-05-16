@@ -12,8 +12,8 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        'exam',  // Allow DEMO token requests
-        'back-office/delivery/*',  // Temporarily exclude delivery routes for debugging
+        'logout',  // Avoid 419 on sign-out in the current multi-domain Inertia flow
+        'api/exam/log-multiple-tabs',
     ];
 
     /**
@@ -21,8 +21,12 @@ class VerifyCsrfToken extends Middleware
      */
     protected function inExceptArray($request)
     {
-        // Allow DEMO token requests to bypass CSRF
-        if ($request->is('exam') && $request->input('token') === 'DEMO') {
+        if (
+            app()->environment(['local', 'testing']) &&
+            config('app.enable_demo_token', false) &&
+            $request->is('exam') &&
+            $request->input('token') === config('app.demo_token', 'DEMO')
+        ) {
             return true;
         }
 
