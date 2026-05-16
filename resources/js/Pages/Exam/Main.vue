@@ -1,7 +1,7 @@
 <script setup>
 import ExamLayout from "@/Layouts/ExamLayout";
 import {XIcon} from '@heroicons/vue/outline'
-import {ref, toRefs, onMounted, computed, watch} from "vue";
+import {ref, toRefs, onMounted, computed, watch, onUnmounted} from "vue";
 import Editor from "@/Components/Editor";
 import Card from '@/Components/Card'
 import LoadingCircle from '@/Components/LoadingCircle'
@@ -54,9 +54,13 @@ const props = defineProps({
     type: Number,
     default: null,
   },
+  timer: {
+    type: Object,
+    default: () => ({}),
+  },
 })
 
-const {exam, examItems, attempt, delivery, attemptQuestions, admin, remainingSeconds, examId, deliveryId, takerId} = toRefs(props);
+const {exam, examItems, attempt, delivery, attemptQuestions, admin, remainingSeconds, examId, deliveryId, takerId, timer} = toRefs(props);
 
 // 🔒 CRITICAL FIX: Use explicit IDs from backend instead of nested object properties
 const examContext = ref({
@@ -301,6 +305,53 @@ const createFallbackQuestion = (index) => {
 const rawAnswerVal = ref({});
 const laters = ref([]);
 const submittingAnswer = ref(false);
+const timerCount = ref("00:00");
+const activeIntervals = [];
+const activeTimeouts = [];
+let timerDeadlineMs = null;
+let timerExpired = false;
+let tabLoggerInstance = null;
+
+const registerInterval = (callback, delay) => {
+  const id = setInterval(callback, delay);
+  activeIntervals.push(id);
+  return id;
+};
+
+const registerTimeout = (callback, delay) => {
+  const id = setTimeout(() => {
+    clearRegisteredTimer(activeTimeouts, id);
+    callback();
+  }, delay);
+  activeTimeouts.push(id);
+  return id;
+};
+
+const clearRegisteredTimer = (collection, id) => {
+  const index = collection.indexOf(id);
+  if (index !== -1) {
+    collection.splice(index, 1);
+  }
+};
+
+const cleanupExamResources = () => {
+  activeIntervals.splice(0).forEach(clearInterval);
+  activeTimeouts.splice(0).forEach(clearTimeout);
+
+  if (tabLoggerInstance && typeof tabLoggerInstance.cleanup === 'function') {
+    const logger = tabLoggerInstance;
+    if (window.tabLogger === logger) {
+      window.tabLogger = null;
+    }
+    tabLoggerInstance.cleanup();
+    tabLoggerInstance = null;
+  }
+
+  if (window.tabLogger && typeof window.tabLogger.cleanup === 'function') {
+    window.tabLogger.cleanup();
+    window.tabLogger = null;
+  }
+};
 
 // 🔒 CRITICAL FIX: Computed property with guaranteed non-null value
 const answerVal = computed({
@@ -435,18 +486,11 @@ const checkAndRedirectToWaitingRoom = () => {
 };
 
 const submitAnswer = async (partial = false, specificQuestionHash = null) => {
-  if (submittingAnswer.value) return;
+  if (submittingAnswer.value) return false;
   submittingAnswer.value = true;
+  let succeeded = true;
 
-  // 🔒 DEBUG: Log current state before submission
   const currentAnswers = answerVal.value; // Safe computed property access
-  console.log('🚀 submitAnswer called:', {
-    partial,
-    answerValExists: !!currentAnswers,
-    answerValKeys: Object.keys(currentAnswers),
-    answerValLength: Object.keys(currentAnswers).length,
-    answerValContent: currentAnswers
-  });
 
   if (Object.keys(currentAnswers).length >= 1) {
     // 🔒 CRITICAL FIX: For partial submissions with specific question, only submit that question's answer
@@ -462,13 +506,14 @@ const submitAnswer = async (partial = false, specificQuestionHash = null) => {
     }
 
     // check if essay null
-    if (questionData.value.type.value !== 'multiple-choice') {
+    const questionType = questionData.value?.type?.value;
+    if (questionType && questionType !== 'multiple-choice') {
       Object.keys(newAnswers).forEach(key => {
-        if (newAnswers[key].replace(/<\/?[^>]+(>|$)/g, "").trim() === '') {
+        if (String(newAnswers[key] || '').replace(/<\/?[^>]+(>|$)/g, "").trim() === '') {
           delete newAnswers[key];
         }
       })
-    } else if (questionData.value.type.value === 'multiple-choice') {
+    } else if (questionType === 'multiple-choice') {
       Object.keys(newAnswers).forEach(key => {
         if (newAnswers[key] === null) {
           delete newAnswers[key];
@@ -528,6 +573,7 @@ const submitAnswer = async (partial = false, specificQuestionHash = null) => {
               // Handle case where server returns error but still HTTP 200
               console.warn('Server returned error in success response:', responseData.error);
               notification.add('error', 'Error', responseData.error);
+              succeeded = false;
             } else {
               const answerCount = Object.keys(newAnswers).length;
               notification.add('success', 'Success', `Answer saved (${answerCount} answer${answerCount > 1 ? 's' : ''})`)
@@ -571,6 +617,7 @@ const submitAnswer = async (partial = false, specificQuestionHash = null) => {
           }
 
           notification.add('error', 'Error', errorMessage);
+          succeeded = false;
 
           // Don't clear answerVal on error so user can retry
           safeConsoleLog('Answer preserved due to error:', {
@@ -578,10 +625,14 @@ const submitAnswer = async (partial = false, specificQuestionHash = null) => {
             answers: currentAnswers
           });
         }
+      } else {
+        notification.add('error', 'Error', 'Cannot save answer because the exam attempt is unavailable.');
+        succeeded = false;
       }
     }
   }
   submittingAnswer.value = false;
+  return succeeded;
 }
 
 const answerIndex = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
@@ -739,22 +790,18 @@ const getQuestions = async (index) => {
       // Process attempt answers if they exist
       if (attempt && attempt.questions && attempt.questions.length > 0) {
         const attemptAnswer = attempt.questions;
-        console.log('Processing attempt answers:', attemptAnswer)
         attemptAnswer.forEach((question) => {
-          console.log('Processing question:', question.hash, 'item_hash:', question.item_hash, 'pivot:', question.pivot)
           // Only process if question has pivot (was answered)
           if (question.pivot) {
             // 🔒 CRITICAL FIX: Use question.hash for storage to prevent vignette collision
             const hashForStorage = question.hash; // Always use question.hash for storage
             const hashForMatching = question.item_hash || question.hash // For state tracking
             const answerValue = (item.item_type.value === 'multiple-choice') ? question.pivot.answer_hash : question.pivot.answer
-            console.log('Answer value:', answerValue, 'Stored with key:', hashForStorage, 'Tracking with:', hashForMatching)
 
             // Check if answer actually exists (not null/empty)
             const hasAnswer = answerValue !== null && answerValue !== undefined && answerValue !== ''
 
             if (hasAnswer) {
-              console.log('Question answered, adding to done:', hashForStorage)
               // 🔒 SAFE: Use computed property access
               const currentAnswers = answerVal.value;
               currentAnswers[hashForStorage] = answerValue;
@@ -876,7 +923,6 @@ const checkDoneQuest = (hash) => doneQuests.value.indexOf(hash) !== -1;
 const getAnswerForQuestion = (question) => {
   // Guard against undefined question
   if (!question || typeof question !== 'object') {
-    console.log('❌ Invalid question object:', question);
     return null;
   }
 
@@ -895,40 +941,20 @@ const getAnswerForQuestion = (question) => {
     possibleKeys.push(question.item_hash);
   }
 
-  console.log('🔍 getAnswerForQuestion DEBUG:', {
-    questionHash: question.hash,
-    itemHash: question.item_hash,
-    possibleKeys,
-    answerValKeys: Object.keys(currentAnswers),
-    searchingFor: possibleKeys
-  });
-
   // Try all possible keys to find the stored answer
   for (const key of possibleKeys) {
     if (currentAnswers[key]) {
-      console.log('✅ Found answer with key:', key, 'value:', currentAnswers[key]);
       return currentAnswers[key];
     }
   }
 
-  console.log('❌ No answer found for any key');
   return null;
 };
 
 // CRITICAL FIX: Smart answer selection with hash matching
 const isAnswerSelected = (answerHash, question) => {
   const storedAnswer = getAnswerForQuestion(question);
-  const isSelected = storedAnswer === answerHash;
-
-  console.log('🎯 isAnswerSelected DEBUG:', {
-    answerHash,
-    questionHash: question.hash,
-    itemHash: question.item_hash,
-    storedAnswer,
-    isSelected
-  });
-
-  return isSelected;
+  return storedAnswer === answerHash;
 };
 
 // Helper function to add item to array without duplicates
@@ -975,12 +1001,6 @@ const selectAnswer = function (answerHash, questionHash) {
     }
 
     const questions = questionData.value.questions;
-    safeConsoleLog('🔍 selectAnswer: Searching questions', {
-      totalQuestions: questions.length,
-      questionHash,
-      answerHash
-    });
-
     // Find the current question being answered to get its item_hash
     const currentQuestion = questions.find(q => q.hash === questionHash);
 
@@ -999,38 +1019,11 @@ const selectAnswer = function (answerHash, questionHash) {
     // Always prioritize question.hash for storage to ensure consistency
     const hashForStorage = questionHash;
 
-    console.log('✅ selectAnswer: Storing answer successfully', {
-      questionHash,
-      itemHash: currentQuestion.item_hash,
-      storageKey: hashForStorage,
-      answerHash,
-      questionFound: !!currentQuestion,
-      strategy: 'Using question.hash as primary key for consistency'
-    });
-
     // 🔒 SAFE: Use safe storage function
     safeSetAnswer(hashForStorage, answerHash);
 
     // 🔒 CRITICAL FIX: Remove dual storage to prevent vignette answer collision
     // Only store with question.hash to ensure each question has unique answer storage
-    if (currentQuestion.item_hash && currentQuestion.item_hash !== questionHash) {
-      console.log('🚫 Skipped item_hash fallback storage to prevent vignette collision:', {
-        itemHash: currentQuestion.item_hash,
-        questionHash: questionHash,
-        reason: 'Prevents auto-filling between vignette columns'
-      });
-    }
-
-    // 🔒 DEBUG: Verify storage was successful
-    const currentAnswers = answerVal.value; // Safe computed property access
-    console.log('🔍 Post-storage verification:', {
-      expectedKey: hashForStorage,
-      answerValKeys: Object.keys(currentAnswers),
-      hasExpectedKey: !!currentAnswers[hashForStorage],
-      storedValue: currentAnswers[hashForStorage],
-      alsoHasItemHash: currentQuestion.item_hash ? !!currentAnswers[currentQuestion.item_hash] : 'N/A'
-    });
-
     submitAnswer(true, questionHash); // Pass specific question hash
 
   } catch (error) {
@@ -1074,154 +1067,97 @@ const selectAnswer = function (answerHash, questionHash) {
   }
 };
 
-const timerCount = ref("00:00");
-const startTimer = (duration) => {
-  // 🔒 COMPREHENSIVE SAFETY CHECKS: Validate all inputs
-  if (!duration || typeof duration !== 'number' || duration <= 0) {
-    console.warn('Timer: Invalid duration provided, using default 0');
-    duration = 0;
+const clearTimerStorage = () => {
+  try {
+    const localStorageKey = getLocalStorageKey('exam-state');
+    if (localStorageKey && typeof localStorageKey === 'string') {
+      localStorage.removeItem(localStorageKey);
+    }
+
+    const timerStateKey = getLocalStorageKey('timer-state');
+    if (timerStateKey && typeof timerStateKey === 'string') {
+      localStorage.removeItem(timerStateKey);
+    }
+  } catch (storageError) {
+    console.warn('Timer: Failed to remove localStorage keys', storageError);
+  }
+};
+
+const redirectToFinished = () => {
+  cleanupExamResources();
+  clearTimerStorage();
+
+  const visitFinished = () => {
+    const finishedRoute = typeof route === 'function' ? route('exam.finished') : '/exam/finished';
+    if (typeof Inertia !== 'undefined' && Inertia.visit && typeof finishedRoute === 'string') {
+      Inertia.visit(finishedRoute);
+    } else {
+      window.location.href = finishedRoute || '/exam/finished';
+    }
+  };
+
+  try {
+    axios.post('/exam/finish')
+      .then((response) => {
+        if (response.data?.redirect) {
+          Inertia.visit(response.data.redirect);
+          return;
+        }
+        visitFinished();
+      })
+      .catch(() => visitFinished());
+  } catch (redirectError) {
+    console.error('Timer: Redirect failed', redirectError);
+    visitFinished();
+  }
+};
+
+const updateTimerDisplay = () => {
+  const remaining = timerDeadlineMs
+    ? Math.max(0, Math.ceil((timerDeadlineMs - Date.now()) / 1000))
+    : 0;
+
+  timerCount.value = formatTime(remaining);
+
+  if (remaining <= 0 && !timerExpired) {
+    timerExpired = true;
+    redirectToFinished();
+  }
+};
+
+const setTimerDeadline = ({ remaining_seconds, expires_at }) => {
+  const remaining = typeof remaining_seconds === 'number' ? Math.max(0, remaining_seconds) : 0;
+  const expiresAtMs = expires_at ? Date.parse(expires_at) : NaN;
+  timerDeadlineMs = Number.isFinite(expiresAtMs) ? expiresAtMs : Date.now() + (remaining * 1000);
+
+  try {
+    localStorage.setItem(getLocalStorageKey('timer-state'), JSON.stringify({
+      expiresAt: new Date(timerDeadlineMs).toISOString(),
+      remainingSeconds: remaining,
+      syncedAt: Date.now()
+    }));
+  } catch (e) {
+    console.warn('Timer: Failed to save timer state', e);
   }
 
-  let timer = duration, minutes, seconds;
-  let timerInterval = null;
+  updateTimerDisplay();
+};
 
-  // Safety check for admin
-  if (!admin || !admin.value) {
-    timerInterval = setInterval(function () {
-      try {
-        // 🔒 ENHANCED SAFETY: Check timer state
-        if (typeof timer !== 'number' || isNaN(timer) || timer < 0) {
-          console.warn('Timer: Invalid timer state, resetting to duration');
-          timer = duration || 0;
-          return;
-        }
-
-        // 🔒 SAFETY: Calculate minutes and seconds with validation
-        try {
-          minutes = parseInt(timer / 60, 10);
-          seconds = parseInt(timer % 60, 10);
-
-          // Validate calculated values
-          if (isNaN(minutes) || isNaN(seconds)) {
-            throw new Error('Invalid time calculation');
-          }
-
-          minutes = minutes < 10 ? "0" + minutes : minutes;
-          seconds = seconds < 10 ? "0" + seconds : seconds;
-        } catch (timeError) {
-          console.error('Timer: Time calculation error', timeError);
-          timer = duration || 0;
-          return;
-        }
-
-        // 🔒 SAFETY: Update timer display with enhanced checks
-        try {
-          // Ensure timerCount exists and is reactive
-          if (!timerCount) {
-            console.warn('Timer: timerCount is undefined, creating new reactive object');
-            // Note: This is a fallback - ideally timerCount should be properly initialized
-            return;
-          }
-
-          if (typeof timerCount === 'object' && 'value' in timerCount) {
-            // Enhanced safety for time formatting
-            const formattedMinutes = typeof minutes === 'string' ? minutes : (minutes ? minutes.toString() : '00');
-            const formattedSeconds = typeof seconds === 'string' ? seconds : (seconds ? seconds.toString() : '00');
-
-            // Additional validation before assignment
-            if (formattedMinutes && formattedSeconds) {
-              timerCount.value = `${formattedMinutes}:${formattedSeconds}`;
-            } else {
-              console.warn('Timer: Invalid formatted time values', { formattedMinutes, formattedSeconds });
-            }
-          } else {
-            console.warn('Timer: timerCount object is invalid or not reactive');
-          }
-        } catch (displayError) {
-          console.error('Timer: Display update error', displayError);
-          // Try to reset timerCount to safe state
-          try {
-            if (timerCount && typeof timerCount === 'object') {
-              timerCount.value = "00:00";
-            }
-          } catch (resetError) {
-            console.error('Timer: Failed to reset timerCount', resetError);
-          }
-        }
-
-        // 🔒 SAFETY: Handle timer expiry with comprehensive error handling
-        if (--timer < 0) {
-          console.log('Timer: Time expired, cleaning up and redirecting');
-
-          // Clear interval to prevent multiple executions
-          if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-          }
-
-          // 🔒 SAFETY: Remove localStorage with enhanced error handling
-          try {
-            const localStorageKey = getLocalStorageKey('exam-state');
-            if (localStorageKey && typeof localStorageKey === 'string') {
-              localStorage.removeItem(localStorageKey);
-            }
-
-            // 🔒 NEW: Also clear timer state
-            const timerStateKey = getLocalStorageKey('timer-state');
-            if (timerStateKey && typeof timerStateKey === 'string') {
-              localStorage.removeItem(timerStateKey);
-            }
-          } catch (storageError) {
-            console.warn('Timer: Failed to remove localStorage keys', storageError);
-          }
-
-          // 🔒 SAFETY: Redirect with comprehensive checks
-          try {
-            // Check if route function exists and exam.finished route exists
-            if (typeof route === 'function') {
-              const finishedRoute = route('exam.finished');
-              if (typeof Inertia !== 'undefined' && Inertia.visit && typeof finishedRoute === 'string') {
-                Inertia.visit(finishedRoute);
-              } else {
-                console.warn('Timer: Inertia or route is unavailable, using fallback redirect');
-                window.location.href = finishedRoute || '/exam/finished';
-              }
-            } else {
-              console.warn('Timer: Route function unavailable, using fallback redirect');
-              window.location.href = '/exam/finished';
-            }
-          } catch (redirectError) {
-            console.error('Timer: Redirect failed', redirectError);
-            // Final fallback
-            window.location.reload();
-          }
-        }
-      } catch (error) {
-        console.error('💥 Timer: Critical error in setInterval callback', error);
-        // Enhanced error recovery
-        try {
-          if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-          }
-          // Attempt to restart timer with safer parameters
-          timer = duration || 0;
-        } catch (recoveryError) {
-          console.error('💥 Timer: Recovery failed', recoveryError);
-        }
-      }
-    }, 1000);
-
-    // 🔒 SAFETY: Store interval reference for cleanup
-    return timerInterval;
-  } else {
+const startTimer = (duration, expiresAt = null) => {
+  if (admin?.value) {
     console.log('Timer: Admin mode detected, timer disabled');
     return null;
   }
-}
 
-// 🔧 SIMPLIFIED: Simple backend time update (no complex synchronization)
-const updateTimerFromBackend = async (retryCount = 0, maxRetries = 2) => {
+  setTimerDeadline({
+    remaining_seconds: typeof duration === 'number' ? duration : 0,
+    expires_at: expiresAt
+  });
+
+  return registerInterval(updateTimerDisplay, 1000);
+};
+
+const updateTimerFromBackend = async (retryCount = 0, maxRetries = 1) => {
   try {
     console.log('🕐 Timer: Getting time from backend', { attempt: retryCount + 1, maxRetries });
 
@@ -1243,14 +1179,12 @@ const updateTimerFromBackend = async (retryCount = 0, maxRetries = 2) => {
     const latency = (pingEnd - pingStart) / 2;
 
     if (response.data && typeof response.data.remaining_seconds === 'number') {
-      // Update timer display directly with backend time
-      const backendTime = Math.max(0, response.data.remaining_seconds);
-      const formattedTime = formatTime(backendTime);
-      timerCount.value = formattedTime;
+      setTimerDeadline(response.data);
 
       console.log('🕐 Timer: Updated from backend', {
-        backendTime: backendTime,
-        formattedTime: formattedTime,
+        backendTime: Math.max(0, response.data.remaining_seconds),
+        expiresAt: response.data.expires_at,
+        formattedTime: timerCount.value,
         latency: latency.toFixed(1),
         expired: response.data.expired
       });
@@ -1258,11 +1192,7 @@ const updateTimerFromBackend = async (retryCount = 0, maxRetries = 2) => {
       // Check if exam has expired according to server
       if (response.data.expired) {
         console.log('🕐 Timer: Server confirms exam expired, redirecting');
-        if (typeof Inertia !== 'undefined' && Inertia.visit) {
-          Inertia.visit(route('exam.finished'));
-        } else {
-          window.location.href = route('exam.finished');
-        }
+        redirectToFinished();
         return true;
       }
 
@@ -1280,7 +1210,7 @@ const updateTimerFromBackend = async (retryCount = 0, maxRetries = 2) => {
     if (retryCount < maxRetries) {
       const backoffMs = 1000 * (retryCount + 1);
       console.log(`🕐 Timer: Retrying in ${backoffMs}ms...`);
-      await new Promise(resolve => setTimeout(resolve, backoffMs));
+      await new Promise(resolve => registerTimeout(resolve, backoffMs));
       return updateTimerFromBackend(retryCount + 1, maxRetries);
     }
 
@@ -1369,7 +1299,7 @@ const syncTimerWithServer = async (retryCount = 0, maxRetries = 3) => {
       const backoffMs = Math.min(1000 * Math.pow(2, retryCount), 5000); // Max 5 seconds
       console.log(`🕐 Timer: Retrying in ${backoffMs}ms...`);
 
-      await new Promise(resolve => setTimeout(resolve, backoffMs));
+      await new Promise(resolve => registerTimeout(resolve, backoffMs));
       return syncTimerWithServer(retryCount + 1, maxRetries);
     } else {
       console.error('🕐 Timer: Max retries reached, sync failed permanently');
@@ -1450,12 +1380,13 @@ onMounted(() => {
 
       // Initialize the tab logger
       const tabLogger = SimpleTabLogger.init(attempt.value.id, {
-        checkInterval: 5000, // 5 seconds
-        heartbeatInterval: 30000, // 30 seconds
+        checkInterval: 10000,
+        heartbeatInterval: 120000,
         logEndpoint: '/api/exam/log-multiple-tabs'
       });
 
       if (tabLogger) {
+        tabLoggerInstance = tabLogger;
         console.log('✅ Tab Logger: Successfully initialized');
         console.log('📋 Tab Logger Info:', {
           attemptId: attempt.value.id,
@@ -1486,65 +1417,19 @@ onMounted(() => {
   console.log('items computed:', items.value)
   console.log('=======================')
 
-  // 🔒 ENHANCED SAFETY: Use server-provided remaining seconds with comprehensive validation
+  // Use server-provided time as the source of truth, then tick locally.
   try {
     console.log('🕐 Timer: Initializing with remaining seconds:', remainingSeconds.value);
 
-    // 🔒 NEW: Check for timer state persistence
-    const timerStateKey = getLocalStorageKey('timer-state');
-    let savedTimerState = {};
-    try {
-      savedTimerState = JSON.parse(localStorage.getItem(timerStateKey) || '{}');
-    } catch (e) {
-      console.warn('Timer: Failed to parse saved timer state', e);
-    }
-
-    // Enhanced validation for remainingSeconds
     let validRemainingSeconds = typeof remainingSeconds?.value === 'number' && remainingSeconds.value > 0
       ? remainingSeconds.value
       : 0;
 
-    // If we have saved timer state and server time seems valid, use saved elapsed time
-    if (savedTimerState.startTime && savedTimerState.duration) {
-      const elapsedSeconds = Math.floor((Date.now() - savedTimerState.startTime) / 1000);
-      const calculatedRemaining = Math.max(0, savedTimerState.duration - elapsedSeconds);
-      
-      // Use saved time if it's reasonable (within 10 seconds of server calculation)
-      if (Math.abs(calculatedRemaining - validRemainingSeconds) <= 10) {
-        validRemainingSeconds = calculatedRemaining;
-        console.log('Timer: Using persisted timer state', {
-          savedElapsed: elapsedSeconds,
-          calculatedRemaining: calculatedRemaining,
-          serverRemaining: remainingSeconds.value
-        });
-      } else {
-        console.log('Timer: Ignoring persisted state due to drift', {
-          calculatedRemaining: calculatedRemaining,
-          serverRemaining: remainingSeconds.value,
-          drift: Math.abs(calculatedRemaining - validRemainingSeconds)
-        });
-      }
-    }
-
     if (validRemainingSeconds > 0) {
-      // 🔒 NEW: Save timer state to localStorage
-      const timerStateKey = getLocalStorageKey('timer-state');
-      try {
-        localStorage.setItem(timerStateKey, JSON.stringify({
-          startTime: Date.now(),
-          duration: validRemainingSeconds
-        }));
-      } catch (e) {
-        console.warn('Timer: Failed to save timer state', e);
-      }
-
-      // Initialize timer with enhanced safety
-      const timerInterval = startTimer(validRemainingSeconds);
+      const timerInterval = startTimer(validRemainingSeconds, timer.value?.expires_at || null);
       if (timerInterval) {
         console.log('✅ Timer: Successfully initialized with', validRemainingSeconds, 'seconds');
-        
-        // 🔧 FIXED: Only start backend sync when attempt is available
-        // Timer will sync with backend once we have a valid attempt hash
+
         const startBackendSync = () => {
           if (!attempt.value?.hash) {
             console.log('🕐 Timer: No attempt available yet, will retry sync initialization');
@@ -1553,56 +1438,38 @@ onMounted(() => {
 
           console.log('🕐 Timer: Starting backend synchronization with attempt:', attempt.value.hash);
 
-          // 🔍 DEBUG: Test immediate sync call
-          setTimeout(async () => {
+          registerTimeout(async () => {
             try {
-              console.log('🕐 Timer: TESTING - Immediate sync test');
-              const result = await updateTimerFromBackend();
-              console.log('🕐 Timer: TEST RESULT:', result);
-            } catch (error) {
-              console.error('🕐 Timer: TEST ERROR:', error);
-            }
-          }, 2000);
-
-          // Start periodic backend synchronization every 30 seconds
-          const syncInterval = setInterval(async () => {
-            try {
-              console.log('🕐 Timer: 30-second sync interval triggered at:', new Date().toISOString());
-              await updateTimerFromBackend();
-            } catch (error) {
-              console.error('🕐 Timer: Backend sync error', error);
-              // Continue with current timer display if backend fails
-            }
-          }, 30000);
-
-          console.log('🕐 Timer: Sync interval created:', syncInterval);
-
-          // Initial sync after 10 seconds to allow page to fully load
-          setTimeout(async () => {
-            try {
-              console.log('🕐 Timer: Initial backend sync at:', new Date().toISOString());
               await updateTimerFromBackend();
             } catch (error) {
               console.error('🕐 Timer: Initial sync error', error);
             }
-          }, 10000);
+          }, 2000);
+
+          // Sparse backend sync: local countdown handles per-second UI updates.
+          registerInterval(async () => {
+            try {
+              await updateTimerFromBackend();
+            } catch (error) {
+              console.error('🕐 Timer: Backend sync error', error);
+            }
+          }, 120000);
 
           return true;
         };
 
-        // Try to start sync immediately, or watch for attempt availability
         if (!startBackendSync()) {
-          // Watch for attempt to be created/loaded
-          const watchForAttempt = setInterval(() => {
+          const watchForAttempt = registerInterval(() => {
             if (startBackendSync()) {
               clearInterval(watchForAttempt);
+              clearRegisteredTimer(activeIntervals, watchForAttempt);
               console.log('🕐 Timer: Backend sync successfully started after attempt became available');
             }
           }, 2000);
 
-          // Stop watching after 2 minutes to prevent indefinite watching
-          setTimeout(() => {
+          registerTimeout(() => {
             clearInterval(watchForAttempt);
+            clearRegisteredTimer(activeIntervals, watchForAttempt);
             console.log('🕐 Timer: Stopped watching for attempt (timeout)');
           }, 120000);
         }
@@ -1611,42 +1478,7 @@ onMounted(() => {
       }
     } else {
       console.log('⏰ Timer: No time remaining or invalid value, redirecting to finished');
-
-      // Enhanced cleanup before redirect
-      try {
-        const localStorageKey = getLocalStorageKey('exam-state');
-        if (localStorageKey && typeof localStorageKey === 'string') {
-          localStorage.removeItem(localStorageKey);
-        }
-
-        // 🔒 NEW: Also clear timer state on expiry redirect
-        const timerStateKey = getLocalStorageKey('timer-state');
-        if (timerStateKey && typeof timerStateKey === 'string') {
-          localStorage.removeItem(timerStateKey);
-        }
-        console.log('✅ Timer: Cleaned up localStorage before redirect');
-      } catch (storageError) {
-        console.warn('⚠️ Timer: Failed to remove localStorage keys', storageError);
-      }
-
-      // Enhanced redirect with fallback
-      try {
-        if (typeof route === 'function') {
-          const finishedRoute = route('exam.finished');
-          if (typeof Inertia !== 'undefined' && Inertia.visit && typeof finishedRoute === 'string') {
-            Inertia.visit(finishedRoute);
-          } else {
-            console.warn('⚠️ Timer: Inertia unavailable, using fallback redirect');
-            window.location.href = finishedRoute || '/exam/finished';
-          }
-        } else {
-          console.warn('⚠️ Timer: Route function unavailable, using fallback redirect');
-          window.location.href = '/exam/finished';
-        }
-      } catch (redirectError) {
-        console.error('💥 Timer: Redirect failed, using final fallback', redirectError);
-        window.location.reload();
-      }
+      redirectToFinished();
       return;
     }
   } catch (timerInitError) {
@@ -1677,15 +1509,12 @@ onMounted(() => {
   }
 
   // CRITICAL FIX: Load answer data from localStorage first
-  console.log('DEBUG: onMounted - Loading from localStorage')
   let savedExamState = {};
   try {
     savedExamState = JSON.parse(localStorage.getItem(getLocalStorageKey('exam-state')) || '{}');
   } catch (e) {
     console.warn('onMounted: Failed to parse saved exam state', e);
   }
-  console.log('DEBUG: localStorage answerData:', savedExamState.answerData || 'NULL')
-
   // 🔒 CRITICAL FIX: Ensure rawAnswerVal is properly initialized for computed property
   if (!rawAnswerVal.value || typeof rawAnswerVal.value !== 'object') {
     rawAnswerVal.value = {};
@@ -1696,21 +1525,16 @@ onMounted(() => {
     Object.keys(savedExamState.answerData).forEach(key => {
       if (savedExamState.answerData[key]) {
         rawAnswerVal.value[key] = savedExamState.answerData[key]
-        console.log('✅ Restored answerVal from localStorage:', {key, value: savedExamState.answerData[key]})
       }
     })
   }
 
   // Then merge with server data (attemptQuestions)
   // This ensures server data supplements, not replaces, local data
-  console.log('DEBUG: onMounted - attemptQuestions.value:', attemptQuestions.value ? JSON.stringify(attemptQuestions.value.map(q => ({hash: q.question.hash, item_hash: q.item_hash, pivot: q.pivot}))).substring(0, 500) + '...' : 'NULL')
-  console.log('DEBUG: onMounted - items.value count:', items.value.length)
 
   items.value.forEach((item) => {
-    console.log('DEBUG: Processing item:', item.hash, item.title)
     item.questions.forEach((question) => {
       const attemptQuestion = attemptQuestions.value && attemptQuestions.value.find((data) => data.question.hash === question.hash)
-      console.log('DEBUG: Question:', question.hash, 'attemptQuestion found:', !!attemptQuestion)
       if (attemptQuestion) {
         // 🔒 CRITICAL FIX: Use consistent strategy matching selectAnswer
         // Always store with question.hash as primary key for consistency
@@ -1720,20 +1544,6 @@ onMounted(() => {
 
           // 🔒 CRITICAL FIX: Remove dual storage to prevent vignette answer collision
           // Only store with question.hash to ensure each question has unique answer storage
-          if (question.item_hash && question.item_hash !== question.hash) {
-            console.log('🚫 Skipped item_hash fallback storage to prevent vignette collision:', {
-              itemHash: question.item_hash,
-              questionHash: question.hash,
-              answerHash: attemptQuestion.pivot.answer_hash,
-              reason: 'Prevents auto-filling between vignette columns'
-            });
-          }
-
-          console.log('✅ Populated answerVal from server data:', {
-            primaryKey: question.hash,
-            answerHash: attemptQuestion.pivot.answer_hash,
-            strategy: 'Consistent with selectAnswer - question.hash primary only'
-          })
         } else {
           console.log('❌ No pivot data or answer_hash in attemptQuestion')
         }
@@ -1742,13 +1552,10 @@ onMounted(() => {
         const hashForMatching = question.item_hash || question.hash
         if (!doneQuests.value.includes(hashForMatching)) {
           doneQuests.value.push(hashForMatching)
-          console.log('✅ Added to doneQuests:', hashForMatching)
         }
       }
     })
   })
-
-  console.log('DEBUG: Final answerVal state:', answerVal.value)
 
   // Update localStorage with merged state - include answerVal data!
   const stateToSave = {
@@ -1768,6 +1575,10 @@ onMounted(() => {
 
   getQuestions(0)
 })
+
+onUnmounted(() => {
+  cleanupExamResources();
+});
 
 const modalFinish = ref(false)
 
@@ -1846,46 +1657,24 @@ const navigationClicked = async (hash, index) => {
 // 🔒 CRITICAL: Hash consistency validation for answer storage
 const validateHashConsistency = (question) => {
   if (!question || typeof question !== 'object') {
-    console.warn('⚠️ Hash validation: Invalid question object');
     return false;
   }
 
   const hasQuestionHash = !!question.hash && typeof question.hash === 'string';
-  const hasItemHash = !!question.item_hash && typeof question.item_hash === 'string';
-  const hashesMatch = question.hash === question.item_hash;
-
-  console.log('🔍 Hash validation:', {
-    questionHash: question.hash,
-    itemHash: question.item_hash,
-    hasQuestionHash,
-    hasItemHash,
-    hashesMatch
-  });
-
   return hasQuestionHash; // At minimum, we need question.hash
 };
 
 // 🔒 CRITICAL: Answer storage validation
 const validateAnswerStorage = (questionHash, answerHash) => {
   if (!questionHash || typeof questionHash !== 'string') {
-    safeConsoleError('❌ Answer validation: Invalid questionHash', questionHash);
+    safeConsoleError('Invalid question hash');
     return false;
   }
 
   if (!answerHash || typeof answerHash !== 'string') {
-    safeConsoleError('❌ Answer validation: Invalid answerHash', answerHash);
+    safeConsoleError('Invalid answer hash');
     return false;
   }
-
-  const currentAnswers = answerVal.value;
-  const isStored = !!currentAnswers[questionHash];
-
-  safeConsoleLog('🔍 Answer validation:', {
-    questionHash,
-    answerHash,
-    isStored,
-    totalStoredAnswers: Object.keys(currentAnswers).length
-  });
 
   return true;
 };
@@ -1930,8 +1719,19 @@ const openModalFinish = () => {
   modalFinish.value = true
 }
 const finishExam = async () => {
-  await submitAnswer()
-  Inertia.visit(route('exam.finished'))
+  const saved = await submitAnswer()
+  if (!saved) {
+    notification.add('error', 'Error', 'Unable to submit your final answer. Please retry before finishing the exam.')
+    return;
+  }
+
+  try {
+    const response = await axios.post('/exam/finish');
+    cleanupExamResources();
+    Inertia.visit(response.data?.redirect || route('exam.finished'))
+  } catch (error) {
+    notification.add('error', 'Error', error.response?.data?.error || 'Unable to finish exam. Please retry.')
+  }
 }
 
 const modalImage = ref(false);
@@ -1966,22 +1766,6 @@ const markAsLater = (e, hash) => {
 
 <template>
   <ExamLayout :title="delivery.name" :taker="taker" :timer="timerCount">
-    <!-- 🕐 WAITING ROOM: Debug Status Indicator -->
-    <div v-if="shouldShowWaitingRoom" class="waiting-room-debug">
-      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-        <div class="flex items-center gap-2">
-          <div class="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
-          <span class="font-medium text-yellow-800">🕐 Early Access Detected</span>
-        </div>
-        <div class="text-sm text-yellow-700 mt-2">
-          <div>Automatic Start: {{ delivery?.automatic_start ? 'Yes' : 'No' }}</div>
-          <div>Scheduled Time: {{ delivery?.scheduled_at ? new Date(delivery.scheduled_at).toLocaleString() : 'Not set' }}</div>
-          <div>Current Time: {{ new Date().toLocaleString() }}</div>
-          <div class="font-medium mt-1">Redirecting to home for proper token entry...</div>
-        </div>
-      </div>
-    </div>
-
     <!-- NEW: Loading Overlay - Non-intrusive -->
     <div v-if="loadingQuestions" class="loading-overlay">
       <div class="flex items-center gap-3">
@@ -2049,18 +1833,9 @@ const markAsLater = (e, hash) => {
               <div class="whitespace-pre-wrap mb-4" v-html="question.question"></div>
               <div v-if="!loadingQuestion">
                 <div class="flex flex-col gap-2 mt-6 w-auto" v-if="question.type !== null && question.type?.name === 'multiple-choice'">
-                  <button v-for="(answer, ansIndex) in question.answers" :key="ansIndex" @click="selectAnswer(answer.hash, question.hash)" :class="['flex text-left px-3 py-2 bg-gray-100 rounded-md', isAnswerSelected(answer.hash, question) ? 'bg-green-600 text-white' : 'hover:bg-green-200 hover:text-green-600']" @click.once="safeConsoleLog('Click check:', {questionHash: question.hash, itemHash: question.item_hash, answerHash: answer.hash, storedValue: getAnswerForQuestion(question)})">
+                  <button v-for="(answer, ansIndex) in question.answers" :key="ansIndex" @click="selectAnswer(answer.hash, question.hash)" :class="['flex text-left px-3 py-2 bg-gray-100 rounded-md', isAnswerSelected(answer.hash, question) ? 'bg-green-600 text-white' : 'hover:bg-green-200 hover:text-green-600']">
                     <span class="mr-3 font-bold uppercase">{{ answerIndex[ansIndex] }}</span> <span v-html="answer.answer"></span>
                   </button>
-                  <!-- DEBUG: Show answerVal state for this question -->
-                  <div class="text-xs text-gray-500 mt-2 p-2 bg-yellow-50 rounded" v-if="question.item_hash || question.hash">
-                    <div><strong>🔍 HASH DEBUG:</strong></div>
-                    <div>Question Hash: {{ question.hash }}</div>
-                    <div>Item Hash: {{ question.item_hash || 'NULL' }}</div>
-                    <div>Direct Lookup: {{ answerVal[question.hash] || 'NULL' }}</div>
-                    <div>Smart Lookup: {{ getAnswerForQuestion(question) || 'NULL' }}</div>
-                    <div>All answerVal keys: {{ answerVal.value ? Object.keys(answerVal.value).slice(0, 5).join(', ') : '[]' }}{{ answerVal.value && Object.keys(answerVal.value).length > 5 ? '...' : '' }}</div>
-                  </div>
                 </div>
                 <div class="mt-4" v-else>
                   <Editor class="my-2" v-model="answerVal[question.hash]" @blur="() => submitAnswer(true, question.hash)" />
