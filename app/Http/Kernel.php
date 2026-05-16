@@ -37,9 +37,9 @@ class Kernel extends HttpKernel
             \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             Middleware\VerifyCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
             Middleware\HandleInertiaRequests::class,
             Middleware\IdentifyTenant::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
 
         'api' => [
@@ -57,9 +57,9 @@ class Kernel extends HttpKernel
             \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             Middleware\VerifyCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
             Middleware\HandleInertiaRequests::class,
             Middleware\IdentifyTenant::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
             Middleware\ExamMiddleware::class,
         ],
     ];

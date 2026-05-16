@@ -12,6 +12,7 @@ use App\Models\Attempts\Attempt;
 use App\Models\Categories\Category;
 use App\Models\Deliveries\Delivery;
 use App\Models\Attachments\Attachment;
+use App\Scopes\ClientScope;
 
 class VariableBinder extends BaseRoute
 {
@@ -22,7 +23,13 @@ class VariableBinder extends BaseRoute
         $this->router->bind('taker_hash', static fn ($takerHash) => Taker::byHashOrFail($takerHash));
         $this->router->bind('group_hash', static fn ($groupHash) => Group::byHashOrFail($groupHash));
         $this->router->bind('exam_hash', static fn ($examHash) => Exam::byHashOrFail($examHash));
-        $this->router->bind('item_hash', static fn ($itemHash) => Item::byHashOrFail($itemHash));
+        $this->router->bind('item_hash', static function ($itemHash) {
+            return Item::withoutGlobalScope(ClientScope::class)
+                ->where('hash', $itemHash)
+                ->first()
+                ?? Item::withoutGlobalScope(ClientScope::class)->byHash($itemHash)->first()
+                ?? abort(404);
+        });
         $this->router->bind('delivery_hash', static fn ($deliveryHash) => Delivery::byHashOrFail($deliveryHash));
         $this->router->bind('attempt_hash', static fn ($attemptHash) => Attempt::byHashOrFail($attemptHash));
         $this->router->bind('attachment_uuid', static fn ($attachUuid) => Attachment::query()->where('id', $attachUuid)->first());

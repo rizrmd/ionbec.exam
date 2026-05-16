@@ -7,6 +7,7 @@ use App\Models\Exams\Item;
 use App\Models\Exams\Question;
 use App\Models\Deliveries\Delivery;
 use App\Models\Deliveries\DeliverySnapshot;
+use App\Scopes\ClientScope;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -32,7 +33,7 @@ class ExamSnapshotService
             return $delivery->snapshot;
         }
 
-        $exam = $delivery->exam;
+        $exam = Exam::withoutGlobalScope(ClientScope::class)->find($delivery->exam_id);
         if (!$exam) {
             throw new \Exception("Exam not found for delivery {$delivery->id}");
         }
@@ -94,6 +95,7 @@ class ExamSnapshotService
                 foreach ($question->answers as $answer) {
                     $answersData[] = [
                         'id' => $answer->id,
+                        'hash' => $answer->getRawOriginal('hash') ?: $answer->hash,
                         'question_id' => $answer->question_id,
                         'answer' => $answer->answer,
                         'is_correct_answer' => $answer->is_correct_answer,
@@ -102,6 +104,7 @@ class ExamSnapshotService
 
                 $questionsData[] = [
                     'id' => $question->id,
+                    'hash' => $question->getRawOriginal('hash') ?: $question->hash,
                     'item_id' => $question->item_id,
                     'type' => $question->type,
                     'question' => $question->question,
@@ -133,6 +136,7 @@ class ExamSnapshotService
 
             $itemsData[] = [
                 'id' => $item->id,
+                'hash' => $item->getRawOriginal('hash') ?: $item->hash,
                 'title' => $item->title,
                 'type' => $item->type,
                 'content' => $item->content,
@@ -187,9 +191,10 @@ class ExamSnapshotService
         // Delete existing snapshot
         if ($delivery->snapshot) {
             $delivery->snapshot->delete();
+            $delivery->unsetRelation('snapshot');
         }
 
         // Create new snapshot
-        return $this->createSnapshot($delivery);
+        return $this->createSnapshot($delivery->fresh());
     }
 }
