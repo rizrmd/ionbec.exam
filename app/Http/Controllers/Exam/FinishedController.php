@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Exam;
 
-use Carbon\Carbon;
 use Inertia\Inertia;
+use App\Jobs\CalculateScore;
 use App\Models\Takers\Taker;
 use Dentro\Yalr\Attributes\Get;
+use Dentro\Yalr\Attributes\Post;
 use App\Models\Deliveries\Delivery;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\DB;
+use App\Services\ExamAccessService;
 use Illuminate\Support\Facades\Session;
 
 class FinishedController extends Controller
@@ -18,55 +19,48 @@ class FinishedController extends Controller
     {
         $dataSession = Session::get('exam');
 
-        if (is_null($dataSession)) {
+        if (is_null($dataSession) && ! Session::has('exam_finished')) {
             return redirect('/');
         }
 
-        if (null !== $dataSession['admin']) {
+        if (is_array($dataSession) && null !== ($dataSession['admin'] ?? null)) {
             Session::forget('exam');
 
             return redirect('/');
         }
 
-        $deliveryId = $dataSession['delivery']->id;
-        
-        // Handle DEMO sessions where taker might be null or object
-        $takerId = null;
-        if ($dataSession['taker'] && isset($dataSession['taker']->id)) {
-            $takerId = $dataSession['taker']->id;
-        }
-
-        // Handle DEMO delivery objects
-        if (isset($dataSession['delivery']) && is_object($dataSession['delivery']) && !($dataSession['delivery'] instanceof \Illuminate\Database\Eloquent\Model)) {
-            // DEMO case: delivery is a stdClass object from session, use it directly
-            $delivery = $dataSession['delivery'];
-        } else {
-            // Normal case: reload delivery from database
-            $delivery = Delivery::query()->where('id', $deliveryId)->first();
-        }
-        
-        $taker = null;
-        if ($takerId) {
-            $taker = Taker::query()->where('id', $takerId)->first();
-            
-            // Only update attempts if taker exists
-            if ($taker) {
-                $taker->attempts()->where('delivery_id', $deliveryId)->update([
-                    'ended_at' => Carbon::now(),
-                ]);
-            }
-        }
-
-        // Reset login status when exam is finished
-        DB::table('delivery_taker')->where('token', $dataSession['token'])->update([
-            'is_login' => false,
-        ]);
-
-        Session::forget('exam');
+        $resolved = app(ExamAccessService::class)->resolveSession();
+        $finished = Session::get('exam_finished', []);
+        $deliveryId = $resolved['delivery']->id ?? ($finished['delivery_id'] ?? null);
+        $takerId = $resolved['taker']->id ?? ($finished['taker_id'] ?? null);
+        $delivery = $deliveryId ? Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)->find($deliveryId) : null;
+        $taker = $takerId ? Taker::withoutGlobalScope(\App\Scopes\ClientScope::class)->find($takerId) : null;
 
         return Inertia::render('Exam/Finished', [
             'delivery' => $delivery,
             'taker' => $taker,
+        ]);
+    }
+
+    #[Post('/exam/finish', name: 'exam.finish')]
+    public function finish()
+    {
+        $attempt = app(ExamAccessService::class)->finishCurrentAttempt();
+
+        if ($attempt) {
+            try {
+                CalculateScore::dispatch($attempt->fresh());
+            } catch (\Throwable $exception) {
+                \Log::error('Unable to dispatch score calculation after exam finish.', [
+                    'attempt_id' => $attempt->id,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'redirect' => route('exam.finished'),
         ]);
     }
 }

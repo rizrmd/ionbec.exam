@@ -155,16 +155,6 @@ const btnColor = (currentItem, item, question) => {
           </template>
         </div>
         <div class="flex-1 space-y-2" v-if="enableInfo">
-          <!-- DEBUG: Show debugging info -->
-          <div class="rounded-md bg-blue-50 p-3 border border-blue-200">
-            <div class="text-xs text-blue-800">
-              <div><strong>DEBUG:</strong></div>
-              <div>done.length: {{ done.length }}</div>
-              <div>uniqueQuestionsDone: {{ uniqueQuestionsDone }}</div>
-              <div>done array: {{ done.slice(0, 3).join(', ') }}{{ done.length > 3 ? '...' : '' }}</div>
-            </div>
-          </div>
-
           <div class="rounded-md bg-green-50 p-4">
             <div class="flex">
               <div class="flex-shrink-0">
