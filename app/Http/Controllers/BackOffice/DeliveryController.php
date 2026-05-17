@@ -53,6 +53,25 @@ class DeliveryController extends Controller
         ];
     }
 
+    private function examQuestionCount(int $examId): int
+    {
+        return Question::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->join('exam_item', 'questions.item_id', '=', 'exam_item.item_id')
+            ->where('exam_item.exam_id', $examId)
+            ->count();
+    }
+
+    private function validateExamHasQuestions(Request $request, int $examId): ?\Illuminate\Http\RedirectResponse
+    {
+        if ($this->examQuestionCount($examId) > 0) {
+            return null;
+        }
+
+        return back()
+            ->withErrors(['exam_hash' => 'Delivery cannot be created from an exam without questions. Attach at least one question set first.'])
+            ->withInput();
+    }
+
     #[Get('back-office/delivery', name: 'back-office.delivery.index')]
     public function index(Request $request): Response
     {
@@ -98,12 +117,17 @@ class DeliveryController extends Controller
         $scheduled_at = new Carbon($request->scheduled_at);
         $ended_at = new Carbon($request->scheduled_at);
 
+        $examId = Exam::hashToId($request->exam_hash);
+        if ($response = $this->validateExamHasQuestions($request, $examId)) {
+            return $response;
+        }
+
         $is_interview = Exam::byHash($request->exam_hash)->is_interview;
 
         $delivery = new Delivery();
         $delivery->name = $request->name;
         $delivery->display_name = $request->display_name;
-        $delivery->exam_id = Exam::hashToId($request->exam_hash);
+        $delivery->exam_id = $examId;
         $delivery->group_id = Group::hashToId($request->group_hash);
         $this->applySchedule($delivery, $scheduled_at, $ended_at, $request->duration, $request->boolean('automatic_start'), $is_interview);
         $delivery->save();
@@ -318,14 +342,23 @@ class DeliveryController extends Controller
 
         $scheduled_at = new Carbon($request->scheduled_at);
         $ended_at = new Carbon($request->scheduled_at);
+        $examId = Exam::hashToId($request->exam_hash);
+        if ($response = $this->validateExamHasQuestions($request, $examId)) {
+            return $response;
+        }
+        $examChanged = (int) $delivery->exam_id !== (int) $examId;
 
         $delivery->name = $request->name;
         $delivery->display_name = $request->display_name;
-        $delivery->exam_id = Exam::hashToId($request->exam_hash);
+        $delivery->exam_id = $examId;
         $delivery->group_id = Group::hashToId($request->group_hash);
         $is_interview = Exam::byHash($request->exam_hash)->is_interview;
         $this->applySchedule($delivery, $scheduled_at, $ended_at, $request->duration, $request->boolean('automatic_start'), $is_interview);
         $delivery->save();
+
+        if ($examChanged) {
+            app(ExamSnapshotService::class)->refreshSnapshot($delivery);
+        }
 
         return $this->actionSuccess(message: 'Delivery updated successfully.');
     }
