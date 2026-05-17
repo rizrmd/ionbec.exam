@@ -224,6 +224,20 @@ class QuestionSetController extends Controller
             $tests[] = Exam::hashToId($hash);
         }
 
+        if ($request->type === ItemType::MULTIPLE_CHOICE->value) {
+            foreach ($request->questions as $index => $data) {
+                $hasCorrectAnswer = collect($data['answers'] ?? [])->contains(
+                    fn ($answer) => filter_var($answer['is_correct_answer'] ?? false, FILTER_VALIDATE_BOOLEAN)
+                );
+
+                if (! $hasCorrectAnswer) {
+                    return back()
+                        ->withErrors(["questions.{$index}.answers" => 'Multiple choice questions must have one correct answer.'])
+                        ->withInput();
+                }
+            }
+        }
+
         $oldVignette = $item->is_vignette;
 
         $item->title = $request->title;

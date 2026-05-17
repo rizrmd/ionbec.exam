@@ -1121,7 +1121,7 @@ class MainController extends Controller
                             ['attempt_id' => $attempt->id, 'question_id' => $question->id],
                             [
                                 'answer_id' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? $answer->id : null,
-                                'answer_hash' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? Answer::idToHash($answer->id) : null,
+                                'answer_hash' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? $answer->hash : null,
                                 'answer' => (null !== $question->type && 'multiple-choice' === $question->type->name) ? $answer->answer : $answer,
                                 'score' => $actualScore, // Use actual calculated score
                                 'is_correct' => null !== $question->type && 'multiple-choice' === $question->type->name && $answer->is_correct_answer,

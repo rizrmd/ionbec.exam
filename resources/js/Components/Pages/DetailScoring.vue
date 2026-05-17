@@ -106,6 +106,18 @@ const getTakerAnswer = (questionHash, multiChoiceHash = null) => {
   return '';
 }
 
+const normalizeAnswerHtml = (value) => String(value || '')
+  .replace(/\s+/g, ' ')
+  .trim()
+
+const isSelectedAnswer = (questionHash, answer) => {
+  const takerAnswer = getTakerAnswer(questionHash, answer.hash)
+  if (!takerAnswer) return false
+
+  return takerAnswer.answer_hash === answer.hash
+    || normalizeAnswerHtml(takerAnswer.answer) === normalizeAnswerHtml(answer.answer)
+}
+
 const showLiveInterviewQuestion = async (e, question_hash) => {
   const {data: responseData} = await axios.post(route('back-office.live-interview.show-question', {
     delivery_hash: attempt.value.delivery.hash,
@@ -336,7 +348,7 @@ const finishScore = async () => {
                         :class="[
                           'cursor-default flex text-left px-3 py-2 rounded-md items-center',
                           answer.is_correct_answer ? 'border border-gray-900' : '',
-                          (getTakerAnswer(question.hash, answer.hash)?.answer_hash === answer.hash) ? (answer.is_correct_answer ? 'bg-green-300' : 'bg-red-300') : ''
+                          isSelectedAnswer(question.hash, answer) ? (answer.is_correct_answer ? 'bg-green-300' : 'bg-red-300') : ''
                         ]">
                   <span class="mr-3 font-bold uppercase" v-if="!answer.is_correct_answer">{{
                       answerIndex[ansIndex]
