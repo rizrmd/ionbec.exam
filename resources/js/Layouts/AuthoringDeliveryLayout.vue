@@ -166,7 +166,11 @@ const editAction = () => {
 }
 
 const modaldelete = ref(false)
-const confirmDeleteAction = () => form.delete(route('back-office.delivery.destroy', {delivery_hash: delivery.value.hash}))
+const confirmDeleteAction = () => {
+  form.delete(route('back-office.delivery.destroy', {delivery_hash: delivery.value.hash}), {
+    onFinish: () => modaldelete.value = false,
+  })
+}
 
 defineExpose({
   openModalForm,
@@ -360,7 +364,7 @@ const generateTokenToScheduleOrStart = () => {
             </button>
             <button
               class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              type="submit"
+              type="button"
               :disabled="form.processing"
               @click="editAction">
               Save
@@ -387,8 +391,9 @@ const generateTokenToScheduleOrStart = () => {
             </button>
             <button
               class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              type="submit"
-              @click="confirmDeleteAction">
+              type="button"
+              :disabled="form.processing"
+              @click.prevent="confirmDeleteAction">
               Yes, Delete Delivery
             </button>
           </div>
@@ -414,7 +419,8 @@ const generateTokenToScheduleOrStart = () => {
             </button>
             <button
               class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              type="submit"
+              type="button"
+              :disabled="form.processing"
               @click="setToFinish">
               Yes, Finish Now
             </button>
@@ -442,7 +448,8 @@ const generateTokenToScheduleOrStart = () => {
             </button>
             <button
               class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              type="submit"
+              type="button"
+              :disabled="form.processing"
               @click="generateTokenToScheduleOrStart">
               <span v-if="delivery.is_interview">Yes, Enable Now</span>
               <span v-else>Yes, Generate Now</span>
