@@ -3,7 +3,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import {ChevronLeftIcon, TrashIcon, TrendingUpIcon, PlusIcon, XCircleIcon, CheckIcon, ChevronUpIcon, ChevronDownIcon, PhotographIcon} from '@heroicons/vue/outline'
 import {toRefs, reactive, computed, ref, onMounted, onUnmounted, watch} from "vue";
 import route from "@/Libs/ziggy";
-import {Link, useForm} from '@inertiajs/inertia-vue3'
+import {Link, useForm, usePage} from '@inertiajs/inertia-vue3'
 import JetConfirmationModal from '@/Jetstream/ConfirmationModal'
 import JetActionMessage from '@/Jetstream/ActionMessage'
 import JetBanner from '@/Jetstream/Banner'
@@ -40,6 +40,7 @@ const props = defineProps({
 })
 
 const {item, tests, categories, questions, chartData, typeOptions} = toRefs(props);
+const page = usePage()
 
 const showModalDelete = ref(false)
 const openModalDelete = () => showModalDelete.value = true;
@@ -58,6 +59,7 @@ const filteredTests = computed(() => {
 })
 
 const formContent = useForm({
+  _token: page.props.value.csrf_token,
   hash: null,
   type: Object.keys(typeOptions.value)[0],
   title: "",
@@ -169,6 +171,7 @@ const updateContent = () => {
     isSubmitting.value = true;
 
     formContent.questions = itemQuestions.value;
+    formContent._token = page.props.value.csrf_token;
     formContent.post(route('back-office.question-set.create-or-update'), {
       preserveState: 'errors',
       preserveScroll: true,
