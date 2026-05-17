@@ -142,10 +142,33 @@ const days = ref(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'])
 
 const time = ref(null);
 
+const fallbackDate = () => {
+  if (
+    today.getFullYear() === year.value &&
+    today.getMonth() === month.value
+  ) {
+    return today.getDate()
+  }
+
+  return 1
+}
+
+const dateFromModelValue = () => {
+  if (modelValue.value !== null) {
+    const date = enableTime.value ? modelValue.value.split(' ')[0].split('-') : modelValue.value.split('-')
+    return new Date(date[0], parseInt(date[1]) - 1, date[2])
+  }
+
+  return new Date(year.value, month.value, fallbackDate())
+}
+
 watch(time, (value, prevValue) => {
-  if (enableTime.value && value !== prevValue && modelValue.value !== null) {
-    const date = modelValue.value.split(' ')[0].split('-')
-    emit('update:modelValue', formatValueDate(new Date(date[0], parseInt(date[1]) - 1, date[2])));
+  if (enableTime.value && value !== prevValue) {
+    const date = dateFromModelValue()
+    const formattedValue = formatValueDate(date)
+
+    datepicker.value = formatDate(date)
+    emit('update:modelValue', formattedValue);
   }
 })
 
@@ -209,14 +232,14 @@ const formatValueDate = (date) => {
 
 const getDateValue = (date) => {
   let selectedDate = new Date(year.value, month.value, date);
-  if (!isSelectedDay(date) || required.value) {
+  if (enableTime.value || !isSelectedDay(date) || required.value) {
     emit('update:modelValue', formatValueDate(selectedDate));
   } else {
     emit('update:modelValue', null);
   }
 
 
-  if (!enableTime) showDatepicker.value = false;
+  if (!enableTime.value) showDatepicker.value = false;
 }
 
 const getNoOfDays = () => {

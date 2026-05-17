@@ -3,7 +3,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import {computed, onMounted, reactive, ref, toRefs} from 'vue'
 import {PencilAltIcon, PlusIcon, SearchIcon} from '@heroicons/vue/outline'
 import {Inertia} from "@inertiajs/inertia";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm, usePage} from "@inertiajs/inertia-vue3";
 import Pagination from '@/Components/Pagination.vue'
 import urlParser from "@/Libs/urlParser";
 import JetActionMessage from '@/Jetstream/ActionMessage'
@@ -74,6 +74,7 @@ const search = () => {
 }
 
 const form = useForm({
+  _token: usePage().props.value.csrf_token,
   exam: null,
   exam_hash: null,
   group: null,
