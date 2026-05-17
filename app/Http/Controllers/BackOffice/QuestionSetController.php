@@ -224,6 +224,12 @@ class QuestionSetController extends Controller
             $tests[] = Exam::hashToId($hash);
         }
 
+        if ($item->exists && $item->exams()->exists() && count($tests) === 0) {
+            return back()
+                ->withErrors(['tests' => 'Question Set is already attached to an exam. Remove it from the exam detail page if you want to detach it.'])
+                ->withInput();
+        }
+
         if ($request->type === ItemType::MULTIPLE_CHOICE->value) {
             foreach ($request->questions as $index => $data) {
                 $hasCorrectAnswer = collect($data['answers'] ?? [])->contains(
