@@ -1,8 +1,9 @@
 <script setup>
 import ExamLayout from "@/Layouts/ExamLayout";
-import {computed, onMounted, ref, toRefs} from "vue";
+import {computed, onBeforeUnmount, onMounted, ref, toRefs} from "vue";
 import {usePage} from '@inertiajs/inertia-vue3';
 import moment from "moment-timezone";
+import route from "@/Libs/ziggy";
 
 const props = defineProps({
   taker: {
@@ -10,72 +11,65 @@ const props = defineProps({
   },
   delivery: {
     type: Object,
+  },
+  status: {
+    type: Object,
+    default: () => ({}),
   }
 })
 
-const {taker, delivery, payload} = toRefs(props)
+const {taker, delivery, status} = toRefs(props)
 
 const client = computed(() => usePage().props.value.client)
 const clientName = computed(() => client.value?.name || 'National Orthopaedic and Traumatology Board Examination')
 const clientLogo = computed(() => client.value?.logo_url || '/images/logo.png')
+const currentStatus = ref(status.value || {})
+let pollTimeout = null
 
-const isTheDay = computed(() => {
-  return moment(delivery.value.scheduled_at).format('YYYY-MM-DD') === moment().format('YYYY-MM-DD');
+const scheduledDisplay = computed(() => {
+  const scheduledAt = currentStatus.value?.scheduled_at || delivery.value.scheduled_at
+  return scheduledAt ? moment(scheduledAt).format('DD MMMM YYYY, HH:mm') : '-'
 })
 
-const countDownDisplay = ref("00:00");
-const startTimer = (duration) => {
-  let timer = duration, minutes, seconds;
-  console.log("Starting timer with duration:", duration, "seconds");
+const clearPoll = () => {
+  if (pollTimeout) {
+    clearTimeout(pollTimeout)
+    pollTimeout = null
+  }
+}
 
-  let timerInterval = setInterval(function () {
-    minutes = parseInt(timer / 60, 10);
-    seconds = parseInt(timer % 60, 10);
+const schedulePoll = (seconds = 15) => {
+  clearPoll()
+  pollTimeout = setTimeout(fetchStatus, Math.max(3, seconds) * 1000)
+}
 
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    seconds = seconds < 10 ? "0" + seconds : seconds;
-
-    countDownDisplay.value = minutes + ":" + seconds;
-
-    if (--timer < 0) {
-      console.log("Timer expired, redirecting to exam...");
-      clearInterval(timerInterval);
-      window.location.href = '/exam';
-      return;
+const fetchStatus = async () => {
+  try {
+    const response = await axios.get(route('exam.waiting-room.status'))
+    currentStatus.value = response.data || {}
+    if (currentStatus.value.can_start) {
+      window.location.href = route('exam.main')
+      return
     }
-
-    // Reload page every 60 seconds to sync with server (but not when timer is close to 0)
-    if (timer > 5 && timer % 60 === 0) {
-      console.log("Reloading page for sync...");
-      clearInterval(timerInterval);
-      window.location.reload();
+    schedulePoll(currentStatus.value.poll_after_seconds || 15)
+  } catch (error) {
+    if (error.response?.status === 401) {
+      window.location.href = '/'
+      return
     }
-
-  }, 1000);
+    schedulePoll(15)
+  }
 }
 
 onMounted(() => {
-  let todayDatetime = moment(new Date()).tz(moment.tz.guess());
-  let scheduledAt = moment(delivery.value.scheduled_at + "+07:00");
-
-  console.log("TODAY:", todayDatetime.format("YYYY-MM-DD HH:mm:ss Z"));
-  console.log("SCHEDULED:", scheduledAt.format("YYYY-MM-DD HH:mm:ss Z"));
-
-  let duration = moment.duration(scheduledAt.diff(todayDatetime));
-  let durationInSeconds = Math.round(duration.asSeconds());
-
-  console.log("Duration in seconds:", durationInSeconds);
-
-  // If exam time has already passed or is now, redirect immediately
-  if (durationInSeconds <= 0) {
-    console.log("Exam time has passed, redirecting immediately...");
-    window.location.href = '/exam';
-    return;
+  if (currentStatus.value?.can_start) {
+    window.location.href = route('exam.main')
+    return
   }
-
-  startTimer(durationInSeconds)
+  schedulePoll(currentStatus.value?.poll_after_seconds || 15)
 })
 
+onBeforeUnmount(clearPoll)
 </script>
 
 <template>
@@ -114,15 +108,15 @@ onMounted(() => {
             </p>
           </div>
 
-          <!-- Exam Date/Time Countdown -->
+          <!-- Exam Date/Time -->
           <div class="bg-gray-50 rounded-lg p-6 mb-8">
             <div class="text-center">
               <div class="text-sm text-gray-600 mb-2">Exam Date & Time</div>
-              <div class="text-lg font-bold text-gray-800" v-if="isTheDay">
-                {{ countDownDisplay }}
+              <div class="text-lg font-bold text-gray-800">
+                {{ scheduledDisplay }}
               </div>
-              <div class="text-lg font-bold text-gray-800" v-else>
-                {{ moment(delivery.scheduled_at).format('MMMM Do YYYY, h:mm A') }}
+              <div class="text-sm text-blue-600 mt-3">
+                Please wait. The exam will open automatically.
               </div>
             </div>
           </div>

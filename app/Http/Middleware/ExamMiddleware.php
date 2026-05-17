@@ -21,7 +21,7 @@ class ExamMiddleware
 
         // Check if this is a token login attempt or waiting room - allow it without session for token login
         $routeName = $request->route() ? $request->route()->getName() : null;
-        if ($routeName === 'exam.token.login' || $routeName === 'exam.waiting-room') {
+        if (in_array($routeName, ['exam.token.login', 'exam.waiting-room', 'exam.waiting-room.status'], true)) {
             \Log::info('ExamMiddleware: Route detected, allowing without session check', [
                 'route_name' => $routeName,
                 'url' => $request->url(),

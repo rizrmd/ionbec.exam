@@ -58,6 +58,9 @@ const form = useForm({
   _token: usePage().props.value.csrf_token,
   hash: null,
 })
+const clearLoginForm = useForm({
+  _token: usePage().props.value.csrf_token,
+})
 
 const generateAllToken = () => {
   form.hash = null
@@ -67,6 +70,13 @@ const generateAllToken = () => {
 const refreshToken = (hash) => {
   form.hash = hash
   form.post(route('back-office.delivery.generate-token', {delivery_hash: delivery.value.hash}))
+}
+
+const clearLogin = (hash) => {
+  clearLoginForm.post(route('back-office.delivery.clear-login', {
+    delivery_hash: delivery.value.hash,
+    taker_hash: hash,
+  }))
 }
 
 const attemptInterview = (delivery_hash, taker_hash) => {
@@ -183,6 +193,13 @@ const downloadPdf = () => {
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500" v-if="!delivery.is_interview">{{
                       taker.deliveries.length >= 1 && taker.deliveries[taker.deliveries.length - 1].pivot.is_login ? 'Logged in' : '-'
                     }}
+                    <button
+                      v-if="taker.deliveries.length >= 1 && taker.deliveries[taker.deliveries.length - 1].pivot.is_login"
+                      class="ml-2 text-xs text-red-600 hover:text-red-800"
+                      type="button"
+                      @click="clearLogin(taker.hash)">
+                      Clear login
+                    </button>
                   </td>
                   <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"
                       v-if="!delivery.is_interview">

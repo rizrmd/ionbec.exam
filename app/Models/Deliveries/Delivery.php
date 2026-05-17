@@ -83,14 +83,6 @@ class Delivery extends Model
     public const STATUS_SCORING = 'Scoring';
     public const STATUS_FINISHED = 'Finished';
 
-    protected static function booted()
-    {
-        static::retrieved(function (self $delivery) {
-            $delivery->last_status = self::getStatus($delivery);
-            $delivery->saveQuietly();
-        });
-    }
-
     /**
      * Define `belongsTo` relationship with Exam model.
      *

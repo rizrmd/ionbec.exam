@@ -16,6 +16,8 @@ class ExamAccessService
 {
     public function loginWithToken(string $token, Request $request): array
     {
+        $token = strtoupper(trim($token));
+
         $pivot = DB::table('delivery_taker')
             ->where('token', $token)
             ->first();
@@ -40,6 +42,8 @@ class ExamAccessService
 
     public function login(Delivery $delivery = null, Taker $taker = null, Request $request = null, ?string $token = null): array
     {
+        $token = $token === null ? null : strtoupper(trim($token));
+
         if (! $delivery || ! $taker) {
             return ['ok' => false, 'message' => 'Exam delivery or taker was not found.'];
         }
@@ -200,6 +204,24 @@ class ExamAccessService
         return (bool) $delivery->automatic_start
             && $delivery->scheduled_at
             && Carbon::now($this->timezone($delivery))->lessThan($this->parseDeliveryDateTime($delivery, 'scheduled_at'));
+    }
+
+    public function waitingRoomStatus(Delivery $delivery): array
+    {
+        $serverNow = Carbon::now($this->timezone($delivery));
+        $scheduledAt = $this->parseDeliveryDateTime($delivery, 'scheduled_at');
+        $canStart = ! $this->shouldWait($delivery);
+        $secondsUntilStart = $scheduledAt
+            ? max(0, $serverNow->diffInSeconds($scheduledAt, false))
+            : 0;
+
+        return [
+            'can_start' => $canStart,
+            'scheduled_at' => $scheduledAt?->toIso8601String(),
+            'server_now' => $serverNow->toIso8601String(),
+            'seconds_until_start' => $secondsUntilStart,
+            'poll_after_seconds' => $canStart ? 0 : ($secondsUntilStart <= 120 ? 5 : 15),
+        ];
     }
 
     private function parseDeliveryDateTime(Delivery $delivery, string $attribute): ?Carbon

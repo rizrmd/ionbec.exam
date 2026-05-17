@@ -18,6 +18,8 @@ const form = useForm({
 });
 
 const loginExam = () => {
+  if (form.processing) return
+  form.token = typeof form.token === 'string' ? form.token.trim().toUpperCase() : form.token
   form.post(route('exam.login'))
 }
 
@@ -131,9 +133,13 @@ onMounted(() => {
                type="text">
         <button
           @click="loginExam()"
-          class="inline-flex px-2.5 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-r-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          :disabled="form.processing"
+          :class="[
+            'inline-flex px-2.5 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-r-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500',
+            form.processing ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700'
+          ]"
           type="button">
-          Submit
+          {{ form.processing ? 'Submitting...' : 'Submit' }}
         </button>
       </div>
       <div class="text-gray-600 text-sm mt-2">

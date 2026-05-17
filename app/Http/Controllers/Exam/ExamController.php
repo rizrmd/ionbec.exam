@@ -15,6 +15,7 @@ use App\Models\Takers\Group;
 use App\Models\Deliveries\Delivery;
 use App\Http\Controllers\Controller;
 use App\Knowledge\Exam\Item\ItemType;
+use App\Services\ExamAccessService;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Dentro\Yalr\Attributes\Get;
@@ -22,46 +23,38 @@ use Dentro\Yalr\Attributes\Post;
 
 class ExamController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('throttle:10,1')->only('login');
+    }
+
     #[Post('/exam', name: 'exam.login')]
     public function login(Request $request): \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
     {
-        $token = $request->input('token');
+        $token = is_string($request->input('token')) ? strtoupper(trim($request->input('token'))) : $request->input('token');
         
-        // Handle DEMO token specially
-        if ($token === 'DEMO') {
+        if (
+            config('app.enable_demo_token', false) &&
+            app()->environment(['local', 'testing']) &&
+            hash_equals(config('app.demo_token', 'DEMO'), (string) $token)
+        ) {
             return $this->handleDemoToken($request);
         }
-        
-        // Rest of login logic...
-        $deliveryQuery = Delivery::query()
-            ->whereHas('takers', function ($q) use ($token) {
-                $q->where('token', $token);
-            })
-            ->with(['takers' => function ($q) use ($token) {
-                $q->where('token', $token);
-            }]);
-        
-        $delivery = $deliveryQuery->first();
 
-        if (! $delivery) {
+        if (! is_string($token) || trim($token) === '') {
             return redirect()->back()->with('error', 'Invalid token');
         }
 
-        // Check if delivery has expired
-        if ($delivery->ended_at && now()->isAfter($delivery->ended_at)) {
-            return redirect()->back()->with('error', 'Token expired - Ujian telah berakhir. Hubungi yang berwenang untuk mendapatkan informasi lebih lanjut.');
+        $result = app(ExamAccessService::class)->loginWithToken(trim($token), $request);
+
+        if (! ($result['ok'] ?? false)) {
+            return redirect()->back()->with('error', $result['message'] ?? 'Invalid token');
         }
-        
-        $taker = $delivery->takers->first();
-        
-        Session::forget('exam');
-        Session::put('exam', [
-            'token' => $token,
-            'taker' => $taker,
-            'delivery' => $delivery,
-            'admin' => null,
-        ]);
-        
+
+        if ($result['waiting_room'] ?? false) {
+            return redirect()->route('exam.waiting-room');
+        }
+
         return redirect('/exam');
     }
 
@@ -737,6 +730,11 @@ Please provide evidence-based recommendations with rationale for your choices.',
     #[Get('/exam/logout', name: 'exam.logout')]
     public function logout(): \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
     {
+        $resolved = app(ExamAccessService::class)->resolveSession();
+        if ($resolved) {
+            app(ExamAccessService::class)->clearActiveLogin($resolved['delivery']->id, $resolved['taker']->id);
+        }
+
         Session::forget('exam');
         
         return redirect('/')->with('success', 'Logged out successfully');

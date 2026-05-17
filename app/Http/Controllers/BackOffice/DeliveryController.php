@@ -105,15 +105,7 @@ class DeliveryController extends Controller
         $delivery->display_name = $request->display_name;
         $delivery->exam_id = Exam::hashToId($request->exam_hash);
         $delivery->group_id = Group::hashToId($request->group_hash);
-        $delivery->scheduled_at = $scheduled_at;
-
-        // IF it is an interview, end time is 23:59 of scheduled day.
-        $delivery->ended_at = (! $request->automatic_start || $is_interview)
-            ? $ended_at->setTime(23, 59, 59)
-            : $ended_at->addMinutes($request->duration);
-        $delivery->duration = $request->duration;
-        $delivery->automatic_start = $is_interview ? false : $request->automatic_start;
-        $delivery->is_anytime = $is_interview ? false : ! $request->automatic_start;
+        $this->applySchedule($delivery, $scheduled_at, $ended_at, $request->duration, $request->boolean('automatic_start'), $is_interview);
         $delivery->save();
 
         // Create exam snapshot for this delivery to ensure exam integrity
@@ -331,11 +323,8 @@ class DeliveryController extends Controller
         $delivery->display_name = $request->display_name;
         $delivery->exam_id = Exam::hashToId($request->exam_hash);
         $delivery->group_id = Group::hashToId($request->group_hash);
-        $delivery->scheduled_at = $scheduled_at;
-        $delivery->ended_at = (! $request->automatic_start) ? $ended_at->setTime(23, 59, 59) : $ended_at->addMinutes($request->duration);
-        $delivery->duration = $request->duration;
-        $delivery->automatic_start = $request->automatic_start;
-        $delivery->is_anytime = ! $request->automatic_start;
+        $is_interview = Exam::byHash($request->exam_hash)->is_interview;
+        $this->applySchedule($delivery, $scheduled_at, $ended_at, $request->duration, $request->boolean('automatic_start'), $is_interview);
         $delivery->save();
 
         return $this->actionSuccess(message: 'Delivery updated successfully.');
@@ -350,9 +339,16 @@ class DeliveryController extends Controller
     }
 
     #[Post('/back-office/delivery/{delivery_hash}/generate-token', name: 'back-office.delivery.generate-token')]
-    public function generateToken(Request $request, Delivery $delivery): \Illuminate\Http\RedirectResponse
+    public function generateToken(Request $request, Delivery $delivery): \Illuminate\Http\RedirectResponse|JsonResponse
     {
         if (! $request->hash) {
+            if (! $delivery->is_interview && $this->hasActiveTakerSessions($delivery)) {
+                return redirect()->back()->with([
+                    '_executed' => false,
+                    '_message' => 'Cannot refresh all tokens while candidates are active. Clear active logins individually if needed.',
+                ]);
+            }
+
             $group = $delivery->group;
             if (!$group) {
                 return response()->json(['error' => 'Group not found'], 404);
@@ -386,9 +382,22 @@ class DeliveryController extends Controller
         ];
         $delivery->takers()->sync($taker, false);
 
-        $this->attemptInterview($delivery, Taker::find($takerId));
+        if ($delivery->is_interview) {
+            $this->attemptInterview($delivery, Taker::find($takerId), false);
+        }
 
         return $this->actionSuccess(message: 'Successfully generate Candidate token.');
+    }
+
+    #[Post('back-office/delivery/{delivery_hash}/takers/{taker_hash}/clear-login', name: 'back-office.delivery.clear-login')]
+    public function clearTakerLogin(Delivery $delivery, Taker $taker): \Illuminate\Http\RedirectResponse
+    {
+        \DB::table('delivery_taker')
+            ->where('delivery_id', $delivery->id)
+            ->where('taker_id', $taker->id)
+            ->update(['is_login' => false]);
+
+        return $this->actionSuccess(message: 'Candidate active login cleared.');
     }
 
     #[Get('back-office/delivery/{delivery_hash}/taker-pdf', name: 'back-office.delivery.taker-pdf')]
@@ -725,7 +734,7 @@ class DeliveryController extends Controller
         }
         
         /** @var Attempt $attempt */
-        $attempt = $taker->attempts()->updateOrCreate([
+        $attempt = $taker->attempts()->firstOrCreate([
             'delivery_id' => $delivery->id,
             'exam_id' => $exam->id,
         ], [
@@ -821,7 +830,44 @@ class DeliveryController extends Controller
 
     public function getRandomToken(): string
     {
-        return Str::random(5);
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+        do {
+            $token = collect(range(1, 6))
+                ->map(fn () => $alphabet[random_int(0, strlen($alphabet) - 1)])
+                ->implode('');
+        } while (\DB::table('delivery_taker')->where('token', $token)->exists());
+
+        return $token;
+    }
+
+    private function applySchedule(
+        Delivery $delivery,
+        Carbon $scheduledAt,
+        Carbon $endedAt,
+        mixed $duration,
+        bool $automaticStart,
+        bool $isInterview
+    ): void {
+        $delivery->scheduled_at = $scheduledAt;
+        $delivery->duration = $isInterview ? 0 : $duration;
+        $delivery->automatic_start = $isInterview ? false : $automaticStart;
+        $delivery->is_anytime = $isInterview ? false : ! $automaticStart;
+        $delivery->ended_at = (! $delivery->automatic_start || $isInterview)
+            ? $endedAt->setTime(23, 59, 59)
+            : $endedAt->addMinutes((int) $duration);
+    }
+
+    private function hasActiveTakerSessions(Delivery $delivery): bool
+    {
+        return \DB::table('delivery_taker')
+            ->where('delivery_id', $delivery->id)
+            ->where('is_login', true)
+            ->exists()
+            || Attempt::withoutGlobalScope(\App\Scopes\ClientScope::class)
+                ->where('delivery_id', $delivery->id)
+                ->whereNull('ended_at')
+                ->exists();
     }
 
     /**

@@ -17,6 +17,7 @@ const Ziggy = {
         "exam.answer": {"uri":"exam\/answer","methods":["POST"]},
         "exam.timer.sync": {"uri":"exam\/timer\/sync","methods":["GET","HEAD"]},
         "exam.waiting-room": {"uri":"exam\/waiting-room","methods":["GET","HEAD"]},
+        "exam.waiting-room.status": {"uri":"exam\/waiting-room\/status","methods":["GET","HEAD"]},
 
         // Taker registration routes
         "taker.register": {"uri":"taker-register","methods":["GET","HEAD"]},
@@ -63,6 +64,7 @@ const Ziggy = {
         "back-office.delivery.goto": {"uri":"back-office\/delivery\/{delivery_hash}\/goto","methods":["GET","HEAD"]},
         "back-office.delivery.preview": {"uri":"back-office\/delivery\/{delivery_hash}\/preview","methods":["GET","HEAD"]},
         "back-office.delivery.attempt-interview": {"uri":"back-office\/delivery\/{delivery_hash}\/takers\/{taker_hash}\/interview","methods":["POST"]},
+        "back-office.delivery.clear-login": {"uri":"back-office\/delivery\/{delivery_hash}\/takers\/{taker_hash}\/clear-login","methods":["POST"]},
 
         // Back-office test routes
         "back-office.test.index": {"uri":"back-office\/test","methods":["GET","HEAD"]},

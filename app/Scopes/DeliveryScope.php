@@ -23,7 +23,7 @@ trait DeliveryScope
             $ended = Carbon::parse($delivery->scheduled_at)->addMinutes($delivery->duration);
         }
 
-        if ($delivery->is_interview && ($now->gt($schedule) || $schedule->isCurrentDay())) {
+        if ($delivery->is_interview && $now->gte($schedule)) {
             return Delivery::STATUS_SCORING;
         }
 

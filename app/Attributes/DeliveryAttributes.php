@@ -35,7 +35,7 @@ trait DeliveryAttributes
 
     public function getStatusAttribute()
     {
-        return $this->last_status;
+        return self::getStatus($this);
     }
 
     public function getTakersReadyAttribute()
