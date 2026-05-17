@@ -72,6 +72,7 @@ const formContent = useForm({
 
 const isSubmitting = ref(false)
 const submitTimeout = ref(null)
+const errorMessages = computed(() => Object.values(formContent.errors ?? {}))
 
 if (item.value !== undefined) {
   formContent.hash = item.value.hash;
@@ -169,6 +170,8 @@ const updateContent = () => {
 
     formContent.questions = itemQuestions.value;
     formContent.post(route('back-office.question-set.create-or-update'), {
+      preserveState: 'errors',
+      preserveScroll: true,
       onSuccess: () => {
         formContent.deleted_answers = [];
         formContent.deleted_questions = [];
@@ -314,6 +317,13 @@ onUnmounted(() => {
             @click="openModalDelete">
             <TrashIcon aria-hidden="true" class="-mx-1 h-5 w-5"/>
           </button>
+          <div
+            v-if="errorMessages.length > 0"
+            class="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div v-for="(message, index) in errorMessages" :key="index">
+              {{ message }}
+            </div>
+          </div>
         </div>
       </div>
 
