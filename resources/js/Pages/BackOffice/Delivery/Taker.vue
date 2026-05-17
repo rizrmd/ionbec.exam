@@ -5,7 +5,7 @@ import {onMounted, reactive, toRefs} from 'vue'
 import {Inertia} from "@inertiajs/inertia";
 import Pagination from '@/Components/Pagination.vue'
 import urlParser from "@/Libs/urlParser";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm, usePage} from "@inertiajs/inertia-vue3";
 import JetActionMessage from '@/Jetstream/ActionMessage'
 import JetBanner from '@/Jetstream/Banner'
 import route from "@/Libs/ziggy";
@@ -55,6 +55,7 @@ onMounted(() => {
 })
 
 const form = useForm({
+  _token: usePage().props.value.csrf_token,
   hash: null,
 })
 
@@ -72,7 +73,9 @@ const attemptInterview = (delivery_hash, taker_hash) => {
   axios.post(route('back-office.delivery.attempt-interview', {
     delivery_hash: delivery_hash,
     taker_hash: taker_hash
-  })).then(response => {
+  }), {
+    _token: usePage().props.value.csrf_token,
+  }).then(response => {
     window.open(route('back-office.delivery.scoring-detail', {
       delivery_hash: delivery_hash,
       attempt_hash: response.data.attempt_hash
@@ -163,13 +166,13 @@ const downloadPdf = () => {
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                     <a href="#"
                        class="text-sm text-blue-500"
-                       @click="attemptInterview(delivery.hash, taker.hash)"
+                       @click.prevent="attemptInterview(delivery.hash, taker.hash)"
                        v-if="taker.attempt_hash == null">
                       Attempt Now
                     </a>
                     <a href="#"
                        class="text-sm text-green-500"
-                       @click="attemptInterview(delivery.hash, taker.hash)"
+                       @click.prevent="attemptInterview(delivery.hash, taker.hash)"
                        v-else>
                       Attempted
                     </a>

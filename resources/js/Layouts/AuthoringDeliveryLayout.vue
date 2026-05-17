@@ -4,7 +4,7 @@ import {ChevronLeftIcon, TrashIcon, PencilAltIcon, ChartBarIcon, UsersIcon, Clip
 import CardCounter from "@/Components/CardCounter";
 import {toRefs, computed, onMounted} from "vue";
 import route from "@/Libs/ziggy";
-import {Link, useForm} from '@inertiajs/inertia-vue3'
+import {Link, useForm, usePage} from '@inertiajs/inertia-vue3'
 import {ref} from "vue";
 import JetDialogModal from '@/Jetstream/DialogModal'
 import JetConfirmationModal from '@/Jetstream/ConfirmationModal'
@@ -120,6 +120,7 @@ const isCurrentRoute = (name) => {
 };
 
 const form = useForm({
+  _token: usePage().props.value.csrf_token,
   exam: null,
   exam_hash: null,
   group: null,
@@ -178,7 +179,10 @@ const setToFinish = () => form.post(route('back-office.delivery.finish', {delive
 
 const modalScheduleNow = ref(false)
 const generateTokenToScheduleOrStart = () => {
-  useForm({hash: null}).post(route('back-office.delivery.generate-token', {delivery_hash: delivery.value.hash}), {
+  useForm({
+    _token: usePage().props.value.csrf_token,
+    hash: null,
+  }).post(route('back-office.delivery.generate-token', {delivery_hash: delivery.value.hash}), {
     onSuccess: () => modalScheduleNow.value = false
   })
 }
