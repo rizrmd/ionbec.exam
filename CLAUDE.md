@@ -1,6 +1,38 @@
 - to deploy copy file to ssh root@cf.avolut.com in docker container app-okksscs4w0s8oc0go0k4cg8k
-- to query use local psql with server info in .env
+- this project runs on the server as a Coolify app
+- to query use local psql; PostgreSQL connection info is in `.coolify.env` (DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD)
 - when querying mysql use local mysql
+
+## CRITICAL: PostgreSQL sequences go out of sync after data import
+
+### Symptom
+Inserts fail with a duplicate-key error, e.g.:
+```
+SQLSTATE[23505]: Unique violation: 7 ERROR: duplicate key value violates unique constraint "takers_pkey"
+DETAIL: Key (id)=(291) already exists.
+```
+Seen on **input peserta** (`takers`), **save soal** (`items`/`questions`/`answers`), groups, etc.
+
+### Cause
+The database was populated by importing rows with **explicit ids**, which does NOT advance the
+auto-increment sequence. The next INSERT then reuses an existing id and violates the PK.
+This is NOT a deploy/app-code bug — it is a database state issue.
+
+### Fix (run after ANY data import, and whenever a `*_pkey` duplicate-key error appears)
+Run the idempotent, safe-to-rerun reset script:
+```bash
+export PGPASSWORD=$(grep -iE "^DB_PASSWORD" .coolify.env | cut -d= -f2)
+psql -h <DB_HOST> -p <DB_PORT> -U <DB_USERNAME> -d <DB_DATABASE> -f scripts/maintenance/reset_sequences.sql
+```
+It resets every `<table>_id_seq` to `MAX(id)` and skips empty tables. Single table only:
+```sql
+SELECT setval('public.<table>_id_seq', (SELECT MAX(id) FROM <table>));
+```
+
+### Note
+- `attachments.id` and `sessions.id` have NO sequence/default attached (skipped by the script).
+  If an `attachments_pkey` duplicate-key appears, it needs separate handling (no auto-increment),
+  not a sequence reset.
 
 ## File Organization Guidelines
 
