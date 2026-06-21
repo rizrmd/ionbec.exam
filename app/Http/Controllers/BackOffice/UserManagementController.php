@@ -110,8 +110,8 @@ class UserManagementController extends Controller
         
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', Rule::unique('users')->where('client_id', $clientId)],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->where('client_id', $clientId)],
+            'username' => ['required', 'string', 'max:255', Rule::unique('users')->where('client_id', $clientId)->whereNull('deleted_at')],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->where('client_id', $clientId)->whereNull('deleted_at')],
             'password' => ['required', 'confirmed', Password::defaults()],
             'role_ids' => ['array'],
             'role_ids.*' => ['exists:roles,id'],
@@ -200,8 +200,8 @@ class UserManagementController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', Rule::unique('users')->where('client_id', $clientId)->ignore($user->id)],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->where('client_id', $clientId)->ignore($user->id)],
+            'username' => ['required', 'string', 'max:255', Rule::unique('users')->where('client_id', $clientId)->whereNull('deleted_at')->ignore($user->id)],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->where('client_id', $clientId)->whereNull('deleted_at')->ignore($user->id)],
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'role_ids' => ['array'],
             'role_ids.*' => ['exists:roles,id'],
