@@ -44,7 +44,19 @@ class DashboardController extends Controller
                 $delivery->setRelation('group', $group);
             }
         }
-        $logs = ActivityLog::query()->with(['causer', 'subject'])->orderBy('created_at', 'DESC')->limit(5)->get();
+        // Scope recent activity to the current tenant only. The activity_log table
+        // has no client_id column, so filter by the causer's client; otherwise other
+        // tenants' history leaks onto this dashboard (cross-tenant data exposure).
+        $clientId = auth()->user()?->client_id;
+        $logsQuery = ActivityLog::query()->with(['causer', 'subject'])->orderBy('created_at', 'DESC');
+        if ($clientId) {
+            $clientUserIds = \App\Models\Accounts\User::withoutGlobalScopes()
+                ->where('client_id', $clientId)
+                ->pluck('id');
+            $logsQuery->where('causer_type', \App\Models\Accounts\User::class)
+                ->whereIn('causer_id', $clientUserIds);
+        }
+        $logs = $logsQuery->limit(5)->get();
 
         return Inertia::render('BackOffice/Dashboard', [
             'countCategory' => Category::query()->count(),
