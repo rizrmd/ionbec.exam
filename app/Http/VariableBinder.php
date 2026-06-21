@@ -10,6 +10,7 @@ use App\Models\Takers\Taker;
 use App\Models\Accounts\User;
 use App\Models\Attempts\Attempt;
 use App\Models\Categories\Category;
+use App\Models\Categories\CategoryType;
 use App\Models\Deliveries\Delivery;
 use App\Models\Attachments\Attachment;
 use App\Scopes\ClientScope;
@@ -19,6 +20,7 @@ class VariableBinder extends BaseRoute
     public function register(): void
     {
         $this->router->bind('category_hash', static fn ($categoryHash) => Category::byHashOrFail($categoryHash));
+        $this->router->bind('category_type_hash', static fn ($categoryTypeHash) => CategoryType::byHashOrFail($categoryTypeHash));
         $this->router->bind('user_hash', static fn ($userHash) => User::byHashOrFail($userHash));
         $this->router->bind('taker_hash', static fn ($takerHash) => Taker::byHashOrFail($takerHash));
         $this->router->bind('group_hash', static fn ($groupHash) => Group::byHashOrFail($groupHash));

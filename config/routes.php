@@ -77,6 +77,7 @@ return [
         App\Http\Controllers\BackOffice\GroupController::class,
 
         App\Http\Controllers\BackOffice\CategoryController::class,
+        App\Http\Controllers\BackOffice\CategoryTypeController::class,
         App\Http\Controllers\BackOffice\QuestionSetController::class,
         App\Http\Controllers\BackOffice\QuestionPackController::class,
         App\Http\Controllers\BackOffice\TestTakerController::class,

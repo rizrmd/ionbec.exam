@@ -10,7 +10,7 @@ use Dentro\Yalr\Attributes\Get;
 use App\Models\Categories\Category;
 use App\Http\Controllers\Controller;
 use App\Knowledge\Exam\Item\ItemType;
-use App\Knowledge\Category\CategoryType;
+use App\Models\Categories\CategoryType;
 use Illuminate\Database\Eloquent\Builder;
 
 class QuestionPackController extends Controller
@@ -54,24 +54,12 @@ class QuestionPackController extends Controller
         });
 
         $questionQuery->where(function (Builder $query) use ($request) {
-            if ($diseaseGroup = $request->input('disease_group')) {
+            foreach ($request->input('category_filters', []) as $categoryHash) {
+                if (empty($categoryHash)) {
+                    continue;
+                }
                 $query->whereHas('categories', fn (Builder $query) => $query
-                    ->where('id', Category::hashToId($diseaseGroup)));
-            }
-
-            if ($regionGroup = $request->input('region_group')) {
-                $query->whereHas('categories', fn (Builder $query) => $query
-                    ->where('id', Category::hashToId($regionGroup)));
-            }
-
-            if ($specificPart = $request->input('specific_part')) {
-                $query->whereHas('categories', fn (Builder $query) => $query
-                    ->where('id', Category::hashToId($specificPart)));
-            }
-
-            if ($typicalGroup = $request->input('typical_group')) {
-                $query->whereHas('categories', fn (Builder $query) => $query
-                    ->where('id', Category::hashToId($typicalGroup)));
+                    ->where('id', Category::hashToId($categoryHash)));
             }
         });
 
@@ -84,6 +72,7 @@ class QuestionPackController extends Controller
             ],
             'typeOptions' => ItemType::getOptions(),
             'categoryType' => $categoryType,
+            'categoryColors' => CategoryType::getColorMap(),
             'categoriesValue' => $categoriesValue,
             'payload' => $questionQuery->with(['item', 'categories'])->latest()->paginate($request->input('perPage', 15))->withQueryString(),
         ]);

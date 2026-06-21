@@ -107,6 +107,10 @@ class Client extends Model
     
     protected static function booted()
     {
+        static::created(function (Client $client) {
+            \App\Models\Categories\CategoryType::seedDefaultsForClient($client->id);
+        });
+
         static::saved(function (Client $client) {
             if ($client->wasChanged(['domains', 'is_active'])) {
                 try {

@@ -10,6 +10,17 @@ module.exports = {
     './resources/js/**/*.vue',
   ],
 
+  // Category type colors are chosen per-client at runtime and applied via
+  // dynamically-built class names (e.g. `bg-${color}-100`). Tailwind cannot
+  // see those literals when scanning source, so safelist the full palette of
+  // selectable colors across the shades/prefixes the UI uses.
+  safelist: [
+    {
+      pattern: /(bg|text|border|ring)-(red|green|blue|yellow|gray|purple|pink|indigo|orange|teal)-(50|100|200|300|400|500|600|700|800|900)/,
+      variants: ['hover', 'focus'],
+    },
+  ],
+
   theme: {
     extend: {
       fontFamily: {

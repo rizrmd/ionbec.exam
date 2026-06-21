@@ -11,7 +11,7 @@ use Dentro\Yalr\Attributes\Delete;
 use App\Models\Categories\Category;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use App\Knowledge\Category\CategoryType;
+use App\Models\Categories\CategoryType;
 
 class CategoryController extends Controller
 {
@@ -41,12 +41,13 @@ class CategoryController extends Controller
         return inertia('BackOffice/Category/Index', [
             'payload' => $categoryQuery->paginate($request->input('perPage', 15))->withQueryString(),
             'categoryTypes' => CategoryType::getOptions(),
-            'types' => collect(CategoryType::getOptions())->map(static fn ($value, $key) => [
-                'value' => $key,
-                'label' => $value,
-                'count' => Category::query()
-//                    ->clone()
-                    ->where('type', $key)->count(),
+            'categoryColors' => CategoryType::getColorMap(),
+            'types' => CategoryType::forCurrentClient()->map(static fn ($type) => [
+                'hash' => $type->exists ? $type->hash : null,
+                'value' => $type->key,
+                'label' => $type->label,
+                'color' => $type->color,
+                'count' => Category::query()->where('type', $type->key)->count(),
             ])->values(),
         ]);
     }

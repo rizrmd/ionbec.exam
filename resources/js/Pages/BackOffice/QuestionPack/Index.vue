@@ -35,6 +35,10 @@ const props = defineProps({
   categoriesValue: {
     type: Object,
   },
+  categoryColors: {
+    type: Object,
+    default: () => ({}),
+  },
 })
 
 const {payload, types, tests, categoryType} = toRefs(props)
@@ -43,7 +47,7 @@ const filters = reactive({
   question_type: null,
   query: null,
   type: null,
-  categories: [],
+  categories: {},
 })
 
 const showAttemptModal = reactive({
@@ -57,14 +61,15 @@ Object.keys(categoryType.value || {}).forEach(key => {
 });
 
 const excorcistFilter = () => {
+  const category_filters = {}
+  Object.keys(categoryType.value || {}).forEach(key => {
+    category_filters[key] = filters.categories[key] ?? null
+  })
   return {
     query: filters.query,
     type: filters.type,
     question_type: filters.question_type,
-    disease_group: filters.categories['disease-group'],
-    region_group: filters.categories['region-group'],
-    specific_part: filters.categories['specific-part'],
-    typical_group: filters.categories['typical-group'],
+    category_filters,
   };
 }
 
@@ -80,12 +85,12 @@ const search = () => {
 onMounted(() => {
   const urlParams = urlParser()
   filters.query = urlParams.query
-  filters.categories = {
-    'disease-group': urlParams.disease_group === '' || urlParams.disease_group === undefined ? null : urlParams.disease_group,
-    'region-group': urlParams.region_group === '' || urlParams.region_group === undefined ? null : urlParams.region_group,
-    'specific-part': urlParams.specific_part === '' || urlParams.specific_part === undefined ? null : urlParams.specific_part,
-    'typical-group': urlParams.typical_group === '' || urlParams.typical_group === undefined ? null : urlParams.typical_group,
-  }
+  const categories = {}
+  Object.keys(categoryType.value || {}).forEach(key => {
+    const value = urlParams[`category_filters[${key}]`]
+    categories[key] = value === '' || value === undefined ? null : value
+  })
+  filters.categories = categories
   filters.type = urlParams.type
 })
 
@@ -162,10 +167,10 @@ const closeAttemptModal = () => {
                       :color="'red-600'" />
       </div>
 
-      <div class="mt-8 mb-2 flex flex-row gap-4">
+      <div class="mt-8 mb-2 flex flex-row flex-wrap gap-4">
         <template v-for="(category, key) in categoryType" :key="`type-${key}`">
           <select v-model="filters.categories[key]"
-                  class="basis-4/12 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                  class="basis-4/12 grow mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
             <option :value="null">Select {{ category }}</option>
             <option :value="category.hash" v-for="(category, key) in categoriesValue[key]">{{ category.name }}</option>
           </select>
@@ -228,7 +233,7 @@ const closeAttemptModal = () => {
                   {{ strippedContent(question.question) }}
                 </div>
                 <div class="flex flex-wrap gap-2 mt-1">
-                  <div :class="[`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-${categoryTypesColor(category.type)}-100 text-${categoryTypesColor(category.type)}-800`]"
+                  <div :class="[`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-${categoryTypesColor(category.type, categoryColors)}-100 text-${categoryTypesColor(category.type, categoryColors)}-800`]"
                        v-for="(category, index) in question.categories" :key="index">
                     {{ category.name }}
                   </div>

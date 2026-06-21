@@ -23,7 +23,7 @@ use Illuminate\Http\RedirectResponse;
 use Intervention\Image\Facades\Image;
 use App\Models\Attachments\Attachment;
 use Illuminate\Support\Facades\Storage;
-use App\Knowledge\Category\CategoryType;
+use App\Models\Categories\CategoryType;
 use App\Models\Attempts\AttemptQuestion;
 use Veelasky\LaravelHashId\Rules\ExistsByHash;
 
@@ -125,6 +125,7 @@ class QuestionSetController extends Controller
     {
         return Inertia::render('BackOffice/QuestionSet/Create', [
             'categories' => $this->getCategories(),
+            'categoryColors' => CategoryType::getColorMap(),
             'tests' => Exam::all(),
             'typeOptions' => ItemType::getOptions(['simple']),
         ]);
@@ -171,6 +172,7 @@ class QuestionSetController extends Controller
         return Inertia::render('BackOffice/QuestionSet/Detail', [
             'item' => $item->load(['exams', 'attachments']),
             'categories' => $this->getCategories(),
+            'categoryColors' => CategoryType::getColorMap(),
             'tests' => Exam::all(),
             'typeOptions' => ItemType::getOptions(['simple']),
             'questions' => $questions,
@@ -292,17 +294,11 @@ class QuestionSetController extends Controller
             $question->save();
 
             $categoriesData = [];
-            if (null !== $data['disease_group']) {
-                $categoriesData[] = Category::byHash($data['disease_group'])->id;
-            }
-            if (null !== $data['region_group']) {
-                $categoriesData[] = Category::byHash($data['region_group'])->id;
-            }
-            if (null !== $data['typical_group']) {
-                $categoriesData[] = Category::byHash($data['typical_group'])->id;
-            }
-            if (null !== $data['specific_part']) {
-                $categoriesData[] = Category::byHash($data['specific_part'])->id;
+            foreach (($data['categories'] ?? []) as $categoryHash) {
+                if (null === $categoryHash || '' === $categoryHash) {
+                    continue;
+                }
+                $categoriesData[] = Category::byHash($categoryHash)->id;
             }
             $question->categories()->sync($categoriesData);
 

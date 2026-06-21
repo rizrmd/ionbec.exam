@@ -97,10 +97,9 @@ const baseAnswer = {
 }
 
 const addQuestion = (question = null) => {
-  const availableCategories = ['disease-group', 'region-group', 'specific-part', 'typical-group'];
+  const availableCategories = Object.keys(categories.value);
   const setDefaultValCategory = (type) => categories.value[type]['options'].length >= 1 ? categories.value[type]['options'][0].hash : null;
-  let hash = null, questValue = null, isRandom = false, answers = [], catHash = [];
-  availableCategories.forEach((cat) => catHash[cat] = setDefaultValCategory(cat))
+  let hash = null, questValue = null, isRandom = false, answers = [], catHash = {};
 
   if (question !== null) {
     question.answers.forEach((answer) => {
@@ -114,20 +113,17 @@ const addQuestion = (question = null) => {
     isRandom = question.is_random
     questValue = question.question
     availableCategories.forEach((cat) => {
-      let category = question.categories.find((category) => category.type === cat);
-      catHash[cat] = (category !== undefined) ? category.hash : null;
+      catHash[cat] = question.categories.find((category) => category.type === cat)?.hash ?? null;
     })
   } else {
     answers.push({...baseAnswer})
+    availableCategories.forEach((cat) => catHash[cat] = setDefaultValCategory(cat))
   }
 
   itemQuestions.value.push({
     id: questionIdCount.value,
     hash: hash,
-    disease_group: question !== null ? catHash['disease-group'] : null,
-    region_group: question !== null ? catHash['region-group'] : null,
-    specific_part: question !== null ? catHash['specific-part'] : null,
-    typical_group: question !== null ? catHash['typical-group'] : null,
+    categories: catHash,
     question: questValue,
     is_random: isRandom,
     show_answer: true,
@@ -502,45 +498,15 @@ onUnmounted(() => {
               </button>
             </div>
 
-            <div class="flex gap-2">
-              <div class="w-4/12">
-                <label class="block text-sm font-medium text-gray-700 mb-1" :for="`disease-group-${index}`">{{ categories['disease-group'].name }}</label>
+            <div class="flex flex-wrap gap-2">
+              <div class="w-4/12 grow" v-for="(category, key) in categories" :key="key">
+                <label class="block text-sm font-medium text-gray-700 mb-1" :for="`${key}-${index}`">{{ category.name }}</label>
                 <select
-                  v-model="question.disease_group"
-                  :id="`disease-group-${index}`"
-                  class="max-w-lg block w-full shadow-sm focus:ring-primary-500 focus:border-text-sm border-gray-300 rounded-md">
-                  <option :value="null">Select {{ categories['disease-group'].name }}</option>
-                  <option :value="option.hash" v-for="(option, index) in categories['disease-group'].options" :key="index">{{ option.name }}</option>
-                </select>
-              </div>
-              <div class="w-4/12">
-                <label class="block text-sm font-medium text-gray-700 mb-1" :for="`region-group-${index}`">{{ categories['region-group'].name }}</label>
-                <select
-                  v-model="question.region_group"
-                  :id="`region-group-${index}`"
-                  class="max-w-lg block w-full shadow-sm focus:ring-primary-500 focus:border-text-sm border-gray-300 rounded-md">
-                  <option :value="null">Select {{ categories['region-group'].name }}</option>
-                  <option :value="option.hash" v-for="(option, index) in categories['region-group'].options" :key="index">{{ option.name }}</option>
-                </select>
-              </div>
-              <div class="w-4/12">
-                <label class="block text-sm font-medium text-gray-700 mb-1" :for="`typical-group-${index}`">{{ categories['typical-group'].name }}</label>
-                <select
-                  v-model="question.typical_group"
-                  :id="`typical-group-${index}`"
+                  v-model="question.categories[key]"
+                  :id="`${key}-${index}`"
                   class="max-w-lg block w-full shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm border-gray-300 rounded-md">
-                  <option :value="null">Select {{ categories['typical-group'].name }}</option>
-                  <option :value="option.hash" v-for="(option, index) in categories['typical-group'].options" :key="index">{{ option.name }}</option>
-                </select>
-              </div>
-              <div class="w-4/12">
-                <label class="block text-sm font-medium text-gray-700 mb-1" :for="`specific-part-${index}`">{{ categories['specific-part'].name }}</label>
-                <select
-                  v-model="question.specific_part"
-                  :id="`specific-part-${index}`"
-                  class="max-w-lg block w-full shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm border-gray-300 rounded-md">
-                  <option :value="null">Select {{ categories['specific-part'].name }}</option>
-                  <option :value="option.hash" v-for="(option, index) in categories['specific-part'].options" :key="index">{{ option.name }}</option>
+                  <option :value="null">Select {{ category.name }}</option>
+                  <option :value="option.hash" v-for="(option, optionIndex) in category.options" :key="optionIndex">{{ option.name }}</option>
                 </select>
               </div>
             </div>
