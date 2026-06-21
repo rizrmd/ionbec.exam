@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Session;
 use App\Models\Attempts\AttemptQuestion;
 use Veelasky\LaravelHashId\Rules\ExistsByHash;
 use App\Services\ExamSnapshotService;
+use App\Services\ExamTimerService;
 
 class DeliveryController extends Controller
 {
@@ -361,6 +362,82 @@ class DeliveryController extends Controller
         }
 
         return $this->actionSuccess(message: 'Delivery updated successfully.');
+    }
+
+    /**
+     * Add or subtract exam duration while an exam may be in progress.
+     *
+     * Shifts the deadline of every not-yet-finished participant by `delta`
+     * minutes. Rejected if shrinking would leave any active participant with
+     * less than one minute remaining (so nobody is finished off accidentally).
+     */
+    #[Post('/back-office/delivery/{delivery_hash}/adjust-duration', name: 'back-office.delivery.adjust-duration')]
+    public function adjustDuration(Request $request, Delivery $delivery): \Illuminate\Http\RedirectResponse
+    {
+        $data = $request->validate([
+            'delta' => 'required|integer|not_in:0',
+        ]);
+
+        $isInterview = (bool) (Exam::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->find($delivery->exam_id)?->is_interview ?? false);
+        if ($isInterview) {
+            return redirect()->back()->with('_message', 'Durasi tidak berlaku untuk delivery interview.');
+        }
+
+        $oldDuration = (int) $delivery->duration;
+        $newDuration = $oldDuration + (int) $data['delta'];
+
+        if ($newDuration < 1) {
+            return redirect()->back()->with('_message', 'Durasi total tidak boleh kurang dari 1 menit.');
+        }
+
+        // Guard: do not shrink so far that an active participant is left with
+        // under a minute (which would expire them on the next timer sync).
+        $activeAttempts = Attempt::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->where('delivery_id', $delivery->id)
+            ->whereNull('ended_at')
+            ->get();
+
+        if ($activeAttempts->isNotEmpty()) {
+            $timer = app(ExamTimerService::class);
+            $delivery->duration = $newDuration; // simulate before saving
+            foreach ($activeAttempts as $attempt) {
+                $window = $timer->window($delivery, $attempt);
+                if (! $window['expires_at']) {
+                    continue; // not started yet (no anchor) — no one to cut off
+                }
+                $remaining = $window['server_now']->diffInSeconds($window['expires_at'], false);
+                if ($remaining < 60) {
+                    return redirect()->back()->with(
+                        '_message',
+                        'Pengurangan ditolak: akan menyisakan kurang dari 1 menit untuk peserta yang sedang ujian.'
+                    );
+                }
+            }
+        }
+
+        // Persist using the same scheduling logic as update() so ended_at stays consistent.
+        $scheduledAt = new Carbon($delivery->getRawOriginal('scheduled_at') ?: $delivery->scheduled_at);
+        $this->applySchedule(
+            $delivery,
+            $scheduledAt,
+            $scheduledAt->copy(),
+            $newDuration,
+            (bool) $delivery->automatic_start,
+            $isInterview
+        );
+        $delivery->save();
+
+        $user = auth()->user();
+        $deltaLabel = ($data['delta'] > 0 ? '+' : '').$data['delta'];
+        $log = ActivityLog::create([
+            'log_name' => 'Delivery Duration Adjusted',
+            'description' => 'Delivery '.$delivery->name.' duration '.$oldDuration.' → '.$newDuration.' min ('.$deltaLabel.')',
+        ]);
+        $user->logs()->save($log);
+        $delivery->logs()->save($log);
+
+        return $this->actionSuccess(message: 'Durasi diperbarui menjadi '.$newDuration.' menit.');
     }
 
     #[Delete('/back-office/delivery/{delivery_hash}', name: 'back-office.delivery.destroy')]

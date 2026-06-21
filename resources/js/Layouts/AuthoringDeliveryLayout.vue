@@ -5,6 +5,7 @@ import CardCounter from "@/Components/CardCounter";
 import {toRefs, computed, onMounted} from "vue";
 import route from "@/Libs/ziggy";
 import {Link, useForm, usePage} from '@inertiajs/inertia-vue3'
+import {Inertia} from '@inertiajs/inertia'
 import {ref} from "vue";
 import JetDialogModal from '@/Jetstream/DialogModal'
 import JetConfirmationModal from '@/Jetstream/ConfirmationModal'
@@ -163,6 +164,23 @@ const editAction = () => {
   form.put(route('back-office.delivery.update', {delivery_hash: delivery.value.hash}), {
     onSuccess: closeModalForm
   })
+}
+
+const adjustStep = ref(5)
+const adjustingDuration = ref(false)
+const adjustDuration = (delta) => {
+  if (!delta || adjustingDuration.value) return
+  adjustingDuration.value = true
+  Inertia.post(
+    route('back-office.delivery.adjust-duration', {delivery_hash: delivery.value.hash}),
+    {delta, _token: usePage().props.value.csrf_token},
+    {
+      preserveScroll: true,
+      preserveState: true,
+      onSuccess: () => { form.duration = delivery.value.duration },
+      onFinish: () => { adjustingDuration.value = false },
+    }
+  )
 }
 
 const modaldelete = ref(false)
@@ -338,6 +356,29 @@ const generateTokenToScheduleOrStart = () => {
                        class="w-36 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
                        type="number"/>
                 <span class="ml-2 text-gray-500">minute</span>
+              </div>
+            </div>
+            <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start">
+              <label class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                Atur Waktu
+              </label>
+              <div class="mt-1 sm:mt-0 sm:col-span-2">
+                <div class="flex items-center gap-2">
+                  <input v-model.number="adjustStep" type="number" min="1"
+                         class="w-24 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm border-gray-300 rounded-md"/>
+                  <span class="text-gray-500 text-sm">menit</span>
+                  <button type="button" :disabled="adjustingDuration" @click="adjustDuration(-adjustStep)"
+                          class="px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">
+                    Kurangi
+                  </button>
+                  <button type="button" :disabled="adjustingDuration" @click="adjustDuration(adjustStep)"
+                          class="px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">
+                    Tambah
+                  </button>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">
+                  Berlaku langsung ke peserta yang sedang ujian (belum selesai).
+                </p>
               </div>
             </div>
             <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start">
