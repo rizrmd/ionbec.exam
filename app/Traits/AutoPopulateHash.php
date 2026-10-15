@@ -20,11 +20,19 @@ trait AutoPopulateHash
     protected function ensureHashIsPopulated()
     {
         // Check if hash column exists and is empty
-        if ($this->hasHashColumn() && empty($this->getAttributeFromArray('hash'))) {
+        if (array_key_exists('hash', $this->getAttributes())
+            && $this->hasHashColumn()
+            && empty($this->getAttributeFromArray('hash'))) {
             $hash = $this->idToHash($this->getKey());
             
-            // Update database without triggering events
-            $this->newQueryWithoutScopes()->where($this->getKeyName(), $this->getKey())->update(['hash' => $hash]);
+            // Fill only an explicitly selected empty hash. Preserve historical timestamps
+            // and never overwrite a hash written concurrently by another request.
+            \Illuminate\Support\Facades\DB::table($this->getTable())
+                ->where($this->getKeyName(), $this->getKey())
+                ->where(function ($query) {
+                    $query->whereNull('hash')->orWhere('hash', '');
+                })
+                ->update(['hash' => $hash]);
             
             // Update the model's attributes
             $this->setAttribute('hash', $hash);

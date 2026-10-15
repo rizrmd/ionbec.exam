@@ -43,7 +43,7 @@ class Taker extends Authenticatable
      */
     protected $fillable = ['name', 'reg', 'email', 'password', 'is_verified', 'client_id'];
 
-    protected $hidden = ['id'];
+    protected $hidden = ['id', 'password', 'remember_token'];
     protected $appends = ['hash'];
 
     /**
