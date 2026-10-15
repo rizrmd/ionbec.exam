@@ -85,13 +85,9 @@ class TestController extends Controller
     {
         $itemIds = DB::table('exam_item')->select('exam_id', 'item_id')->where('exam_id', $exam->id)->pluck('item_id');
 
-        $totalVignette = Item::query()->where('is_vignette', true)->whereHas('exams', function ($query) use ($exam) {
-            $query->where('id', $exam->id);
-        })->count();
+        $totalVignette = Item::query()->whereIn('id', $itemIds)->where('is_vignette', true)->count();
 
-        $totalMultiple = Item::query()->where('type', ItemType::MULTIPLE_CHOICE)->whereHas('exams', function ($query) use ($exam) {
-            $query->where('id', $exam->id);
-        })->count();
+        $totalMultiple = Item::query()->whereIn('id', $itemIds)->where('type', ItemType::MULTIPLE_CHOICE)->count();
 
         $totalQuestions = Question::query()->whereIn('item_id', $itemIds)->count();
 
