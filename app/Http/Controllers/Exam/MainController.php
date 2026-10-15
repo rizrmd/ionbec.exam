@@ -11,7 +11,6 @@ use App\Models\Exams\Answer;
 use App\Models\Takers\Taker;
 use App\Services\ExamTimerService;
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\Builder;
 use App\Models\Accounts\User;
 use App\Models\Exams\Question;
 use Dentro\Yalr\Attributes\Get;
@@ -1244,23 +1243,22 @@ class MainController extends Controller
                 $itemIds = collect($delivery->snapshot->exam_structure['items'] ?? [])->pluck('id');
             } else {
                 // Fallback to current exam structure (legacy behavior)
-                $itemQuery = Item::query()
-                    ->with('questions')
-                    ->whereHas(
-                        'exams',
-                        fn (Builder $builder) => $builder->where('id', $attempt->exam_id)
-                    );
-                $itemIds = $itemQuery->pluck('id');
-                $totalQuestions = Question::query()->whereIn('item_id', $itemIds)->count();
+                $itemIds = \Illuminate\Support\Facades\DB::table('exam_item')
+                    ->where('exam_id', $attempt->exam_id)
+                    ->pluck('item_id');
+                $totalQuestions = Question::query()
+                    ->where('client_id', $attempt->client_id)
+                    ->whereIn('item_id', $itemIds)
+                    ->count();
             }
 
             // Always query items from database for scoring logic
+            // Query the delivery's item IDs directly. Item::exams() depends on
+            // the parent instance's client_id, which is unset in whereHas queries.
             $itemQuery = Item::query()
-                ->with('questions')
-                ->whereHas(
-                    'exams',
-                    fn (Builder $builder) => $builder->where('id', $attempt->exam_id)
-                );
+                ->where('client_id', $attempt->client_id)
+                ->whereIn('id', $itemIds)
+                ->with('questions');
             $items = $itemQuery->cursor();
             $totalScore = 0;
             $totalItems = 0;
@@ -1316,6 +1314,10 @@ class MainController extends Controller
                 }
             }
 
+            if ($totalItems < 1 || $totalQuestions < 1) {
+                throw new \RuntimeException('Cannot score an exam without questions.');
+            }
+
             $attempt->score = $totalScore / $totalItems;
 
             // Calculate progress and cap at 100% to prevent issues with orphaned questions
@@ -1340,6 +1342,7 @@ class MainController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+            throw $e;
         }
     }
 
