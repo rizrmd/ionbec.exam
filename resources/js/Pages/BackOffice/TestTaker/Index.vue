@@ -78,6 +78,7 @@
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ taker.name }}</td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                     <pre>{{ taker.email }}</pre>
+                    <small v-if="taker.login_id" class="block mt-1">Participant ID: {{ taker.login_id }}</small>
                   </td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ taker.groups.length }} Group</td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ moment(taker.created_at).format('D MMM YYYY') }}</td>

@@ -143,6 +143,9 @@ class TestTakerController extends Controller
             ],
             'groups' => 'array',
         ];
+        if ($taker->email === $request->email) {
+            $validation['email'] = ['required', 'email', 'max:255'];
+        }
         $request->validate($validation);
 
         $groupIds = [];

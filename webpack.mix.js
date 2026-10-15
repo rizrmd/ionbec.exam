@@ -7,5 +7,8 @@ mix.js('resources/js/app.js', 'public/js').vue()
     ])
     .webpackConfig(require('./webpack.config'))
 
+// Bound minification memory on shared deployment/build hosts.
+mix.options({ terser: { parallel: false } })
+
 mix.sourceMaps()
 mix.version()

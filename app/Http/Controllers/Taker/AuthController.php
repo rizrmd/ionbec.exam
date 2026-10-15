@@ -104,39 +104,48 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
+            'login_id' => ['nullable', 'uuid'],
         ]);
 
-        if (Auth::guard('taker')->attempt($credentials)) {
-            $request->session()->regenerate();
-            $taker = auth()->guard('taker')->user();
-            Log::info('Taker login successful', ['email' => $credentials['email'], 'taker_id' => $taker->id]);
-            
-            if (! $taker->is_verified) {
-                auth()->guard('taker')->logout();
-                Log::warning('Taker login blocked - not verified', ['email' => $credentials['email'], 'taker_id' => $taker->id]);
+        $clientId = app()->has('current_client')
+            ? app('current_client')->id
+            : $request->session()->get('client_id');
+        abort_unless($clientId, 403, 'Tenant context required.');
 
-                return back()->withErrors([
-                    'email' => 'Taker not verified! please contact admin.',
-                ])->onlyInput('email');
-            }
-
-            return redirect()->route('taker.dashboard');
+        // Email is a contact address. A shared address must never select the
+        // first account or use a password to guess which identity was intended.
+        $query = Taker::query()->where('client_id', $clientId)
+            ->where('email', $credentials['email']);
+        if (! empty($credentials['login_id'])) {
+            $query->where('login_id', $credentials['login_id']);
+        }
+        $ids = (clone $query)->limit(2)->pluck('id');
+        if ($ids->count() !== 1) {
+            return back()->withErrors([
+                'email' => 'Check your credentials. If this email is shared, enter your participant ID.',
+            ])->onlyInput('email', 'login_id');
         }
 
-        // Check if taker exists but password is wrong
-        $taker = Taker::where('email', $credentials['email'])->first();
-        if ($taker) {
-            Log::warning('Taker login failed - wrong password', [
-                'email' => $credentials['email'],
-                'taker_id' => $taker->id,
-                'is_verified' => $taker->is_verified
-            ]);
-        } else {
-            Log::warning('Taker login failed - email not found', ['email' => $credentials['email']]);
+        $login = [
+            'id' => $ids->first(),
+            'client_id' => $clientId,
+            'email' => $credentials['email'],
+            'password' => $credentials['password'],
+        ];
+        if (Auth::guard('taker')->attempt($login)) {
+            $request->session()->regenerate();
+            $taker = Auth::guard('taker')->user();
+            if (! $taker->is_verified) {
+                Auth::guard('taker')->logout();
+                return back()->withErrors([
+                    'email' => 'Taker not verified! please contact admin.',
+                ])->onlyInput('email', 'login_id');
+            }
+            return redirect()->route('taker.dashboard');
         }
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+        ])->onlyInput('email', 'login_id');
     }
 }

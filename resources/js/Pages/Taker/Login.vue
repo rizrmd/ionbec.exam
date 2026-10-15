@@ -17,6 +17,7 @@ const clientLogo = computed(() => client.value?.logo_url || '/images/logo.png')
 
 const form = useForm({
   email: '',
+  login_id: '',
   password: ''
 });
 
@@ -53,6 +54,11 @@ const submit = () => {
       <div>
         <JetLabel for="email" value="Email"/>
         <input type="text" id="email" autocomplete="email" v-model="form.email" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required autofocus/>
+      </div>
+
+      <div class="mt-4">
+        <JetLabel for="login_id" value="Participant ID (required for shared email)"/>
+        <input type="text" id="login_id" autocomplete="off" v-model="form.login_id" class="mt-1 block w-full shadow-sm border-gray-300 rounded-md"/>
       </div>
 
       <div class="mt-4">
