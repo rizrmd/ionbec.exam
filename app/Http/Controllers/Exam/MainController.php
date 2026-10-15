@@ -11,6 +11,7 @@ use App\Models\Exams\Answer;
 use App\Models\Takers\Taker;
 use App\Services\ExamTimerService;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\Accounts\User;
 use App\Models\Exams\Question;
 use Dentro\Yalr\Attributes\Get;
