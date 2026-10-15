@@ -10,7 +10,6 @@ use App\Models\Attempts\Attempt;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Attempts\AttemptQuestion;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
@@ -100,23 +99,20 @@ class CalculateScore implements ShouldQueue
             $itemIds = collect($delivery->snapshot->exam_structure['items'] ?? [])->pluck('id');
         } else {
             // Fallback to current exam structure (legacy behavior)
-            $itemQuery = Item::query()
-                ->with('questions')
-                ->whereHas(
-                    'exams',
-                    fn (Builder $builder) => $builder->where('id', $this->attempt->exam_id)
-                );
-            $itemIds = $itemQuery->pluck('id');
-            $totalQuestions = Question::query()->whereIn('item_id', $itemIds)->count();
+            $itemIds = \Illuminate\Support\Facades\DB::table('exam_item')
+                ->where('exam_id', $this->attempt->exam_id)
+                ->pluck('item_id');
+            $totalQuestions = Question::query()
+                ->where('client_id', $this->attempt->client_id)
+                ->whereIn('item_id', $itemIds)
+                ->count();
         }
 
         // Always query items from database for scoring logic
         $itemQuery = Item::query()
-            ->with('questions')
-            ->whereHas(
-                'exams',
-                fn (Builder $builder) => $builder->where('id', $this->attempt->exam_id)
-            );
+            ->where('client_id', $this->attempt->client_id)
+            ->whereIn('id', $itemIds)
+            ->with('questions');
         $items = $itemQuery->cursor();
         $totalScore = 0;
         $totalItems = 0;
@@ -172,6 +168,10 @@ class CalculateScore implements ShouldQueue
             } elseif (! $is_mcq && $item->is_vignette) { // if not mcq and it's vignette.
                 $totalItems -= ($questions->count() - 1);
             }
+        }
+
+        if ($totalItems < 1 || $totalQuestions < 1) {
+            throw new \RuntimeException('Cannot score an exam without questions.');
         }
 
         $this->attempt->score = $totalScore / $totalItems;
