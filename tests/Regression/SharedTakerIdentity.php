@@ -20,6 +20,9 @@ try {
  }
  $base=['email'=>'identity-test@example.invalid','password'=>'Staging-only-passphrase'];
  attemptLogin($base,$session,$app);check(Auth::guard('taker')->guest(),'ambiguous email rejected');
+ $shared=(new App\Http\Middleware\HandleInertiaRequests)->share($app['request']);
+ $errors=$shared['errors']();
+ check(isset($errors->email) && str_contains($errors->email, 'participant ID'), 'ambiguous identity validation message visible to Inertia');
  foreach($ids as $n=>$id) {attemptLogin($base+['login_id'=>$logins[$n]],$session,$app);check((int)Auth::guard('taker')->id()===(int)$id,'explicit identity '.$n.' authenticates correct account');}
  attemptLogin(['email'=>$base['email'],'password'=>'wrong','login_id'=>$logins[0]],$session,$app);check(Auth::guard('taker')->guest(),'wrong password rejected');
  $app->instance('current_client',(object)['id'=>3]);attemptLogin($base+['login_id'=>$logins[0]],$session,$app);check(Auth::guard('taker')->guest(),'cross tenant identity rejected');
