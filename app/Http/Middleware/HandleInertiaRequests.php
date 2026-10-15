@@ -34,8 +34,6 @@ class HandleInertiaRequests extends Middleware
                 'warning' => $request->session()->get('warning'),
                 'info' => $request->session()->get('info'),
             ],
-            // Also share errors for validation
-            'errors' => static fn () => $request->session()->get('errors', new \Illuminate\Support\MessageBag),
             // Share CSRF token for all requests
             'csrf_token' => static fn () => $request->session()->token(),
         ]);
