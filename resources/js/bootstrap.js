@@ -38,6 +38,7 @@ window.Echo = new Echo({
   wssPort: window.location.protocol === 'https:' ? 443 : (window.location.port || 3000),
   forceTLS: window.location.protocol === 'https:',
   disableStats: true,
-  enabledTransports: window.location.protocol === 'https:' ? ['wss'] : ['ws'],
+  // Pusher selects its WebSocket strategy by "ws"; forceTLS upgrades it to WSS.
+  enabledTransports: ['ws', 'wss'],
   authEndpoint: '/broadcasting/auth',
 })
