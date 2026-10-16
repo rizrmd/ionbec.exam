@@ -1,7 +1,7 @@
 services:
     app:
         build:
-            context: https://github.com/rizrmd/ionbec.exam.git#224c2a6553ec93f648bfc7db4af3813d8aed0676
+            context: https://github.com/rizrmd/ionbec.exam.git#78a922b6149da516b95046fc14253b31538aab66
             dockerfile: Dockerfile
         restart: unless-stopped
         entrypoint:
