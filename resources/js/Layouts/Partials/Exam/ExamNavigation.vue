@@ -167,7 +167,19 @@ const buttonColorMap = computed(() => {
   return colorMap;
 });
 
+// Lazy exam payloads carry a question count before fetching question content.
+// These entries navigate by the existing item index; no question IDs or answers
+// are invented or sent to the answer API.
+const navigationQuestions = item => {
+  if (Array.isArray(item.questions) && item.questions.length) return item.questions
+  const count = Number(item.questions_count)
+  return Number.isSafeInteger(count) && count > 0
+    ? Array.from({length: count}, () => ({hash: null}))
+    : []
+}
+
 const btnColor = (currentItem, item, question) => {
+  if (currentItem?.item_hash === item.hash) return 'bg-blue-600 text-white';
   return buttonColorMap.value.get(question.hash) || 'bg-gray-100 hover:bg-blue-600 hover:text-white';
 }
 </script>
@@ -187,7 +199,7 @@ const btnColor = (currentItem, item, question) => {
         <div class="exam-navigation-content">
           <div class="exam-question-grid">
             <template v-for="(item, itemIndex) in items" :key="item.hash">
-              <button v-for="(question, questionIndex) in item.questions" :key="question.hash" type="button"
+              <button v-for="(question, questionIndex) in navigationQuestions(item)" :key="`${item.hash}:${questionIndex}`" type="button"
                       :class="['rounded-md flex justify-center items-center', btnColor(currentItem, item, question)]"
                       :aria-current="currentItem?.item_hash === item.hash ? 'step' : null"
                       @click="selectQuestion(question.hash, itemIndex)">
