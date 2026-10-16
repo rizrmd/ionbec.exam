@@ -1,0 +1,166 @@
+services:
+    app:
+        build:
+            context: https://github.com/rizrmd/ionbec.exam.git#224c2a6553ec93f648bfc7db4af3813d8aed0676
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        entrypoint:
+            - /bin/sh
+            - -ec
+            - "sed -i 's/soketi/cbt-soketi/g' /var/www/config/broadcasting.php /etc/nginx/sites-available/default; exec /usr/local/bin/start.sh"
+        depends_on:
+            cbt-soketi:
+                condition: service_started
+        ports:
+            - '3000:3000'
+        environment: &app_environment
+            APP_NAME: MDXM
+            APP_ENV: production
+            APP_KEY: '${APP_KEY}'
+            APP_DEBUG: 'true'
+            APP_URL: ''
+            DB_CONNECTION: pgsql
+            DB_HOST: jf1e89v3lerdo74uaf5diihl
+            DB_PORT: '5432'
+            DB_DATABASE: '${DB_DATABASE}'
+            DB_USERNAME: '${DB_USERNAME}'
+            DB_PASSWORD: '${DB_PASSWORD}'
+            REDIS_HOST: gx474zh0w0vpg3b38sn6ht0d
+            REDIS_PASSWORD: '${REDIS_PASSWORD}'
+            REDIS_PORT: 6379
+            CACHE_DRIVER: redis
+            SESSION_DRIVER: redis
+            QUEUE_CONNECTION: redis
+            MAIL_MAILER: log
+            MAIL_HOST: '${MAIL_HOST}'
+            MAIL_PORT: '587'
+            MAIL_USERNAME: '${MAIL_USERNAME}'
+            MAIL_PASSWORD: '${MAIL_PASSWORD}'
+            MAIL_ENCRYPTION: tls
+            MAIL_FROM_ADDRESS: '${MAIL_FROM_ADDRESS}'
+            MAIL_FROM_NAME: '${APP_NAME}'
+            BROADCAST_DRIVER: pusher
+            PUSHER_APP_ID: '${PUSHER_APP_ID}'
+            PUSHER_APP_KEY: '${PUSHER_APP_KEY}'
+            PUSHER_APP_SECRET: '${PUSHER_APP_SECRET}'
+            PUSHER_APP_CLUSTER: mt1
+            SESSION_DOMAIN: ''
+            SESSION_SECURE_COOKIE: 'false'
+            SANCTUM_STATEFUL_DOMAINS: '*'
+            COOLIFY_BRANCH: '"main"'
+            COOLIFY_RESOURCE_UUID: okksscs4w0s8oc0go0k4cg8k
+            COOLIFY_CONTAINER_NAME: app-okksscs4w0s8oc0go0k4cg8k
+            SERVICE_URL_SCHEDULER: 'http://mdxm-schd.85.25.187.84.sslip.io'
+            SERVICE_FQDN_SCHEDULER: mdxm-schd.85.25.187.84.sslip.io
+            SERVICE_URL_QUEUE: 'http://mdxm-que.85.25.187.84.sslip.io'
+            SERVICE_FQDN_QUEUE: mdxm-que.85.25.187.84.sslip.io
+            SERVICE_URL_APP: 'https://medxamion.com'
+            SERVICE_FQDN_APP: medxamion.com
+            SERVICE_URL_RUST_SERVICE: 'http://mdxm-rust.85.25.187.84.sslip.io'
+            SERVICE_FQDN_RUST_SERVICE: mdxm-rust.85.25.187.84.sslip.io
+            SERVICE_URL_SOKETI: 'http://mdxm-skt.85.25.187.84.sslip.io'
+            SERVICE_FQDN_SOKETI: mdxm-skt.85.25.187.84.sslip.io
+            COOLIFY_URL: 'https://medxamion.com'
+            COOLIFY_FQDN: medxamion.com
+            SERVICE_NAME_APP: app
+            SERVICE_NAME_QUEUE: queue
+            SERVICE_NAME_SCHEDULER: scheduler
+            SERVICE_NAME_SOKETI: soketi
+            SERVICE_NAME_RUST_SERVICE: rust-service
+        volumes:
+            - 'okksscs4w0s8oc0go0k4cg8k_app-storage:/var/www/storage'
+            - 'okksscs4w0s8oc0go0k4cg8k_app-cache:/var/www/bootstrap/cache'
+            - '/data/coolify/proxy/dynamic:/traefik-dynamic'
+        networks:
+            app_network: null
+            okksscs4w0s8oc0go0k4cg8k: null
+            coolify: null
+        container_name: app-okksscs4w0s8oc0go0k4cg8k
+        labels:
+            - coolify.managed=true
+            - coolify.version=4.0.0-beta.470
+            - coolify.applicationId=103
+            - coolify.type=application
+            - coolify.name=app-okksscs4w0s8oc0go0k4cg8k
+            - coolify.resourceName=mdxm
+            - coolify.projectName=tools
+            - coolify.serviceName=mdxm
+            - coolify.environmentName=tools-env
+            - coolify.pullRequestId=0
+            - traefik.enable=true
+            - traefik.docker.network=coolify
+            - traefik.http.services.okksscs4w0s8oc0go0k4cg8k-app.loadbalancer.server.port=3000
+            - traefik.http.middlewares.gzip.compress=true
+            - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+            - traefik.http.routers.http-0-okksscs4w0s8oc0go0k4cg8k-app.entryPoints=http
+            - traefik.http.routers.http-0-okksscs4w0s8oc0go0k4cg8k-app.middlewares=redirect-to-https
+            - 'traefik.http.routers.http-0-okksscs4w0s8oc0go0k4cg8k-app.rule=Host(`medxamion.com`) && PathPrefix(`/`)'
+            - traefik.http.routers.https-0-okksscs4w0s8oc0go0k4cg8k-app.entryPoints=https
+            - traefik.http.routers.https-0-okksscs4w0s8oc0go0k4cg8k-app.middlewares=gzip
+            - 'traefik.http.routers.https-0-okksscs4w0s8oc0go0k4cg8k-app.rule=Host(`medxamion.com`) && PathPrefix(`/`)'
+            - traefik.http.routers.https-0-okksscs4w0s8oc0go0k4cg8k-app.tls.certresolver=letsencrypt
+            - traefik.http.routers.https-0-okksscs4w0s8oc0go0k4cg8k-app.tls=true
+            - 'caddy_0.encode=zstd gzip'
+            - 'caddy_0.handle_path.0_reverse_proxy={{upstreams}}'
+            - 'caddy_0.handle_path=/*'
+            - caddy_0.header=-Server
+            - 'caddy_0.try_files={path} /index.html /index.php'
+            - 'caddy_0=https://medxamion.com'
+            - caddy_ingress_network=okksscs4w0s8oc0go0k4cg8k
+        env_file:
+            - .env
+        image: 'okksscs4w0s8oc0go0k4cg8k_app:cbt-builder-fix'
+    queue:
+        image: 'okksscs4w0s8oc0go0k4cg8k_app:cbt-builder-fix'
+        pull_policy: never
+        restart: unless-stopped
+        working_dir: /var/www
+        entrypoint:
+            - /bin/sh
+            - -ec
+            - "sed -i 's/soketi/cbt-soketi/g' /var/www/config/broadcasting.php; exec php artisan queue:work redis --sleep=1 --tries=3 --timeout=60 --max-time=3600"
+        stop_grace_period: 75s
+        depends_on:
+            app:
+                condition: service_healthy
+        environment: *app_environment
+        env_file:
+            - .env
+        volumes:
+            - 'okksscs4w0s8oc0go0k4cg8k_app-storage:/var/www/storage'
+            - 'okksscs4w0s8oc0go0k4cg8k_app-cache:/var/www/bootstrap/cache'
+        networks:
+            app_network: null
+            okksscs4w0s8oc0go0k4cg8k: null
+            coolify: null
+        healthcheck:
+            disable: true
+    cbt-soketi:
+        image: 'quay.io/soketi/soketi:latest-16-alpine'
+        restart: unless-stopped
+        environment:
+            SOKETI_DEFAULT_APP_ID: '${PUSHER_APP_ID}'
+            SOKETI_DEFAULT_APP_KEY: '${PUSHER_APP_KEY}'
+            SOKETI_DEFAULT_APP_SECRET: '${PUSHER_APP_SECRET}'
+            SOKETI_DEFAULT_APP_MAX_CONNS: 1000
+            SOKETI_DEFAULT_APP_ENABLE_CLIENT_MESSAGES: 'true'
+        networks:
+            app_network: null
+volumes:
+    app_storage:
+        driver: local
+    app_cache:
+        driver: local
+    okksscs4w0s8oc0go0k4cg8k_app-storage:
+        name: okksscs4w0s8oc0go0k4cg8k_app-storage
+    okksscs4w0s8oc0go0k4cg8k_app-cache:
+        name: okksscs4w0s8oc0go0k4cg8k_app-cache
+networks:
+    app_network:
+        driver: bridge
+    okksscs4w0s8oc0go0k4cg8k:
+        name: okksscs4w0s8oc0go0k4cg8k
+        external: true
+    coolify:
+        name: coolify
+        external: true
