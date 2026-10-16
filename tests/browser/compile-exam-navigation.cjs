@@ -1,0 +1,4 @@
+const path=require('path'),os=require('os'),webpack=require('webpack'),{VueLoaderPlugin}=require('vue-loader');
+const root=path.resolve(__dirname,'../..');
+const output=path.resolve(process.argv[2]||path.join(os.tmpdir(),'ionbec-exam-navigation-tests'));
+webpack({mode:'development',context:root,entry:path.join(__dirname,'exam-navigation-harness.js'),devtool:false,output:{path:output,filename:'test.js'},resolve:{extensions:['.js','.vue'],alias:{vue:path.join(root,'node_modules/vue')}},module:{rules:[{test:/\.vue$/,loader:require.resolve('vue-loader')},{test:/\.css$/,use:[require.resolve('style-loader'),require.resolve('css-loader')]}]},plugins:[new VueLoaderPlugin()]},(err,stats)=>{if(err||stats.hasErrors()){console.error(err||stats.toString({all:false,errors:true}));process.exitCode=1}else console.log(stats.toString({all:false,timings:true}));});

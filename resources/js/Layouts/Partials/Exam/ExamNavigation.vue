@@ -1,6 +1,6 @@
 <script setup>
-import { CheckCircleIcon, ExclamationCircleIcon, QuestionMarkCircleIcon, ArrowRightIcon, ArrowLeftIcon } from '@heroicons/vue/solid'
-import {computed, ref, toRefs} from "vue";
+import { CheckCircleIcon, ExclamationCircleIcon, QuestionMarkCircleIcon, ArrowRightIcon, ArrowLeftIcon, XIcon } from '@heroicons/vue/solid'
+import {computed, ref, toRefs, onMounted, onBeforeUnmount} from "vue";
 
 const props = defineProps({
   items: {
@@ -58,9 +58,44 @@ const {items, skipped, later, done, currentItem} = toRefs(props)
 const emit = defineEmits(['click', 'previous', 'next', 'extraButtonAction'])
 
 const btnNavigation = ref(false)
-const popup = ref(false)
-
-const btnMouseLeave = () => setTimeout(() => btnNavigation.value = false, 1000)
+// Keep the bar inside the visible viewport when browser chrome or a keyboard
+// changes its height without resizing the layout viewport.
+const viewportHeight = ref(0)
+const viewportInset = ref(0)
+const barHeight = ref(60)
+const actions = ref(null)
+let barObserver
+const updateViewport = () => {
+  const viewport = window.visualViewport
+  viewportHeight.value = viewport?.height ?? window.innerHeight
+  viewportInset.value = Math.max(0, window.innerHeight - viewportHeight.value - (viewport?.offsetTop ?? 0))
+  barHeight.value = actions.value?.offsetHeight ?? 60
+}
+const onKeydown = event => {
+  if (event.key === 'Escape') btnNavigation.value = false
+}
+const selectQuestion = (hash, index) => {
+  emit('click', hash, index)
+  btnNavigation.value = false
+}
+onMounted(() => {
+  updateViewport()
+  window.addEventListener('resize', updateViewport)
+  window.visualViewport?.addEventListener('resize', updateViewport)
+  window.visualViewport?.addEventListener('scroll', updateViewport)
+  document.addEventListener('keydown', onKeydown)
+  if (typeof ResizeObserver !== 'undefined') {
+    barObserver = new ResizeObserver(updateViewport)
+    if (actions.value) barObserver.observe(actions.value)
+  }
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateViewport)
+  window.visualViewport?.removeEventListener('resize', updateViewport)
+  window.visualViewport?.removeEventListener('scroll', updateViewport)
+  document.removeEventListener('keydown', onKeydown)
+  barObserver?.disconnect()
+})
 
 const checkSkippedQuest = (hash) => skipped.value.indexOf(hash) !== -1;
 const checkDoneQuest = (hash) => done.value.indexOf(hash) !== -1;
@@ -138,77 +173,123 @@ const btnColor = (currentItem, item, question) => {
 </script>
 
 <template>
-  <transition
-    enter-active-class="transition duration-100 ease-out"
-    enter-from-class="transform scale-95 opacity-0"
-    enter-to-class="transform scale-100 opacity-100"
-    leave-active-class="transition duration-75 ease-in"
-    leave-from-class="transform scale-100 opacity-100"
-    leave-to-class="transform scale-95 opacity-0">
-    <div :class="['fixed bottom-14 left-0 right-0 mx-auto w-full', enableInfo ? 'md:w-1/2' : 'md:w-1/3']" @mouseover="popup = true" @mouseleave="popup = false" v-show="btnNavigation || popup">
-      <div class="flex flex-col-reverse md:flex-row gap-2 p-2 bg-white shadow-lg rounded-lg max-h-96">
-        <div class="flex-1 flex flex-wrap gap-2 overflow-auto">
-          <template v-for="(item, itemIndex) in items">
-            <button :class="['rounded-md flex justify-center items-center py-2 px-3 w-12 h-12', btnColor(currentItem, item, question)]" @click="$emit('click', question.hash, itemIndex)" v-for="(question, questionIndex) in item.questions">
-              {{ itemIndex + 1 }}.{{ questionIndex + 1 }}
-            </button>
-          </template>
+  <Teleport to="body">
+    <div class="exam-navigation" :style="{
+      bottom: `${viewportInset}px`,
+      '--exam-visible-height': `${viewportHeight}px`,
+      '--exam-actions-height': `${barHeight}px`,
+    }">
+      <section v-if="btnNavigation" id="exam-question-navigation" class="exam-navigation-panel" :class="{ 'no-info': !enableInfo }" aria-label="Question navigation">
+        <div class="exam-navigation-heading">
+          <span>Questions</span>
+          <button type="button" aria-label="Close question navigation" @click="btnNavigation = false"><XIcon class="h-5 w-5"/></button>
         </div>
-        <div class="flex-1 space-y-2" v-if="enableInfo">
-          <div class="rounded-md bg-green-50 p-4">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <CheckCircleIcon class="h-5 w-5 text-green-400" aria-hidden="true" />
-              </div>
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-green-800">{{ uniqueQuestionsDone }} Quest Done</h3>
-              </div>
-            </div>
+        <div class="exam-navigation-content">
+          <div class="exam-question-grid">
+            <template v-for="(item, itemIndex) in items" :key="item.hash">
+              <button v-for="(question, questionIndex) in item.questions" :key="question.hash" type="button"
+                      :class="['rounded-md flex justify-center items-center', btnColor(currentItem, item, question)]"
+                      :aria-current="currentItem?.item_hash === item.hash ? 'step' : null"
+                      @click="selectQuestion(question.hash, itemIndex)">
+                {{ itemIndex + 1 }}.{{ questionIndex + 1 }}
+              </button>
+            </template>
           </div>
-          <div class="rounded-md bg-yellow-50 p-4">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <ExclamationCircleIcon class="h-5 w-5 text-yellow-400" aria-hidden="true" />
-              </div>
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-yellow-800">{{ countSkipped }} Quest Skipped</h3>
-              </div>
-            </div>
-          </div>
-          <div class="rounded-md bg-red-50 p-4">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <QuestionMarkCircleIcon class="h-5 w-5 text-red-400" aria-hidden="true" />
-              </div>
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">{{ later.length }} Mark As Later</h3>
-              </div>
-            </div>
+          <div v-if="enableInfo" class="exam-navigation-summary">
+            <div class="bg-green-50 text-green-800"><CheckCircleIcon class="h-5 w-5 text-green-400"/><span>{{ uniqueQuestionsDone }} Quest Done</span></div>
+            <div class="bg-yellow-50 text-yellow-800"><ExclamationCircleIcon class="h-5 w-5 text-yellow-400"/><span>{{ countSkipped }} Quest Skipped</span></div>
+            <div class="bg-red-50 text-red-800"><QuestionMarkCircleIcon class="h-5 w-5 text-red-400"/><span>{{ later.length }} Mark As Later</span></div>
           </div>
         </div>
-      </div>
+      </section>
+      <nav ref="actions" class="exam-navigation-bar" aria-label="Exam controls">
+        <div class="exam-navigation-actions" :class="{ 'has-extra': extraButton !== null }">
+          <button type="button" :disabled="!showPrevious" class="exam-step" @click="$emit('previous')">
+            <ArrowLeftIcon aria-hidden="true" class="h-4 w-4"/><span>Previous</span>
+          </button>
+          <button type="button" class="exam-toggle" :aria-expanded="btnNavigation" aria-controls="exam-question-navigation" @click="btnNavigation = !btnNavigation">Navigation</button>
+          <button type="button" :disabled="!showNext" class="exam-step" @click="$emit('next')">
+            <span>Next</span><ArrowRightIcon aria-hidden="true" class="h-4 w-4"/>
+          </button>
+          <button v-if="extraButton !== null" type="button" class="exam-extra" @click="$emit('extraButtonAction')">{{ extraButton }}</button>
+        </div>
+      </nav>
     </div>
-  </transition>
-
-  <div class="fixed bottom-0 left-0 min-w-full backdrop-blur-md bg-white/30 z-10">
-    <div class="flex gap-2 justify-center items-center items-center mx-5 my-2">
-
-      <button :class="['flex justify-center items-center text-white rounded-md py-1 px-4', showPrevious ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-200 hover:bg-gray-200']" @click="showPrevious ? $emit('previous') : null">
-        <ArrowLeftIcon aria-hidden="true" class="h-5 w-5"/>&nbsp;&nbsp;Previous
-      </button>
-      <button @click="() => btnNavigation = !btnNavigation" @mouseleave="() => btnMouseLeave()" class="flex justify-center items-center text-white bg-primary-600 rounded-md py-1 px-4 hover:bg-primary-700">
-        Navigation
-      </button>
-      <button :class="['flex justify-center items-center text-white rounded-md py-1 px-4', showNext ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-200 hover:bg-gray-200 -normal']" @click="showNext ? $emit('next') : null">
-        Next&nbsp;&nbsp;<ArrowRightIcon aria-hidden="true" class="h-5 w-5"/>
-      </button>
-      <button class="ml-4 flex justify-center items-center text-white bg-red-500 rounded-md py-1 px-4 hover:bg-red-700" v-if="extraButton !== null" @click="$emit('extraButtonAction')">
-        {{ extraButton }}
-      </button>
-    </div>
-  </div>
+  </Teleport>
 </template>
 
 <style scoped>
-
+.exam-navigation, .exam-navigation * { box-sizing: border-box; }
+.exam-navigation {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+.exam-navigation-bar {
+  width: 100%;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -2px 10px rgb(0 0 0 / 0.08);
+  pointer-events: auto;
+}
+.exam-navigation-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .5rem;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: .5rem max(.5rem, env(safe-area-inset-right, 0px)) max(.5rem, env(safe-area-inset-bottom, 0px)) max(.5rem, env(safe-area-inset-left, 0px));
+}
+.exam-navigation-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: .25rem;
+  border-radius: .375rem;
+  color: white;
+  font-size: .875rem;
+}
+.exam-step { background: #2563eb; }
+.exam-step:disabled { background: #e5e7eb; color: #4b5563; cursor: default; }
+.exam-toggle { background: #04a95a; }
+.exam-extra { grid-column: 1 / -1; background: #ef4444; }
+.exam-navigation-panel {
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 1rem);
+  max-width: 60rem;
+  max-height: calc(var(--exam-visible-height) - var(--exam-actions-height) - 1rem);
+  min-height: 0;
+  margin: 0 auto .5rem;
+  padding: .5rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: .5rem;
+  box-shadow: 0 4px 16px rgb(0 0 0 / .15);
+  overflow: hidden;
+  pointer-events: auto;
+}
+.exam-navigation-panel.no-info { max-width: 32rem; }
+.exam-navigation-heading { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; font-weight: 600; }
+.exam-navigation-heading button { min-width: 44px; min-height: 32px; display: grid; place-items: center; }
+.exam-navigation-content { display: flex; flex-direction: column-reverse; gap: .5rem; min-height: 0; }
+.exam-question-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: .5rem; overflow: auto; min-height: 0; align-content: start; }
+.exam-question-grid button { min-height: 44px; }
+.exam-navigation-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; flex-shrink: 0; }
+.exam-navigation-summary > div { display: flex; align-items: center; gap: .25rem; padding: .5rem; border-radius: .375rem; font-size: .75rem; }
+.exam-navigation-summary svg { flex-shrink: 0; }
+@media (min-width: 768px) {
+  .exam-navigation-content { flex-direction: row; }
+  .exam-question-grid { flex: 1; }
+  .exam-navigation-summary { flex: 1; display: flex; flex-direction: column; }
+}
+@media (min-width: 640px) {
+  .exam-navigation-actions.has-extra { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .exam-extra { grid-column: auto; }
+}
 </style>
