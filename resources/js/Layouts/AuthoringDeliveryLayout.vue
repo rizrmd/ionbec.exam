@@ -239,6 +239,13 @@ const generateTokenToScheduleOrStart = () => {
           <div>
             <h1 class="text-xl font-semibold text-gray-900">{{ delivery.name }}</h1>
             <h2 class="text-base text-gray-700">{{ delivery.exam?.name ?? '' }} - {{ delivery.exam?.code ?? '' }}</h2>
+            <p v-if="delivery.snapshot_info?.frozen" class="mt-1 text-xs text-gray-600" data-testid="delivery-snapshot-note">
+              Exam content frozen at {{ delivery.snapshot_info.frozen_at }} ({{ delivery.snapshot_info.snapshot_items }} question set(s)).
+              Participants and scoring use this frozen content; later edits to the exam do not change this delivery.
+              <span v-if="delivery.snapshot_info.differs_from_exam" class="text-yellow-700">
+                The exam currently has {{ delivery.snapshot_info.live_exam_items }} question set(s), which differs from the frozen content.
+              </span>
+            </p>
           </div>
         </div>
         <div class="flex items-center gap-3">

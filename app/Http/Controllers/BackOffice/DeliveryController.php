@@ -913,6 +913,9 @@ class DeliveryController extends Controller
             $delivery->setRelation('group', $group);
         }
 
+        // Tell the admin that this delivery serves the exam content frozen when it was scheduled
+        $delivery->append('snapshot_info');
+
         $baseDetail = [
             'takerCount' => $takerCount,
             'scoringCount' => $delivery->attempts->count(),
