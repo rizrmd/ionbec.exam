@@ -91,6 +91,44 @@ const vignetteData = ref(null);
 const questionData = ref(null);
 // Visible error state for lazy question loading (never fail silently)
 const questionLoadError = ref(null);
+const QUESTION_LOAD_TIMEOUT_MS = 20000;
+
+// A lazily loaded item only carries question placeholders (hash, no text). Treat questions as
+// renderable only when at least one has text or answer options, so a broken payload shows the
+// error + retry block instead of empty "Question N.x" cards.
+const hasRenderableQuestions = (questions) => Array.isArray(questions) && questions.some((q) =>
+  q && typeof q === 'object' && (
+    (typeof q.question === 'string' && q.question.trim() !== '') ||
+    (Array.isArray(q.answers) && q.answers.length > 0)
+  )
+);
+
+// Short, safe server message from a JSON error body (new backend) or legacy shapes.
+const extractServerMessage = (data) => {
+  if (!data || typeof data !== 'object') return null;
+  const msg = data.message || data.error || null;
+  return typeof msg === 'string' && msg.trim() !== '' && msg.length <= 300 ? msg.trim() : null;
+};
+
+const buildQuestionLoadError = (index, itemHash, error = null, data = null) => {
+  const status = error?.response?.status ?? null;
+  const serverMessage = extractServerMessage(error?.response?.data ?? data);
+  let message;
+  if (status === 401 || status === 419) {
+    message = 'Your exam session has ended. Please reload the page or log in to the exam again.';
+  } else if (error && (error.code === 'ECONNABORTED' || /timeout/i.test(error.message || ''))) {
+    message = 'Loading this question took too long. Check your connection and try again.';
+  } else if (error && !error.response) {
+    message = 'Could not reach the exam server. Check your connection and try again.';
+  } else if (status === 404) {
+    message = 'The question for this number could not be found.';
+  } else if (status && status >= 500) {
+    message = 'The exam server failed to load this question. Please try again.';
+  } else {
+    message = 'The question for this number could not be loaded. Please try again.';
+  }
+  return { index, item_hash: itemHash ?? null, status, message, detail: serverMessage };
+};
 
 // NEW: Isolated localStorage keys for this exam session
 const getLocalStorageKey = (key) => {
@@ -702,7 +740,7 @@ const getQuestions = async (index, force = false) => {
       return null;
     }
 
-  if (!force && questionData.value !== null && questionData.value.item_hash === item.hash) return null;
+  if (!force && !questionLoadError.value && questionData.value !== null && questionData.value.item_hash === item.hash) return null;
 
   loadingQuestions.value = true;
   questionLoadError.value = null;
@@ -716,8 +754,9 @@ const getQuestions = async (index, force = false) => {
     // Continue with question loading even if submit fails
   }
 
-    // 🔒 ENHANCED: Preserve existing questions during loading to prevent blank screen
-    const previousQuestions = questionData.value?.questions || [];
+    // While loading, only show this item's own questions when they were already loaded;
+    // otherwise the template shows a loading block. Showing the previous number's questions
+    // under the new number could record answers / "Mark As Later" on the wrong question.
     const previousQuestionData = {...questionData.value};
 
     // 🔒 CRITICAL: Save current answers before navigation
@@ -735,7 +774,7 @@ const getQuestions = async (index, force = false) => {
       item_hash: item.hash,
       type: item.item_type,
       is_random: item.is_random,
-      questions: previousQuestions.length > 0 ? previousQuestions : item.questions, // Keep previous if available
+      questions: hasRenderableQuestions(item.questions) ? item.questions : [],
       attachments: item.attachments,
       loading: true,
       // Preserve answer state reference
@@ -762,18 +801,14 @@ const getQuestions = async (index, force = false) => {
     // Send the stable item id as well: the server resolves the item inside the delivery
     // snapshot by id, so a stale/mismatched hash can no longer leave the page blank.
     const requestParams = item.id ? { item_id: item.id } : {};
-    const {data: responseData} = await axios.get(route('exam.get-taker-answer', { item_hash: item.hash }), { params: requestParams });
+    const {data: responseData} = await axios.get(route('exam.get-taker-answer', { item_hash: item.hash }), { params: requestParams, timeout: QUESTION_LOAD_TIMEOUT_MS });
     console.log('✅ Server response received for item:', item.hash, responseData);
 
     // NEW: Validate exam context to prevent mixed exam issues
     if (!validateExamContext(item.hash, responseData)) {
       console.error('❌ EXAM CONTEXT VALIDATION FAILED - Rejecting mixed context response');
-      questionLoadError.value = {
-        index,
-        item_hash: item.hash,
-        message: 'The question for this number could not be loaded.',
-      };
-      questionData.value = { ...questionData.value, questions: item.questions || [], loading: false };
+      questionLoadError.value = buildQuestionLoadError(index, item.hash, null, responseData);
+      questionData.value = { ...questionData.value, questions: hasRenderableQuestions(item.questions) ? item.questions : [], loading: false };
       lastLoadedIndex.value = null;
       loadingQuestion.value = false;
       loadingQuestions.value = false;
@@ -793,15 +828,11 @@ const getQuestions = async (index, force = false) => {
       }
 
       // Load questions into the item
-      item.questions = questions;
+      item.questions = Array.isArray(questions) ? questions : [];
       item.archived = !!responseData.archived;
 
-      if (!Array.isArray(questions) || questions.length === 0) {
-        questionLoadError.value = {
-          index,
-          item_hash: item.hash,
-          message: 'The question for this number could not be loaded.',
-        };
+      if (!hasRenderableQuestions(questions)) {
+        questionLoadError.value = buildQuestionLoadError(index, item.hash, null, responseData);
       }
 
       // Sync laters checkbox state with laterQuests
@@ -856,11 +887,7 @@ const getQuestions = async (index, force = false) => {
         done: doneQuests.value,
       }))
     } else {
-      questionLoadError.value = {
-        index,
-        item_hash: item.hash,
-        message: 'The question for this number could not be loaded.',
-      };
+      questionLoadError.value = buildQuestionLoadError(index, item.hash, null, responseData);
       loadingQuestion.value = false;
       pageNumber.value = Math.ceil((index + 1) / 20)
 
@@ -878,7 +905,7 @@ const getQuestions = async (index, force = false) => {
       item_hash: item.hash,
       type: item.item_type,
       is_random: item.is_random,
-      questions: item.questions,
+      questions: hasRenderableQuestions(item.questions) ? item.questions : [],
       attachments: item.attachments,
       archived: !!item.archived,
       loading: false // NEW: Remove loading flag
@@ -905,21 +932,14 @@ const getQuestions = async (index, force = false) => {
       loadingQuestion.value = false;
 
       // Show the failure to the participant with a retry button instead of a blank question
-      const status = error?.response?.status;
-      questionLoadError.value = {
-        index,
-        item_hash: items.value?.[index]?.hash ?? null,
-        status: status ?? null,
-        message: status === 401
-          ? 'Your exam session has ended. Please reload the page or log in to the exam again.'
-          : 'The question for this number could not be loaded. Check your connection and try again.',
-      };
+      questionLoadError.value = buildQuestionLoadError(index, items.value?.[index]?.hash, error);
       lastLoadedIndex.value = null;
 
       // Never leave the previous number's questions on screen under the new number,
       // otherwise an answer could be recorded for the wrong question.
       if (questionData.value && questionData.value.index === index) {
-        questionData.value.questions = items.value?.[index]?.questions || [];
+        const cached = items.value?.[index]?.questions;
+        questionData.value.questions = hasRenderableQuestions(cached) ? cached : [];
       }
 
       // Keep previous questions on error to prevent blank screen
@@ -964,7 +984,8 @@ const getQuestions = async (index, force = false) => {
 };
 const retryQuestionLoad = () => {
   const index = questionLoadError.value?.index ?? questionData.value?.index ?? 0;
-  if (questionLoadError.value?.status === 401) {
+  if (loadingQuestions.value) return;
+  if (questionLoadError.value?.status === 401 || questionLoadError.value?.status === 419) {
     window.location.reload();
     return;
   }
@@ -1863,14 +1884,23 @@ const markAsLater = (e, hash) => {
           <div v-html="vignetteData"></div>
         </div>
 
+        <div v-if="loadingQuestions && (!questionData.questions || questionData.questions.length === 0)"
+             class="my-5 flex items-center justify-center gap-3 rounded-md border border-gray-200 bg-gray-50 p-6 text-gray-700"
+             role="status" aria-live="polite" data-testid="question-loading">
+          <LoadingCircle />
+          <span class="text-sm font-medium">Loading question...</span>
+        </div>
+
         <div v-if="questionLoadError && questionLoadError.index === questionData.index && !loadingQuestions"
              class="my-5 rounded-md border border-red-200 bg-red-50 p-4 text-red-800" role="alert" data-testid="question-load-error">
           <p class="font-semibold">{{ questionLoadError.message }}</p>
+          <p v-if="questionLoadError.detail" class="mt-1 text-sm" data-testid="question-load-error-detail">{{ questionLoadError.detail }}</p>
           <p class="mt-1 text-sm">Your other answers are saved. If this keeps happening, please contact the exam supervisor.</p>
-          <button type="button" @click="retryQuestionLoad"
-                  class="mt-3 inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+          <p v-if="questionLoadError.status" class="mt-1 text-xs text-red-600">Error code: {{ questionLoadError.status }}</p>
+          <button type="button" @click="retryQuestionLoad" :disabled="loadingQuestions"
+                  class="mt-3 inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                   data-testid="question-load-retry">
-            {{ questionLoadError.status === 401 ? 'Reload page' : 'Retry' }}
+            {{ (questionLoadError.status === 401 || questionLoadError.status === 419) ? 'Reload page' : 'Try again' }}
           </button>
         </div>
 
