@@ -46,6 +46,13 @@ const props = defineProps({
 
 const {item, tests, categories, questions, chartData, typeOptions, snapshotDeliveries} = toRefs(props);
 const detachedSnapshotDeliveries = computed(() => (snapshotDeliveries.value || []).filter(d => !d.attached_to_exam));
+// Number of exams this question set is attached to that the selector can actually show.
+// formContent.tests may carry hashes of exams outside the option list (other client / deleted);
+// counting those made the selector and the pills disagree.
+const attachedExamCount = computed(() => {
+  const optionHashes = new Set((tests.value || []).map(test => test.hash));
+  return (formContent.tests || []).filter(hash => optionHashes.has(hash)).length;
+})
 const page = usePage()
 
 const showModalDelete = ref(false)
@@ -389,7 +396,11 @@ onUnmounted(() => {
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1" for="group">
                   Choose exam to attach
+                  <span class="font-normal text-gray-500" data-testid="attached-exam-count">({{ attachedExamCount }} attached)</span>
                 </label>
+                <p v-if="attachedExamCount === 0 && snapshotDeliveries && snapshotDeliveries.length > 0" class="mb-1 text-xs text-gray-600" data-testid="snapshot-only-note">
+                  Not attached to any exam now, but used by {{ snapshotDeliveries.length }} scheduled delivery(ies) listed below.
+                </p>
                 <div class="mt-1 sm:mt-0 sm:col-span-2">
                   <div class="w-full">
                     <MultipleSelect title="Tests" :required="false" :options="filteredTests" pills-size="small" v-model="formContent.tests" position="top" />
