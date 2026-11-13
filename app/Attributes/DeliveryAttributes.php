@@ -61,6 +61,13 @@ trait DeliveryAttributes
             return 0;
         }
 
+        // Deliveries with a snapshot contain exactly the snapshot items (what participants
+        // see and what scoring counts), even if the exam was edited afterwards.
+        $itemSource = app(\App\Services\DeliveryItemSource::class);
+        if ($itemSource->snapshotItems($this)->isNotEmpty()) {
+            return $itemSource->questionCount($this);
+        }
+
         return $this->exam instanceof Exam ? $this->exam->totalQuestions() : 0;
     }
 

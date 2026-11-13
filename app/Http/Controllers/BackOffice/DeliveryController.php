@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Session;
 use App\Models\Attempts\AttemptQuestion;
 use Veelasky\LaravelHashId\Rules\ExistsByHash;
 use App\Services\ExamSnapshotService;
+use App\Services\DeliveryItemSource;
 use App\Services\ExamTimerService;
 
 class DeliveryController extends Controller
@@ -606,14 +607,8 @@ class DeliveryController extends Controller
         
         $attemptQuests = AttemptQuestion::query()->with('question')->where('attempt_id', $attempt->id)->get();
         
-        // Use direct join to bypass ClientScope issues
-        $items = Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
-            ->join('exam_item', 'items.id', '=', 'exam_item.item_id')
-            ->where('exam_item.exam_id', $delivery->exam_id)
-            ->with(['questions.answers', 'attachments'])
-            ->select('items.*')
-            ->orderBy('exam_item.order')
-            ->get();
+        // Items of this delivery (snapshot first), the same set the participant saw and scoring counts
+        $items = app(DeliveryItemSource::class)->items($delivery, ['questions.answers', 'attachments']);
 
         return Inertia::render('BackOffice/Delivery/ScoringDetail', [
             'items' => $items,
@@ -808,8 +803,8 @@ class DeliveryController extends Controller
             return redirect()->route('back-office.delivery.index')->with('error', 'Exam not found');
         }
 
-        // Load items through exam relationship to get proper ordering
-        $items = $exam->items()->with(['questions.answers', 'attachments'])->orderByPivot('order')->get();
+        // Preview exactly the items of this delivery (snapshot first), in delivery order
+        $items = app(DeliveryItemSource::class)->items($delivery, ['questions.answers', 'attachments']);
 
         // hiding is_correct_answer column for admin preview
         foreach ($items as $item) {
@@ -880,14 +875,10 @@ class DeliveryController extends Controller
         
         if ($exam) {
             // Load items and questions without ClientScope using direct DB query
-            $items = \App\Models\Exams\Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
-                ->join('exam_item', 'items.id', '=', 'exam_item.item_id')
-                ->where('exam_item.exam_id', $delivery->exam_id)
-                ->with(['questions' => function ($q) {
-                    $q->withoutGlobalScope(\App\Scopes\ClientScope::class);
-                }])
-                ->select('items.*') // Select only items columns to avoid conflicts
-                ->get();
+            // Items of this delivery (snapshot first) so detail pages match what participants saw
+            $items = app(DeliveryItemSource::class)->items($delivery, ['questions' => function ($q) {
+                $q->withoutGlobalScope(\App\Scopes\ClientScope::class);
+            }]);
             
             $exam->setRelation('items', $items);
             
@@ -995,18 +986,18 @@ class DeliveryController extends Controller
             return;
         }
 
-        // Get total question count for this exam
+        // Question set of this delivery (snapshot first), consistent with CalculateScore
+        $itemIds = app(DeliveryItemSource::class)->itemIds($delivery)->all();
+
         $totalQuestions = \DB::table('questions')
-            ->join('exam_item', 'questions.item_id', '=', 'exam_item.item_id')
-            ->where('exam_item.exam_id', $delivery->exam_id)
+            ->whereIn('questions.item_id', $itemIds)
             ->count();
 
         // Get scored question count for this attempt
         $scoredQuestions = \DB::table('attempt_question')
             ->join('questions', 'attempt_question.question_id', '=', 'questions.id')
-            ->join('exam_item', 'questions.item_id', '=', 'exam_item.item_id')
             ->where('attempt_question.attempt_id', $attempt->id)
-            ->where('exam_item.exam_id', $delivery->exam_id)
+            ->whereIn('questions.item_id', $itemIds)
             ->whereNotNull('attempt_question.score')
             ->count();
 

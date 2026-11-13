@@ -37,9 +37,15 @@ const props = defineProps({
     type: Object,
     required: false,
   },
+  snapshotDeliveries: {
+    type: Array,
+    required: false,
+    default: () => [],
+  },
 })
 
-const {item, tests, categories, questions, chartData, typeOptions} = toRefs(props);
+const {item, tests, categories, questions, chartData, typeOptions, snapshotDeliveries} = toRefs(props);
+const detachedSnapshotDeliveries = computed(() => (snapshotDeliveries.value || []).filter(d => !d.attached_to_exam));
 const page = usePage()
 
 const showModalDelete = ref(false)
@@ -388,6 +394,18 @@ onUnmounted(() => {
                   <div class="w-full">
                     <MultipleSelect title="Tests" :required="false" :options="filteredTests" pills-size="small" v-model="formContent.tests" position="top" />
                   </div>
+                </div>
+                <div v-if="snapshotDeliveries && snapshotDeliveries.length > 0" class="mt-2 text-xs text-gray-600" data-testid="snapshot-deliveries">
+                  <p class="font-medium">Used in scheduled deliveries:</p>
+                  <ul class="list-disc ml-4">
+                    <li v-for="d in snapshotDeliveries" :key="d.name + d.scheduled_at">
+                      {{ d.name }} <span class="text-gray-400">({{ d.exam_name }}, {{ d.scheduled_at }})</span>
+                    </li>
+                  </ul>
+                  <p v-if="detachedSnapshotDeliveries.length > 0" class="mt-1 rounded bg-yellow-50 p-2 text-yellow-800" data-testid="snapshot-detached-warning">
+                    This question set is no longer attached to the exam of {{ detachedSnapshotDeliveries.length }} delivery(ies) above,
+                    but participants of those deliveries still receive it because their exam content was frozen when the delivery was scheduled.
+                  </p>
                 </div>
               </div>
             </div>

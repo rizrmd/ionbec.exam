@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Session;
 use App\Models\Attempts\AttemptQuestion;
 use Veelasky\LaravelHashId\Rules\ExistsByHash;
 use App\Services\RustService;
+use App\Services\DeliveryItemSource;
 
 class MainController extends Controller
 {
@@ -260,6 +261,18 @@ class MainController extends Controller
                             'item_name' => $item->name ?? 'none',
                             'generated_hash' => $item->hash
                         ]);
+                    }
+
+                    // Snapshot items store the type as a plain value; expose the same
+                    // item_type shape as the Rust payload so the page renders the type
+                    // badge and treats essay items as essay (not multiple choice).
+                    if (!isset($item->item_type)) {
+                        // Snapshot stores ItemType as {name, value, ...}; older rows may hold a plain string.
+                        $rawType = $item->type ?? null;
+                        $typeValue = is_array($rawType) ? ($rawType['value'] ?? null) : (is_object($rawType) ? ($rawType->value ?? null) : $rawType);
+                        $typeName = is_array($rawType) ? ($rawType['name'] ?? null) : (is_object($rawType) ? ($rawType->name ?? null) : $rawType);
+                        $typeValue = is_string($typeValue) && $typeValue !== '' ? $typeValue : 'multiple-choice';
+                        $item->item_type = ['id' => 0, 'name' => is_string($typeName) && $typeName !== '' ? $typeName : $typeValue, 'value' => $typeValue];
                     }
 
                     // Convert questions array
@@ -604,6 +617,64 @@ class MainController extends Controller
             'taker_id' => $takerId
         ]);
 
+        if (!$deliveryId || !$examId) {
+            // Without an exam session the request cannot be tied to a delivery.
+            // Answer with JSON so the page can show "session ended" instead of failing silently.
+            return response()->json([
+                'questions' => [],
+                'attempt' => null,
+                'error' => 'exam_session_missing',
+                'message' => 'Exam session has ended. Please log in to the exam again.',
+            ], 401);
+        }
+
+        // DELIVERY SNAPSHOT FIRST: the snapshot defines which items this delivery contains
+        // (and is what scoring counts). Resolve the requested item inside the snapshot by its
+        // stable id/hash instead of relying on the items.hash column, which is not persisted for
+        // new items and was historically filled with hashes from a different key.
+        $snapshotDelivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)->find($deliveryId);
+        $itemSource = app(DeliveryItemSource::class);
+        $requestedItemId = request()->query('item_id');
+        $requestedItemId = is_numeric($requestedItemId) ? (int) $requestedItemId : null;
+        $snapshotItem = $snapshotDelivery ? $itemSource->findSnapshotItem($snapshotDelivery, $actualHash, $requestedItemId) : null;
+
+        if ($snapshotItem) {
+            $resolved = $itemSource->questionsForSnapshotItem($snapshotItem);
+            $questionIds = $resolved['questions']->pluck('id')->filter()->all();
+
+            $attempt = $takerId ? Attempt::query()
+                ->where('attempted_by', $takerId)
+                ->where('delivery_id', $deliveryId)
+                ->with(['questions' => function ($query) use ($questionIds) {
+                    $query->whereIn('question_id', $questionIds)
+                        ->withPivot(['answer_hash', 'answer', 'is_correct', 'score']);
+                }])
+                ->latest()
+                ->first() : null;
+
+            if ($attempt && $attempt->questions) {
+                $attempt->questions->each(function ($question) use ($actualHash) {
+                    $question->item_hash = $actualHash;
+                });
+            }
+
+            \Log::info('getQuestions: served from delivery snapshot', [
+                'delivery_id' => $deliveryId,
+                'item_id' => $resolved['item_id'],
+                'questions_count' => $resolved['questions']->count(),
+                'archived' => $resolved['archived'],
+            ]);
+
+            return response()->json([
+                'questions' => $resolved['questions'],
+                'attempt' => $attempt,
+                'attachments' => $resolved['attachments'],
+                'item_id' => $resolved['item_id'],
+                'archived' => $resolved['archived'],
+                'source' => 'delivery_snapshot',
+            ]);
+        }
+
         // UNIFIED APPROACH: Try Rust API first to maintain hash consistency
         $rustService = new RustService();
         $examData = $rustService->loadExamData(
@@ -712,9 +783,34 @@ class MainController extends Controller
             'using_without_globalscope' => true
         ]);
 
+        // Restrict the lookup to items of this delivery/exam and accept both the legacy
+        // items.hash column and the hash computed by the application (Item::idToHash),
+        // which is what the page receives for deliveries without a snapshot.
+        $allowedItemIds = $snapshotDelivery
+            ? $itemSource->itemIds($snapshotDelivery)->all()
+            : \Illuminate\Support\Facades\DB::table('exam_item')->where('exam_id', $examId)->pluck('item_id')->all();
+
         $item = Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
+            ->whereIn('id', $allowedItemIds)
             ->where('hash', $actualHash)
             ->first();
+
+        if (!$item) {
+            try {
+                $decodedId = Item::hashToId($actualHash);
+            } catch (\Throwable $e) {
+                $decodedId = null;
+            }
+            if (!$decodedId && preg_match('/^item_(\d+)$/', (string) $actualHash, $m)) {
+                $decodedId = (int) $m[1];
+            }
+            if (!$decodedId && $requestedItemId) {
+                $decodedId = $requestedItemId;
+            }
+            if ($decodedId && in_array($decodedId, array_map('intval', $allowedItemIds), true)) {
+                $item = Item::withoutGlobalScope(\App\Scopes\ClientScope::class)->find($decodedId);
+            }
+        }
 
         if (!$item) {
             \Log::error('🔒 CRITICAL ERROR: Item not found in Rust API or database', [

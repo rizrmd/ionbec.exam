@@ -20,6 +20,7 @@ use App\Models\Attempts\AttemptQuestion;
 use Veelasky\LaravelHashId\Rules\ExistsByHash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use App\Services\DeliveryItemSource;
 
 class ScoringController extends Controller
 {
@@ -74,10 +75,7 @@ class ScoringController extends Controller
             // Calculate questions_count
             $questionsCount = 0;
             if ($exam) {
-                $questionsCount = DB::table('questions')
-                    ->join('exam_item', 'questions.item_id', '=', 'exam_item.item_id')
-                    ->where('exam_item.exam_id', $exam->id)
-                    ->count();
+                $questionsCount = app(DeliveryItemSource::class)->questionCount($delivery);
             }
             $delivery->questions_count = $questionsCount;
             
@@ -108,10 +106,7 @@ class ScoringController extends Controller
                 ->count();
             
             // Get question count with a single query
-            $questionCount = DB::table('questions')
-                ->join('exam_item', 'questions.item_id', '=', 'exam_item.item_id')
-                ->where('exam_item.exam_id', $delivery->exam_id)
-                ->count();
+            $questionCount = app(DeliveryItemSource::class)->questionCount($delivery);
 
             // Get all takers in the group
             $groupTakerIds = DB::table('group_taker')
@@ -417,51 +412,14 @@ class ScoringController extends Controller
                 'exam_name' => $delivery->exam->name ?? 'Unknown'
             ]);
 
-            // Always load items independently from attempt data - bypass ClientScope
-            $items = Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
-                ->whereHas('exams', function ($q) use ($delivery) {
-                    $q->where('id', $delivery->exam_id);
-                })
-                ->with(['questions.answers', 'attachments'])
-                ->get();
+            // Items of this delivery (snapshot first): the set the participant saw and scoring counts
+            $items = app(DeliveryItemSource::class)->items($delivery, ['questions.answers', 'attachments']);
 
-            \Log::info("Items query result (with ClientScope bypass)", [
+            \Log::info('Scoring exam view: delivery items loaded', [
                 'items_count' => $items->count(),
                 'exam_id' => $delivery->exam_id,
-                'client_id' => $delivery->client_id
+                'delivery_id' => $delivery->id,
             ]);
-
-            // If items empty, try direct query and convert to proper models
-            if ($items->isEmpty()) {
-                \Log::warning("Items empty, trying direct query");
-
-                $itemsData = \DB::table('items')
-                    ->join('exam_item', 'items.id', '=', 'exam_item.item_id')
-                    ->where('exam_item.exam_id', $delivery->exam_id)
-                    ->get()
-                    ->toArray();
-
-                \Log::info("Direct query result", [
-                    'items_count' => count($itemsData),
-                    'sample' => array_slice($itemsData, 0, 3)
-                ]);
-
-                // Convert to Item models - bypass ClientScope
-                $items = collect();
-                foreach ($itemsData as $itemData) {
-                    // Get the actual Item model with relationships - bypass ClientScope
-                    $itemModel = \App\Models\Exams\Item::withoutGlobalScope(\App\Scopes\ClientScope::class)
-                        ->with(['questions.answers', 'attachments'])
-                        ->find($itemData->id);
-                    if ($itemModel) {
-                        $items->push($itemModel);
-                    } else {
-                        \Log::warning("Failed to load item model", ['item_id' => $itemData->id]);
-                    }
-                }
-
-                \Log::info("Converted models count", ['items_count' => $items->count()]);
-            }
 
             // Load attempt questions (may be empty)
             $attemptQuests = AttemptQuestion::query()

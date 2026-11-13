@@ -89,6 +89,8 @@ const loadingQuestions = ref(false); // NEW: Loading state for question navigati
 const lastLoadedIndex = ref(null); // NEW: Track last loaded index to prevent duplicate requests
 const vignetteData = ref(null);
 const questionData = ref(null);
+// Visible error state for lazy question loading (never fail silently)
+const questionLoadError = ref(null);
 
 // NEW: Isolated localStorage keys for this exam session
 const getLocalStorageKey = (key) => {
@@ -642,7 +644,7 @@ const laterQuests = ref([]);
 const doneQuests = ref([]);
 
 // 🔒 CRITICAL FIX: Enhanced getQuestions with comprehensive validation
-const getQuestions = async (index) => {
+const getQuestions = async (index, force = false) => {
   try {
     console.log('🚀 getQuestions called with index:', index);
 
@@ -695,14 +697,15 @@ const getQuestions = async (index) => {
     }
 
     // NEW: Prevent duplicate requests and track loading state
-    if (loadingQuestions.value || lastLoadedIndex.value === index) {
+    if (loadingQuestions.value || (!force && lastLoadedIndex.value === index)) {
       console.log('⏭️ Skipping duplicate request for index:', index, 'loading:', loadingQuestions.value);
       return null;
     }
 
-  if (questionData.value !== null && questionData.value.item_hash === item.hash) return null;
+  if (!force && questionData.value !== null && questionData.value.item_hash === item.hash) return null;
 
   loadingQuestions.value = true;
+  questionLoadError.value = null;
   console.log('🔄 Loading questions for index:', index, 'item:', item.hash);
 
   // 🔒 NEW: Submit answer with error handling
@@ -756,12 +759,22 @@ const getQuestions = async (index) => {
     loadingQuestion.value = true;
     console.log('📡 Fetching server data for item:', item.hash);
 
-    const {data: responseData} = await axios.get(route('exam.get-taker-answer', { item_hash: item.hash }));
+    // Send the stable item id as well: the server resolves the item inside the delivery
+    // snapshot by id, so a stale/mismatched hash can no longer leave the page blank.
+    const requestParams = item.id ? { item_id: item.id } : {};
+    const {data: responseData} = await axios.get(route('exam.get-taker-answer', { item_hash: item.hash }), { params: requestParams });
     console.log('✅ Server response received for item:', item.hash, responseData);
 
     // NEW: Validate exam context to prevent mixed exam issues
     if (!validateExamContext(item.hash, responseData)) {
       console.error('❌ EXAM CONTEXT VALIDATION FAILED - Rejecting mixed context response');
+      questionLoadError.value = {
+        index,
+        item_hash: item.hash,
+        message: 'The question for this number could not be loaded.',
+      };
+      questionData.value = { ...questionData.value, questions: item.questions || [], loading: false };
+      lastLoadedIndex.value = null;
       loadingQuestion.value = false;
       loadingQuestions.value = false;
       return;
@@ -781,6 +794,15 @@ const getQuestions = async (index) => {
 
       // Load questions into the item
       item.questions = questions;
+      item.archived = !!responseData.archived;
+
+      if (!Array.isArray(questions) || questions.length === 0) {
+        questionLoadError.value = {
+          index,
+          item_hash: item.hash,
+          message: 'The question for this number could not be loaded.',
+        };
+      }
 
       // Sync laters checkbox state with laterQuests
       item.questions.forEach((question) => {
@@ -834,6 +856,11 @@ const getQuestions = async (index) => {
         done: doneQuests.value,
       }))
     } else {
+      questionLoadError.value = {
+        index,
+        item_hash: item.hash,
+        message: 'The question for this number could not be loaded.',
+      };
       loadingQuestion.value = false;
       pageNumber.value = Math.ceil((index + 1) / 20)
 
@@ -853,10 +880,11 @@ const getQuestions = async (index) => {
       is_random: item.is_random,
       questions: item.questions,
       attachments: item.attachments,
+      archived: !!item.archived,
       loading: false // NEW: Remove loading flag
     };
 
-    lastLoadedIndex.value = index;
+    lastLoadedIndex.value = questionLoadError.value ? null : index;
     console.log('✅ Successfully loaded questions for index:', index);
 
   } catch (error) {
@@ -875,6 +903,24 @@ const getQuestions = async (index) => {
       // Attempt to restore loading states
       loadingQuestions.value = false;
       loadingQuestion.value = false;
+
+      // Show the failure to the participant with a retry button instead of a blank question
+      const status = error?.response?.status;
+      questionLoadError.value = {
+        index,
+        item_hash: items.value?.[index]?.hash ?? null,
+        status: status ?? null,
+        message: status === 401
+          ? 'Your exam session has ended. Please reload the page or log in to the exam again.'
+          : 'The question for this number could not be loaded. Check your connection and try again.',
+      };
+      lastLoadedIndex.value = null;
+
+      // Never leave the previous number's questions on screen under the new number,
+      // otherwise an answer could be recorded for the wrong question.
+      if (questionData.value && questionData.value.index === index) {
+        questionData.value.questions = items.value?.[index]?.questions || [];
+      }
 
       // Keep previous questions on error to prevent blank screen
       if (questionData.value) {
@@ -916,6 +962,15 @@ const getQuestions = async (index) => {
     console.log('🏁 getQuestions completed for index:', index);
   }
 };
+const retryQuestionLoad = () => {
+  const index = questionLoadError.value?.index ?? questionData.value?.index ?? 0;
+  if (questionLoadError.value?.status === 401) {
+    window.location.reload();
+    return;
+  }
+  getQuestions(index, true);
+};
+
 const checkSkippedQuest = (hash) => skippedQuests.value.indexOf(hash) !== -1;
 const checkDoneQuest = (hash) => doneQuests.value.indexOf(hash) !== -1;
 
@@ -1808,6 +1863,21 @@ const markAsLater = (e, hash) => {
           <div v-html="vignetteData"></div>
         </div>
 
+        <div v-if="questionLoadError && questionLoadError.index === questionData.index && !loadingQuestions"
+             class="my-5 rounded-md border border-red-200 bg-red-50 p-4 text-red-800" role="alert" data-testid="question-load-error">
+          <p class="font-semibold">{{ questionLoadError.message }}</p>
+          <p class="mt-1 text-sm">Your other answers are saved. If this keeps happening, please contact the exam supervisor.</p>
+          <button type="button" @click="retryQuestionLoad"
+                  class="mt-3 inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                  data-testid="question-load-retry">
+            {{ questionLoadError.status === 401 ? 'Reload page' : 'Retry' }}
+          </button>
+        </div>
+
+        <div v-if="questionData.archived" class="my-5 rounded-md border border-yellow-200 bg-yellow-50 p-4 text-yellow-800" data-testid="question-archived">
+          This question was removed by the administrator after the exam was scheduled. It is shown for reference only and is not scored.
+        </div>
+
         <div v-for="(question, questionIndex) in questionData.questions" class="mt-5 mb-16">
           <div class="pt-5">
             <div class="flex gap-2 items-center mb-2">
@@ -1833,11 +1903,11 @@ const markAsLater = (e, hash) => {
               <div class="whitespace-pre-wrap mb-4" v-html="question.question"></div>
               <div v-if="!loadingQuestion">
                 <div class="flex flex-col gap-2 mt-6 w-auto" v-if="question.type !== null && question.type?.name === 'multiple-choice'">
-                  <button v-for="(answer, ansIndex) in question.answers" :key="ansIndex" @click="selectAnswer(answer.hash, question.hash)" :class="['flex text-left px-3 py-2 bg-gray-100 rounded-md', isAnswerSelected(answer.hash, question) ? 'bg-green-600 text-white' : 'hover:bg-green-200 hover:text-green-600']">
+                  <button v-for="(answer, ansIndex) in question.answers" :key="ansIndex" :disabled="!!question.is_archived" @click="!question.is_archived && selectAnswer(answer.hash, question.hash)" :class="['flex text-left px-3 py-2 bg-gray-100 rounded-md disabled:cursor-not-allowed disabled:opacity-60', isAnswerSelected(answer.hash, question) ? 'bg-green-600 text-white' : 'hover:bg-green-200 hover:text-green-600']">
                     <span class="mr-3 font-bold uppercase">{{ answerIndex[ansIndex] }}</span> <span v-html="answer.answer"></span>
                   </button>
                 </div>
-                <div class="mt-4" v-else>
+                <div class="mt-4" v-else-if="!question.is_archived">
                   <Editor class="my-2" v-model="answerVal[question.hash]" @blur="() => submitAnswer(true, question.hash)" />
                 </div>
 
