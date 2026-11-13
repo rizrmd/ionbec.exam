@@ -103,6 +103,14 @@ const hasRenderableQuestions = (questions) => Array.isArray(questions) && questi
   )
 );
 
+// Questions the server returned for an item may legitimately have no text and no options when
+// the image is the question (e.g. an image-based essay prompt). Those are flagged questionsLoaded
+// by getQuestions; bare placeholders from the page props never are, so they still show the error.
+const itemQuestionsRenderable = (item) => !!item && (
+  hasRenderableQuestions(item.questions) ||
+  (item.questionsLoaded === true && Array.isArray(item.questions) && item.questions.length > 0)
+);
+
 // Short, safe server message from a JSON error body (new backend) or legacy shapes.
 const extractServerMessage = (data) => {
   if (!data || typeof data !== 'object') return null;
@@ -774,7 +782,7 @@ const getQuestions = async (index, force = false) => {
       item_hash: item.hash,
       type: item.item_type,
       is_random: item.is_random,
-      questions: hasRenderableQuestions(item.questions) ? item.questions : [],
+      questions: itemQuestionsRenderable(item) ? item.questions : [],
       attachments: item.attachments,
       loading: true,
       // Preserve answer state reference
@@ -808,7 +816,7 @@ const getQuestions = async (index, force = false) => {
     if (!validateExamContext(item.hash, responseData)) {
       console.error('❌ EXAM CONTEXT VALIDATION FAILED - Rejecting mixed context response');
       questionLoadError.value = buildQuestionLoadError(index, item.hash, null, responseData);
-      questionData.value = { ...questionData.value, questions: hasRenderableQuestions(item.questions) ? item.questions : [], loading: false };
+      questionData.value = { ...questionData.value, questions: itemQuestionsRenderable(item) ? item.questions : [], loading: false };
       lastLoadedIndex.value = null;
       loadingQuestion.value = false;
       loadingQuestions.value = false;
@@ -830,8 +838,12 @@ const getQuestions = async (index, force = false) => {
       // Load questions into the item
       item.questions = Array.isArray(questions) ? questions : [];
       item.archived = !!responseData.archived;
+      item.questionsLoaded = item.questions.length > 0 && (
+        (Array.isArray(item.attachments) && item.attachments.length > 0) ||
+        (typeof item.content === 'string' && item.content.trim() !== '')
+      );
 
-      if (!hasRenderableQuestions(questions)) {
+      if (!itemQuestionsRenderable(item)) {
         questionLoadError.value = buildQuestionLoadError(index, item.hash, null, responseData);
       }
 
@@ -905,7 +917,7 @@ const getQuestions = async (index, force = false) => {
       item_hash: item.hash,
       type: item.item_type,
       is_random: item.is_random,
-      questions: hasRenderableQuestions(item.questions) ? item.questions : [],
+      questions: itemQuestionsRenderable(item) ? item.questions : [],
       attachments: item.attachments,
       archived: !!item.archived,
       loading: false // NEW: Remove loading flag
@@ -938,8 +950,8 @@ const getQuestions = async (index, force = false) => {
       // Never leave the previous number's questions on screen under the new number,
       // otherwise an answer could be recorded for the wrong question.
       if (questionData.value && questionData.value.index === index) {
-        const cached = items.value?.[index]?.questions;
-        questionData.value.questions = hasRenderableQuestions(cached) ? cached : [];
+        const cachedItem = items.value?.[index];
+        questionData.value.questions = itemQuestionsRenderable(cachedItem) ? cachedItem.questions : [];
       }
 
       // Keep previous questions on error to prevent blank screen

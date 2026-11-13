@@ -117,6 +117,17 @@ try {
     $assert($status === 200 && ($body2['item_id'] ?? null) === $item2, 'item 2 resolved by item_id');
     $assert($snapHash2 !== 'stale-hash-from-old-page', 'snapshot hash of item 2 differs from the sent hash');
 
+    echo "Router binding of /exam/questions/{item_hash} (real HTTP route):\n";
+    $route = app('router')->getRoutes()->match(Request::create('/exam/questions/stale-hash-from-old-page?item_id='.$item2, 'GET'));
+    $bindingStatus = 200;
+    try {
+        app('router')->substituteBindings($route);
+    } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        $bindingStatus = $e->getStatusCode();
+    }
+    $assert($route->getName() === 'exam.get-taker-answer' && $bindingStatus === 200, 'stale hash is not rejected by the item_hash route binding (no 404 before the controller)');
+    $assert($route->parameter('item_hash') === 'stale-hash-from-old-page', 'controller receives the raw hash string');
+
     echo "GET with unknown hash:\n";
     [$status, $body] = $call('getQuestions', 'definitely-not-an-item-hash');
     $assert($status === 404, 'unknown hash returns HTTP 404');

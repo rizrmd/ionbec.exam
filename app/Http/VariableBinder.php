@@ -25,7 +25,15 @@ class VariableBinder extends BaseRoute
         $this->router->bind('taker_hash', static fn ($takerHash) => Taker::byHashOrFail($takerHash));
         $this->router->bind('group_hash', static fn ($groupHash) => Group::byHashOrFail($groupHash));
         $this->router->bind('exam_hash', static fn ($examHash) => Exam::byHashOrFail($examHash));
-        $this->router->bind('item_hash', static function ($itemHash) {
+        $this->router->bind('item_hash', static function ($itemHash, $route = null) {
+            // The participant question endpoint resolves the item itself from the
+            // delivery snapshot (hash or ?item_id=). Binding it here looked the item up
+            // by items.hash / Hashids and aborted with 404 before the controller ran,
+            // which is exactly the case of items whose stored hash is stale or NULL.
+            if ($route instanceof \Illuminate\Routing\Route && $route->getName() === 'exam.get-taker-answer') {
+                return (string) $itemHash;
+            }
+
             return Item::withoutGlobalScope(ClientScope::class)
                 ->where('hash', $itemHash)
                 ->first()
