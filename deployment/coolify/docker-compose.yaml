@@ -1,7 +1,7 @@
 services:
     app:
         build:
-            context: https://github.com/rizrmd/ionbec.exam.git#78a922b6149da516b95046fc14253b31538aab66
+            context: https://github.com/rizrmd/ionbec.exam.git#72ec92116262017abb668b709af51559aa9bc703
             dockerfile: Dockerfile
         restart: unless-stopped
         entrypoint:
@@ -17,7 +17,8 @@ services:
             APP_NAME: MDXM
             APP_ENV: production
             APP_KEY: '${APP_KEY}'
-            APP_DEBUG: 'true'
+            APP_DEBUG: 'false'
+            USE_RUST_SCORING: 'false'
             APP_URL: ''
             DB_CONNECTION: pgsql
             DB_HOST: jf1e89v3lerdo74uaf5diihl
