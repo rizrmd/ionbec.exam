@@ -828,18 +828,26 @@ class MainController extends Controller
                 ]
             ]);
 
-            return response()->json([
-                'error' => 'Item not found in Rust API or database',
+            // Stable machine-readable error so the exam page can show "try again"
+            // instead of a blank question.
+            $notFound = [
+                'error' => 'question_not_found',
+                'message' => 'The question for this number could not be found in this exam. Please try again or contact the proctor.',
+                'retryable' => true,
                 'questions' => [],
                 'attempt' => null,
-                'rust_api_failed' => true,
-                'database_failed' => true,
-                'debug_info' => [
+            ];
+            if (config('app.debug')) {
+                $notFound['debug_info'] = [
                     'requested_hash' => $actualHash,
+                    'requested_item_id' => $requestedItemId,
                     'exam_id' => $examId,
-                    'delivery_id' => $deliveryId
-                ]
-            ], 404);
+                    'delivery_id' => $deliveryId,
+                    'has_snapshot' => (bool) ($snapshotDelivery && $itemSource->snapshotItems($snapshotDelivery)->isNotEmpty()),
+                ];
+            }
+
+            return response()->json($notFound, 404);
         }
 
         \Log::info('🔒 DATABASE FALLBACK: Item found successfully', [
