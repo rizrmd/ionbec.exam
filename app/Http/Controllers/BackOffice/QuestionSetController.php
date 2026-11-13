@@ -169,7 +169,33 @@ class QuestionSetController extends Controller
             ];
         }
 
+        // Deliveries whose frozen snapshot contains this item. An item can be detached from an
+        // exam (or the exam edited) after a delivery was scheduled; participants of those
+        // deliveries still receive it, so show that next to the "attached exams" selector.
+        $snapshotDeliveries = \Illuminate\Support\Facades\DB::table('delivery_snapshots as s')
+            ->join('deliveries as d', 'd.id', '=', 's.delivery_id')
+            ->leftJoin('exams as e', 'e.id', '=', 's.exam_id')
+            ->whereRaw("s.exam_structure->'items' @> ?::jsonb", [json_encode([['id' => $item->id]])])
+            ->where('d.client_id', $item->client_id)
+            ->orderByDesc('d.scheduled_at')
+            ->select('d.id', 'd.name', 'd.scheduled_at', 'd.ended_at', 's.exam_id', 'e.name as exam_name')
+            ->limit(50)
+            ->get()
+            ->map(function ($row) use ($item) {
+                return [
+                    'name' => $row->name,
+                    'scheduled_at' => $row->scheduled_at,
+                    'ended_at' => $row->ended_at,
+                    'exam_name' => $row->exam_name,
+                    'attached_to_exam' => \Illuminate\Support\Facades\DB::table('exam_item')
+                        ->where('exam_id', $row->exam_id)
+                        ->where('item_id', $item->id)
+                        ->exists(),
+                ];
+            });
+
         return Inertia::render('BackOffice/QuestionSet/Detail', [
+            'snapshotDeliveries' => $snapshotDeliveries,
             'item' => $item->load(['exams', 'attachments']),
             'categories' => $this->getCategories(),
             'categoryColors' => CategoryType::getColorMap(),

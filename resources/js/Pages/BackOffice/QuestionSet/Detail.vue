@@ -20,9 +20,13 @@
     chartData: {
       type: Object
     },
+    snapshotDeliveries: {
+      type: Array,
+      default: () => [],
+    },
   })
 </script>
 
 <template>
-  <AuthoringQuestionSet :item="item" :tests="tests" :typeOptions="typeOptions" :categories="categories" :questions="questions" :chartData="chartData" />
+  <AuthoringQuestionSet :item="item" :tests="tests" :typeOptions="typeOptions" :categories="categories" :questions="questions" :chartData="chartData" :snapshotDeliveries="snapshotDeliveries" />
 </template>
