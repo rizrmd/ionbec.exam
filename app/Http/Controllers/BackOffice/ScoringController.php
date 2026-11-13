@@ -347,10 +347,34 @@ class ScoringController extends Controller
 
             $attempt = Attempt::byHash($request->attempt_hash);
 
+            // Only questions of this delivery's items (snapshot first) can be scored. A question
+            // deleted after scheduling (archived, read-only) or from another exam is skipped
+            // instead of failing the whole submission.
+            $delivery = Delivery::withoutGlobalScope(\App\Scopes\ClientScope::class)->find($attempt->delivery_id);
+            $allowedQuestionIds = $delivery
+                ? DB::table('questions')
+                    ->whereIn('item_id', app(DeliveryItemSource::class)->itemIds($delivery)->all())
+                    ->pluck('id')->map(fn ($id) => (int) $id)->flip()
+                : null; // no delivery: keep the previous behaviour (no restriction)
+            $skipped = [];
+
             // Use upsert instead of update - creates if not exists
-            DB::transaction(function () use ($request, $attempt) {
+            DB::transaction(function () use ($request, $attempt, $allowedQuestionIds, &$skipped) {
                 foreach ($request->corrects as $questionHash => $correct) {
-                    $question = Question::byHash($questionHash);
+                    try {
+                        $questionId = Question::hashToId((string) $questionHash);
+                    } catch (\Throwable $e) {
+                        $questionId = null;
+                    }
+                    if (! $questionId || ($allowedQuestionIds !== null && ! $allowedQuestionIds->has($questionId))) {
+                        $skipped[] = $questionHash;
+                        continue;
+                    }
+                    $question = Question::withoutGlobalScope(\App\Scopes\ClientScope::class)->find($questionId);
+                    if (! $question) {
+                        $skipped[] = $questionHash;
+                        continue;
+                    }
 
                     // Use updateOrCreate to create or update attempt_question
                     AttemptQuestion::updateOrCreate(
@@ -374,6 +398,7 @@ class ScoringController extends Controller
             return response()->json([
                 'success' => true,
                 'attempt' => $attempt->fresh(['attemptQuestions']),
+                'skipped' => $skipped,
                 'message' => 'Scores submitted successfully'
             ]);
 
